@@ -1,0 +1,6 @@
+[package]
+name = "qamd"
+version = "0.1.0"
+authors = ["Myles Offord <mylesofford@hotmail.com>"]
+
+[dependencies]
