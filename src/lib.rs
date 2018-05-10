@@ -2,8 +2,8 @@
 //! # Overview
 //!
 //! Rust only QAMyData. Uses
-//! [ReadStat](https://github.com/WizardMac/ReadStat) C library, with thanks to
-//! WizardMac.
+//! [ReadStat](https://github.com/WizardMac/ReadStat) C library, with thanks
+//! to WizardMac.
 //!
 //! # Examples
 //! ```
@@ -26,7 +26,8 @@ pub mod config;
 pub mod report;
 
 use self::config::Config;
-use self::report::{Report, Metadata};
+use self::report::{Report, Metadata, VariableChecks, ValueChecks};
+use self::report::Variable;
 
 use std::os::raw::{c_int, c_void, c_char};
 use std::ffi::{CString, CStr};
@@ -47,51 +48,48 @@ struct Context {
 }
 
 /// Read Stata
-pub fn read_dta(path: &str) -> Result<Report, io::Error> {
+pub fn read_dta(path: &str, config: &Config) -> Result<Report, io::Error> {
     return unsafe {
-        read(path, readstat_parse_dta)
+        read(path, config, readstat_parse_dta)
     };
 }
 
 /// Read SPSS
-pub fn read_sav(path: &str) -> Result<Report, io::Error> {
+pub fn read_sav(path: &str, config: &Config) -> Result<Report, io::Error> {
     return unsafe {
-        read(path, readstat_parse_sav)
+        read(path, config, readstat_parse_sav)
     };
 }
 
 /// Read SPSS (older format)
-pub fn read_por(path: &str) -> Result<Report, io::Error> {
+pub fn read_por(path: &str, config: &Config) -> Result<Report, io::Error> {
     return unsafe {
-        read(path, readstat_parse_por)
+        read(path, config, readstat_parse_por)
     };
 }
 
 /// Read SAS
-pub fn read_sas7bdat(path: &str) -> Result<Report, io::Error> {
+pub fn read_sas7bdat(path: &str, config: &Config)
+    -> Result<Report, io::Error> {
+
     return unsafe {
-        read(path, readstat_parse_sas7bdat)
+        read(path, config, readstat_parse_sas7bdat)
     };
 }
 
 /// Parser function type signature
-type GenericParseFn =
+type ParseFn =
     unsafe extern "C" fn(parser: *mut readstat_parser_t,
                          path: *const c_char,
                          user_ctx: *mut c_void) -> readstat_error_t;
 
-/// Read the file using a given GenericParseFn
-unsafe fn read(path: &str, file_parser: GenericParseFn)
+/// Read the file using a given ParseFn
+unsafe fn read(path: &str, config: &Config, file_parser: ParseFn)
                -> Result<Report, io::Error> {
+
     let context: *mut Context = Box::into_raw(Box::new(Context {
-        config: Config {
-            file_encoding: true,
-            odd_characters: vec!(),
-            missing_variable_labels: true,
-            system_missing_value_threshold: Some(25),
-        },
+        config: (*config).clone(),
         report: Report {
-            odd_characters: None,
             metadata: Metadata {
                 raw_case_count: 0,
                 case_count: None,
@@ -101,7 +99,13 @@ unsafe fn read(path: &str, file_parser: GenericParseFn)
                 file_label: "".into(),
                 file_format_version: 0,
                 file_encoding: None,
-            }
+            },
+            variable_checks: VariableChecks {
+                odd_characters: None,
+            },
+            value_checks: ValueChecks {
+                odd_characters: None,
+            },
         },
     }));
 
@@ -157,40 +161,59 @@ unsafe extern "C" fn metadata_handler(metadata: *mut readstat_metadata_t,
 }
 
 /// Variable callback
-unsafe extern "C" fn variable_handler(_index: c_int,
+unsafe extern "C" fn variable_handler(index: c_int,
                                       variable: *mut readstat_variable_t,
-                                      val_labels: *const c_char,
+                                      _val_labels: *const c_char,
                                       ctx: *mut c_void) -> c_int {
-    // let context = ctx as *mut DataFrame;
+    let context = ctx as *mut Context;
 
-    // let variable_name = ptr_to_str!(readstat_variable_get_name(variable));
+    let variable_name = ptr_to_str!(readstat_variable_get_name(variable));
 
-    // let label = if readstat_variable_get_label(variable) != std::ptr::null() {
-    //     ptr_to_str!(readstat_variable_get_label(variable))
-    // } else {
-    //     "".to_string()
-    // };
+    let label = if readstat_variable_get_label(variable) != std::ptr::null() {
+        ptr_to_str!(readstat_variable_get_label(variable))
+    } else {
+        "".to_string()
+    };
 
-    // let val_labels_string = if val_labels != std::ptr::null() {
-    //     ptr_to_str!(val_labels)
-    // } else {
-    //     "".to_string()
-    // };
+    let var = Variable {
+        // index is zero based but this is used to locate
+        index: index as i32 + 1,
+        name: variable_name,
+        label: label,
+    };
 
-    // let var = Variable::new(variable_name, label, val_labels_string);
-    // (*context).values
-    //     .insert(var.clone(), vec!());
-    // (*context).frequency_table
-    //     .insert(var, HashMap::new());
+    // need a way to add the checks in here
+    // via the ctx
+
+    if let Some(ref config_odd_characters) = (*context).config
+        .variable_config
+        .odd_characters {
+        if contains(&var.name, config_odd_characters) ||
+            contains(&var.label, config_odd_characters) {
+
+            if (*context).report.variable_checks.odd_characters.is_none() {
+                (*context).report
+                    .variable_checks
+                    .odd_characters = Some(vec!());
+            }
+
+            if let Some(ref mut odd_characters_vec) = (*context)
+                    .report
+                    .variable_checks
+                    .odd_characters {
+                odd_characters_vec.push(var);
+            }
+        }
+    }
 
     return READSTAT_HANDLER_OK as c_int;
 }
 
 /// Value callback
 unsafe extern "C" fn value_handler(_obs_index: c_int,
-                                   variable: *mut readstat_variable_t,
-                                   value: readstat_value_t,
-                                   ctx: *mut c_void) -> c_int {
+                                   _variable: *mut readstat_variable_t,
+                                   _value: readstat_value_t,
+                                   _ctx: *mut c_void) -> c_int {
     // let context = ctx as *mut DataFrame;
     // //let var_index = readstat_variable_get_index(variable);
     // let var_name = ptr_to_str!(readstat_variable_get_name(variable));
@@ -237,10 +260,10 @@ unsafe extern "C" fn value_handler(_obs_index: c_int,
 }
 
 /// Value label callback
-unsafe extern "C" fn value_label_handler(val_labels: *const c_char,
-                                         value: readstat_value_t,
-                                         label: *const c_char,
-                                         ctx: *mut c_void) -> c_int {
+unsafe extern "C" fn value_label_handler(_val_labels: *const c_char,
+                                         _value: readstat_value_t,
+                                         _label: *const c_char,
+                                         _ctx: *mut c_void) -> c_int {
     // let context = ctx as *mut DataFrame;
 
     // use readstat_type_t::*;
@@ -286,6 +309,12 @@ unsafe extern "C" fn value_label_handler(val_labels: *const c_char,
     // // }
 
     return READSTAT_HANDLER_OK as c_int;
+}
+
+fn contains(string: &str, patterns: &Vec<String>) -> bool {
+    patterns.iter()
+        .map(|p| string.contains(p))
+        .fold(false, |a, b| a || b)
 }
 
 #[cfg(test)]

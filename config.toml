@@ -1,4 +1,10 @@
 file_encoding = true
+
+[variable_config]
 odd_characters = ["!", "#", "  "]
 missing_variable_labels = true
-system_missing_value_threshold = 10
+
+[value_config]
+odd_characters = ["!", "#", "  "]
+system_missing_value_threshold = 25
+
