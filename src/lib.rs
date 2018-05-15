@@ -30,6 +30,7 @@ use self::config::Config;
 use self::report::{Report, Metadata, VariableChecks, ValueChecks};
 use self::report::{Variable, Value};
 use self::report::anyvalue::AnyValue;
+use self::report::missing::Missing;
 
 use self::bindings::*;
 
@@ -100,6 +101,7 @@ unsafe fn read(path: &str, config: &Config, file_parser: ParseFn)
             },
             variable_checks: VariableChecks {
                 odd_characters: None,
+                missing_variable_labels: None,
             },
             value_checks: ValueChecks {
                 odd_characters: None,
@@ -174,36 +176,14 @@ unsafe extern "C" fn variable_handler(index: c_int,
     };
 
     let var = Variable {
-        // index is zero based but this is used to locate
+        // index is zero based, add one to make it human usable
         index: index as i32 + 1,
         name: variable_name,
         label: label,
     };
 
-    check::variable::check_odd_characters(var, ctx);
-
-    /*
-    if let Some(ref config_odd_characters) = (*context).config
-        .variable_config
-        .odd_characters {
-        if contains(&var.name, config_odd_characters) ||
-            contains(&var.label, config_odd_characters) {
-
-            if (*context).report.variable_checks.odd_characters.is_none() {
-                (*context).report
-                    .variable_checks
-                    .odd_characters = Some(vec!());
-            }
-
-            if let Some(ref mut odd_characters_vec) = (*context)
-                    .report
-                    .variable_checks
-                    .odd_characters {
-                odd_characters_vec.push(var);
-            }
-        }
-    }
-    */
+    check::variable::check_label(&var, ctx);
+    check::variable::check_odd_characters(&var, ctx);
 
     return READSTAT_HANDLER_OK as c_int;
 }
@@ -213,16 +193,31 @@ unsafe extern "C" fn value_handler(obs_index: c_int,
                                    variable: *mut readstat_variable_t,
                                    value: readstat_value_t,
                                    ctx: *mut c_void) -> c_int {
-    let context = ctx as *mut Context;
-
     let var_index = readstat_variable_get_index(variable);
 
+    use Missing::*;
+
+    // determine the MISSINGESS
+    let missing: Missing = match (
+        readstat_value_is_system_missing(value),
+        readstat_value_is_tagged_missing(value),
+        readstat_value_is_defined_missing(value, variable)) {
+        (0, 0, 0) => NOT_MISSING,
+        (_, 1, _) => TAGGED_MISSING(readstat_value_tag(value) as u8 as char),
+        (_, _, 1) => DEFINED_MISSING,
+        (1, _, _) => SYSTEM_MISSING,
+        _            => panic!("default case hit"),
+    };
+
     let value = Value {
-        var_index: var_index,
-        row: obs_index,
+        var_index: var_index + 1,
+        row: obs_index + 1,
         value: AnyValue::from(value),
         label: "".into(),
+        missing: missing,
     };
+
+    check::value::check_odd_characters(value, ctx);
 
     // let var_name = ptr_to_str!(readstat_variable_get_name(variable));
     // let key = (*context).values
@@ -236,19 +231,6 @@ unsafe extern "C" fn value_handler(obs_index: c_int,
     // //     println!("Warn: Key missing: {:?}", key);
     // // }
 
-    // use Missing::*;
-
-    // // determine the MISSINGESS
-    // let missing: Missing = match (
-    //                               readstat_value_is_system_missing(value),
-    //                               readstat_value_is_tagged_missing(value),
-    //                               readstat_value_is_defined_missing(value, variable)) {
-    //     (0, 0, 0) => NOT_MISSING,
-    //     (_, 1, _) => TAGGED_MISSING(readstat_value_tag(value) as u8 as char),
-    //     (_, _, 1) => DEFINED_MISSING,
-    //     (1, _, _) => SYSTEM_MISSING,
-    //     _            => panic!("default case hit"),
-    // };
 
     // let new_value = Value::new(value_as_any_value, missing);
 
@@ -325,31 +307,80 @@ mod tests {
     use super::*;
 
     use std::error::Error;
+    use self::config::{VariableConfig, ValueConfig};
 
     #[test]
     fn test_read_dta() {
-        let data = read_dta("test/mtcars.dta").unwrap();
-        assert_eq!(data.var_count, 12);
-        assert_eq!(data.row_count, 32);
+        let config = Config {
+            file_encoding: false,
+            variable_config: VariableConfig {
+                odd_characters: None,
+                missing_variable_labels: false,
+            },
+            value_config: ValueConfig {
+                odd_characters: None,
+                system_missing_value_threshold: None,
+            },
+        };
+
+        let report = read_dta("test/mtcars.dta", &config).unwrap();
+        assert_eq!(report.metadata.variable_count, 12);
+        assert_eq!(report.metadata.raw_case_count, 32);
     }
 
     #[test]
     fn test_read_sav() {
-        let data = read_sav("test/mtcars.sav").unwrap();
-        assert_eq!(data.var_count, 12);
-        assert_eq!(data.row_count, 32);
+        let config = Config {
+            file_encoding: false,
+            variable_config: VariableConfig {
+                odd_characters: None,
+                missing_variable_labels: false,
+            },
+            value_config: ValueConfig {
+                odd_characters: None,
+                system_missing_value_threshold: None,
+            },
+        };
+
+        let report = read_sav("test/mtcars.sav", &config).unwrap();
+        assert_eq!(report.metadata.variable_count, 12);
+        assert_eq!(report.metadata.raw_case_count, 32);
     }
 
     #[test]
     fn test_tead_sas7bdat() {
-        let data = read_sas7bdat("test/mtcars.sas7bdat").unwrap();
-        assert_eq!(data.var_count, 12);
-        assert_eq!(data.row_count, 32);
+        let config = Config {
+            file_encoding: false,
+            variable_config: VariableConfig {
+                odd_characters: None,
+                missing_variable_labels: false,
+            },
+            value_config: ValueConfig {
+                odd_characters: None,
+                system_missing_value_threshold: None,
+            },
+        };
+
+        let report = read_sas7bdat("test/mtcars.sas7bdat", &config).unwrap();
+        assert_eq!(report.metadata.variable_count, 12);
+        assert_eq!(report.metadata.raw_case_count, 32);
     }
 
     #[test]
     fn test_read_err() {
-        let err = match read_dta("") {
+        let config = Config {
+            file_encoding: false,
+            variable_config: VariableConfig {
+                odd_characters: None,
+                missing_variable_labels: false,
+            },
+            value_config: ValueConfig {
+                odd_characters: None,
+                system_missing_value_threshold: None,
+            },
+        };
+
+        let err = match read_dta("", &config) {
             Ok(_) => "failed".to_string(),
             Err(e) => e.description().to_string()
         };

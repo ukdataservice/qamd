@@ -1,10 +1,10 @@
 file_encoding = true
 
 [variable_config]
-odd_characters = ["!", "#", "  "]
+odd_characters = ["!", "#", "  ", "ë", "ç", "ô", "ü"]
 missing_variable_labels = true
 
 [value_config]
-odd_characters = ["!", "#", "  "]
+odd_characters = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]
 system_missing_value_threshold = 25
 

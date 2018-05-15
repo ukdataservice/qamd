@@ -1,7 +1,9 @@
 
 pub mod anyvalue;
+pub mod missing;
 
 use self::anyvalue::AnyValue;
+use self::missing::Missing;
 
 // use std::collections::HashMap;
 
@@ -27,6 +29,7 @@ pub struct Metadata {
 #[derive(Serialize, Debug, Clone)]
 pub struct VariableChecks {
     pub odd_characters: Option<Vec<Variable>>,
+    pub missing_variable_labels: Option<Vec<Variable>>,
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -47,5 +50,6 @@ pub struct Value {
     pub row: i32,
     pub value: AnyValue,
     pub label: String,
+    pub missing: Missing,
 }
 
