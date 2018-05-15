@@ -1,14 +1,18 @@
 
+pub mod anyvalue;
+
+use self::anyvalue::AnyValue;
+
 // use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Report {
     pub metadata: Metadata,
     pub variable_checks: VariableChecks,
     pub value_checks: ValueChecks,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Metadata {
     pub raw_case_count: i32,
     pub case_count: Option<i32>,
@@ -20,28 +24,28 @@ pub struct Metadata {
     pub file_encoding: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub struct VariableChecks {
     pub odd_characters: Option<Vec<Variable>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub struct ValueChecks {
-    pub odd_characters: Option<Vec<String>>,
+    pub odd_characters: Option<Vec<Value>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Variable {
     pub index: i32,
     pub name: String,
     pub label: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Value {
-    pub index: i32,
+    pub var_index: i32,
     pub row: i32,
-    pub value: String,
+    pub value: AnyValue,
     pub label: String,
 }
 

@@ -10,36 +10,34 @@
 //! ```
 //!
 
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-
 #[macro_use]
 extern crate serde_derive;
 
 extern crate serde;
 // extern crate serde_json;
 
+#[macro_use]
+pub mod macros;
+
 pub mod config;
 pub mod report;
+pub mod bindings;
+
+mod check;
 
 use self::config::Config;
+
 use self::report::{Report, Metadata, VariableChecks, ValueChecks};
-use self::report::Variable;
+use self::report::{Variable, Value};
+use self::report::anyvalue::AnyValue;
+
+use self::bindings::*;
 
 use std::os::raw::{c_int, c_void, c_char};
 use std::ffi::{CString, CStr};
 use std::io;
 
 use std::clone::Clone;
-
-macro_rules! str_to_ptr(($name:expr) =>
-                        (ok!(CString::new($name)).into_raw()));
-macro_rules! ptr_to_str(($name:expr) =>
-                        (CStr::from_ptr($name).to_string_lossy().into_owned()));
-macro_rules! ok(($expression:expr) => ($expression.unwrap()));
 
 #[derive(Debug)]
 struct Context {
@@ -165,7 +163,7 @@ unsafe extern "C" fn variable_handler(index: c_int,
                                       variable: *mut readstat_variable_t,
                                       _val_labels: *const c_char,
                                       ctx: *mut c_void) -> c_int {
-    let context = ctx as *mut Context;
+    // let context = ctx as *mut Context;
 
     let variable_name = ptr_to_str!(readstat_variable_get_name(variable));
 
@@ -182,9 +180,9 @@ unsafe extern "C" fn variable_handler(index: c_int,
         label: label,
     };
 
-    // need a way to add the checks in here
-    // via the ctx
+    check::variable::check_odd_characters(var, ctx);
 
+    /*
     if let Some(ref config_odd_characters) = (*context).config
         .variable_config
         .odd_characters {
@@ -205,17 +203,27 @@ unsafe extern "C" fn variable_handler(index: c_int,
             }
         }
     }
+    */
 
     return READSTAT_HANDLER_OK as c_int;
 }
 
 /// Value callback
-unsafe extern "C" fn value_handler(_obs_index: c_int,
-                                   _variable: *mut readstat_variable_t,
-                                   _value: readstat_value_t,
-                                   _ctx: *mut c_void) -> c_int {
-    // let context = ctx as *mut DataFrame;
-    // //let var_index = readstat_variable_get_index(variable);
+unsafe extern "C" fn value_handler(obs_index: c_int,
+                                   variable: *mut readstat_variable_t,
+                                   value: readstat_value_t,
+                                   ctx: *mut c_void) -> c_int {
+    let context = ctx as *mut Context;
+
+    let var_index = readstat_variable_get_index(variable);
+
+    let value = Value {
+        var_index: var_index,
+        row: obs_index,
+        value: AnyValue::from(value),
+        label: "".into(),
+    };
+
     // let var_name = ptr_to_str!(readstat_variable_get_name(variable));
     // let key = (*context).values
     //     .keys()
@@ -311,11 +319,6 @@ unsafe extern "C" fn value_label_handler(_val_labels: *const c_char,
     return READSTAT_HANDLER_OK as c_int;
 }
 
-fn contains(string: &str, patterns: &Vec<String>) -> bool {
-    patterns.iter()
-        .map(|p| string.contains(p))
-        .fold(false, |a, b| a || b)
-}
 
 #[cfg(test)]
 mod tests {
