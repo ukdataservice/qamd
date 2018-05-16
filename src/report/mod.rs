@@ -14,6 +14,16 @@ pub struct Report {
     pub value_checks: ValueChecks,
 }
 
+impl Report {
+    pub fn new() -> Report {
+        Report {
+            metadata: Metadata::new(),
+            variable_checks: VariableChecks::new(),
+            value_checks: ValueChecks::new(),
+        }
+    }
+}
+
 #[derive(Serialize, Debug, Clone)]
 pub struct Metadata {
     pub raw_case_count: i32,
@@ -26,10 +36,35 @@ pub struct Metadata {
     pub file_encoding: Option<String>,
 }
 
+impl Metadata {
+    pub fn new() -> Metadata {
+        Metadata {
+            raw_case_count: 0,
+            case_count: None,
+            variable_count: 0,
+            creation_time: 0,
+            modified_time: 0,
+            file_label: "".into(),
+            file_format_version: 0,
+            file_encoding: None,
+        }
+    }
+}
+
+
 #[derive(Serialize, Debug, Clone)]
 pub struct VariableChecks {
     pub odd_characters: Option<Vec<Variable>>,
     pub missing_variable_labels: Option<Vec<Variable>>,
+}
+
+impl VariableChecks {
+    pub fn new() -> VariableChecks {
+        VariableChecks {
+            odd_characters: None,
+            missing_variable_labels: None,
+        }
+    }
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -37,11 +72,20 @@ pub struct ValueChecks {
     pub odd_characters: Option<Vec<Value>>,
 }
 
+impl ValueChecks {
+    pub fn new() -> ValueChecks {
+        ValueChecks {
+            odd_characters: None,
+        }
+    }
+}
+
 #[derive(Serialize, Debug, Clone)]
 pub struct Variable {
     pub index: i32,
     pub name: String,
     pub label: String,
+    pub value_labels: String,
 }
 
 #[derive(Serialize, Debug, Clone)]

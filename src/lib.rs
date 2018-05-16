@@ -27,12 +27,14 @@ mod check;
 
 use self::config::Config;
 
-use self::report::{Report, Metadata, VariableChecks, ValueChecks};
+use self::report::Report;
 use self::report::{Variable, Value};
 use self::report::anyvalue::AnyValue;
 use self::report::missing::Missing;
 
 use self::bindings::*;
+
+use std::collections::HashMap;
 
 use std::os::raw::{c_int, c_void, c_char};
 use std::ffi::{CString, CStr};
@@ -43,7 +45,9 @@ use std::clone::Clone;
 #[derive(Debug)]
 struct Context {
     config: Config,
-    report: Report
+    report: Report,
+    value_labels: HashMap<String, HashMap<String, String>>,
+    variables: Vec<Variable>,
 }
 
 /// Read Stata
@@ -88,25 +92,9 @@ unsafe fn read(path: &str, config: &Config, file_parser: ParseFn)
 
     let context: *mut Context = Box::into_raw(Box::new(Context {
         config: (*config).clone(),
-        report: Report {
-            metadata: Metadata {
-                raw_case_count: 0,
-                case_count: None,
-                variable_count: 0,
-                creation_time: 0,
-                modified_time: 0,
-                file_label: "".into(),
-                file_format_version: 0,
-                file_encoding: None,
-            },
-            variable_checks: VariableChecks {
-                odd_characters: None,
-                missing_variable_labels: None,
-            },
-            value_checks: ValueChecks {
-                odd_characters: None,
-            },
-        },
+        report: Report::new(),
+        value_labels: HashMap::new(),
+        variables: vec!(),
     }));
 
     let parser: *mut readstat_parser_t = readstat_parser_init();
@@ -163,9 +151,9 @@ unsafe extern "C" fn metadata_handler(metadata: *mut readstat_metadata_t,
 /// Variable callback
 unsafe extern "C" fn variable_handler(index: c_int,
                                       variable: *mut readstat_variable_t,
-                                      _val_labels: *const c_char,
+                                      val_labels: *const c_char,
                                       ctx: *mut c_void) -> c_int {
-    // let context = ctx as *mut Context;
+    let context = ctx as *mut Context;
 
     let variable_name = ptr_to_str!(readstat_variable_get_name(variable));
 
@@ -175,12 +163,21 @@ unsafe extern "C" fn variable_handler(index: c_int,
         "".to_string()
     };
 
+    let value_labels = if val_labels != std::ptr::null() {
+        ptr_to_str!(val_labels)
+    } else {
+        "".into()
+    };
+
     let var = Variable {
         // index is zero based, add one to make it human usable
         index: index as i32 + 1,
         name: variable_name,
         label: label,
+        value_labels: value_labels,
     };
+
+    (*context).variables.push(var.clone());
 
     check::variable::check_label(&var, ctx);
     check::variable::check_odd_characters(&var, ctx);
@@ -193,7 +190,10 @@ unsafe extern "C" fn value_handler(obs_index: c_int,
                                    variable: *mut readstat_variable_t,
                                    value: readstat_value_t,
                                    ctx: *mut c_void) -> c_int {
+    let context = ctx as *mut Context;
+
     let var_index = readstat_variable_get_index(variable);
+    let anyvalue = AnyValue::from(value);
 
     use Missing::*;
 
@@ -209,11 +209,21 @@ unsafe extern "C" fn value_handler(obs_index: c_int,
         _            => panic!("default case hit"),
     };
 
+    let label: String = if let Some(variable) = (*context).variables.iter().nth(var_index as usize) {
+        if let Some(map) = (*context).value_labels.get_mut(&variable.value_labels) {
+            map.get(&format!("{}", anyvalue)).unwrap_or(&"".to_string()).to_string()
+        } else {
+            "".to_string()
+        }
+    } else {
+        "".to_string()
+    };
+
     let value = Value {
         var_index: var_index + 1,
         row: obs_index + 1,
-        value: AnyValue::from(value),
-        label: "".into(),
+        value: anyvalue,
+        label: label,
         missing: missing,
     };
 
@@ -230,7 +240,6 @@ unsafe extern "C" fn value_handler(obs_index: c_int,
     // // if !(*context).values.contains_key(&key) {
     // //     println!("Warn: Key missing: {:?}", key);
     // // }
-
 
     // let new_value = Value::new(value_as_any_value, missing);
 
@@ -250,30 +259,23 @@ unsafe extern "C" fn value_handler(obs_index: c_int,
 }
 
 /// Value label callback
-unsafe extern "C" fn value_label_handler(_val_labels: *const c_char,
-                                         _value: readstat_value_t,
-                                         _label: *const c_char,
-                                         _ctx: *mut c_void) -> c_int {
-    // let context = ctx as *mut DataFrame;
+unsafe extern "C" fn value_label_handler(val_labels: *const c_char,
+                                         value: readstat_value_t,
+                                         label: *const c_char,
+                                         ctx: *mut c_void) -> c_int {
+    let context = ctx as *mut Context;
 
-    // use readstat_type_t::*;
+    let value_label_id = ptr_to_str!(val_labels);
 
-    // let mut value_str: String = match readstat_value_type(value) {
-    //     READSTAT_TYPE_STRING =>
-    //         ptr_to_str!(readstat_string_value(value)),
-    //     READSTAT_TYPE_INT8 =>
-    //         (readstat_int8_value(value) as i8).to_string(),
-    //     READSTAT_TYPE_INT16 =>
-    //         (readstat_int16_value(value) as i16).to_string(),
-    //     READSTAT_TYPE_INT32 =>
-    //         (readstat_int32_value(value) as i32).to_string(),
-    //     READSTAT_TYPE_FLOAT =>
-    //         format!("{:?}", readstat_float_value(value)),
-    //     READSTAT_TYPE_DOUBLE =>
-    //         format!("{:?}", readstat_double_value(value)),
-    //     READSTAT_TYPE_STRING_REF =>
-    //         "REF TYPE".to_string(),
-    // };
+    let value_str: String = format!("{}", AnyValue::from(value));
+
+    if !(*context).value_labels.contains_key(&value_label_id) {
+        (*context).value_labels.insert(value_label_id.clone(), HashMap::new());
+    }
+
+    if let Some(map) = (*context).value_labels.get_mut(&value_label_id) {
+        (*map).insert(value_str, ptr_to_str!(label));
+    }
 
     // // hack to make the decimal point show up.
     // if !value_str.contains(".") {
