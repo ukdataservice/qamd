@@ -70,12 +70,14 @@ impl VariableChecks {
 #[derive(Serialize, Debug, Clone)]
 pub struct ValueChecks {
     pub odd_characters: Option<Vec<Value>>,
+    pub defined_missing_no_label: Option<Vec<Value>>,
 }
 
 impl ValueChecks {
     pub fn new() -> ValueChecks {
         ValueChecks {
             odd_characters: None,
+            defined_missing_no_label: None,
         }
     }
 }

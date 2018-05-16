@@ -1,6 +1,7 @@
 
 use Context;
 use report::Value;
+use report::missing::Missing;
 use check::ValueCheckFn;
 use check::common::contains;
 
@@ -8,14 +9,15 @@ use std::os::raw::c_void;
 
 // Register the checks with the context object
 pub fn register() -> Vec<ValueCheckFn> {
-    vec!(check_odd_characters)
+    vec!(odd_characters,
+         defined_missing_no_label)
 }
 
 // Value checks
 
 /// Check for odd characters in the value and value label.
 /// If a value is determined to contain any odd character(s), the value is pushed to the report.
-fn check_odd_characters(value: &Value, ctx: *mut c_void) {
+fn odd_characters(value: &Value, ctx: *mut c_void) {
     unsafe {
         let context = ctx as *mut Context;
 
@@ -40,6 +42,26 @@ fn check_odd_characters(value: &Value, ctx: *mut c_void) {
                     .odd_characters {
                             odd_characters_vec.push(value.clone());
                 }
+            }
+        }
+    }
+}
+
+/// Check for defined missing values that do not have a label
+fn defined_missing_no_label(value: &Value, ctx: *mut c_void) {
+    unsafe {
+        let context = ctx as *mut Context;
+
+        if value.missing == Missing::DEFINED_MISSING && value.label == "" {
+            if (*context).report.value_checks.defined_missing_no_label.is_none() {
+                (*context).report.value_checks.defined_missing_no_label = Some(vec!())
+            }
+
+            if let Some(ref mut defined_missing_no_label) = (*context)
+                .report
+                .value_checks
+                .defined_missing_no_label {
+                    defined_missing_no_label.push(value.clone());
             }
         }
     }

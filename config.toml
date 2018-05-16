@@ -1,7 +1,5 @@
-file_encoding = true
-
 [variable_config]
-odd_characters = ["!", "#", "  ", "ë", "ç", "ô", "ü"]
+odd_characters = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]
 missing_variable_labels = true
 
 [value_config]

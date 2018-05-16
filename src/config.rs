@@ -5,7 +5,6 @@ trait Valid {
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct Config {
-    pub file_encoding: bool,
     pub variable_config: VariableConfig,
     pub value_config: ValueConfig,
 }
