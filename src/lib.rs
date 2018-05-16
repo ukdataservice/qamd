@@ -32,6 +32,8 @@ use self::report::{Variable, Value};
 use self::report::anyvalue::AnyValue;
 use self::report::missing::Missing;
 
+use self::check::Check;
+
 use self::bindings::*;
 
 use std::collections::HashMap;
@@ -46,6 +48,7 @@ use std::clone::Clone;
 struct Context {
     config: Config,
     report: Report,
+    checks: Check,
     value_labels: HashMap<String, HashMap<String, String>>,
     variables: Vec<Variable>,
 }
@@ -93,6 +96,7 @@ unsafe fn read(path: &str, config: &Config, file_parser: ParseFn)
     let context: *mut Context = Box::into_raw(Box::new(Context {
         config: (*config).clone(),
         report: Report::new(),
+        checks: Check::new(),
         value_labels: HashMap::new(),
         variables: vec!(),
     }));
@@ -179,8 +183,9 @@ unsafe extern "C" fn variable_handler(index: c_int,
 
     (*context).variables.push(var.clone());
 
-    check::variable::check_label(&var, ctx);
-    check::variable::check_odd_characters(&var, ctx);
+    for check in (*context).checks.variable.iter() {
+        check(&var, ctx);
+    }
 
     return READSTAT_HANDLER_OK as c_int;
 }
@@ -227,7 +232,9 @@ unsafe extern "C" fn value_handler(obs_index: c_int,
         missing: missing,
     };
 
-    check::value::check_odd_characters(value, ctx);
+    for check in (*context).checks.value.iter() {
+        check(&value, ctx)
+    }
 
     // let var_name = ptr_to_str!(readstat_variable_get_name(variable));
     // let key = (*context).values

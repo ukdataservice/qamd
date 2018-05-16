@@ -1,13 +1,20 @@
 
 use Context;
 use report::Variable;
+use check::VariableCheckFn;
 use check::common::contains;
 
 use std::os::raw::c_void;
 
+// Register the checks with the context object
+pub fn register() -> Vec<VariableCheckFn> {
+    vec!(check_label,
+         check_odd_characters)
+}
+
 /// Variable checks
 
-pub fn check_label(variable: &Variable, ctx: *mut c_void) {
+fn check_label(variable: &Variable, ctx: *mut c_void) {
     unsafe {
         let context = ctx as *mut Context;
 
@@ -27,7 +34,7 @@ pub fn check_label(variable: &Variable, ctx: *mut c_void) {
     }
 }
 
-pub fn check_odd_characters(variable: &Variable, ctx: *mut c_void) {
+fn check_odd_characters(variable: &Variable, ctx: *mut c_void) {
     unsafe {
         let context = ctx as *mut Context;
 

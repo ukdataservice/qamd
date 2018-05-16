@@ -1,11 +1,21 @@
 
 use Context;
 use report::Value;
+use check::ValueCheckFn;
 use check::common::contains;
 
 use std::os::raw::c_void;
 
-pub fn check_odd_characters(value: Value, ctx: *mut c_void) {
+// Register the checks with the context object
+pub fn register() -> Vec<ValueCheckFn> {
+    vec!(check_odd_characters)
+}
+
+// Value checks
+
+/// Check for odd characters in the value and value label.
+/// If a value is determined to contain any odd character(s), the value is pushed to the report.
+fn check_odd_characters(value: &Value, ctx: *mut c_void) {
     unsafe {
         let context = ctx as *mut Context;
 
@@ -28,7 +38,7 @@ pub fn check_odd_characters(value: Value, ctx: *mut c_void) {
                     .report
                     .value_checks
                     .odd_characters {
-                            odd_characters_vec.push(value);
+                            odd_characters_vec.push(value.clone());
                 }
             }
         }
