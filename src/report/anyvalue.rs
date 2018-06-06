@@ -70,7 +70,7 @@ impl From<readstat_value_t> for AnyValue {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
 
 }
 

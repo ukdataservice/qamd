@@ -7,6 +7,8 @@
 //!
 //! # Examples
 //! ```
+//! println!("Hello, World!");
+//! assert!(4 == 2 + 2);
 //! ```
 //!
 
@@ -321,7 +323,6 @@ mod tests {
     #[test]
     fn test_read_dta() {
         let config = Config {
-            file_encoding: false,
             variable_config: VariableConfig {
                 odd_characters: None,
                 missing_variable_labels: false,
@@ -340,7 +341,6 @@ mod tests {
     #[test]
     fn test_read_sav() {
         let config = Config {
-            file_encoding: false,
             variable_config: VariableConfig {
                 odd_characters: None,
                 missing_variable_labels: false,
@@ -359,7 +359,6 @@ mod tests {
     #[test]
     fn test_tead_sas7bdat() {
         let config = Config {
-            file_encoding: false,
             variable_config: VariableConfig {
                 odd_characters: None,
                 missing_variable_labels: false,
@@ -378,7 +377,6 @@ mod tests {
     #[test]
     fn test_read_err() {
         let config = Config {
-            file_encoding: false,
             variable_config: VariableConfig {
                 odd_characters: None,
                 missing_variable_labels: false,
