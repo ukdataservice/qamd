@@ -11,9 +11,18 @@ pub enum Level {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum FileType {
+    SAV,
+    DTA,
+    SAS7BDAT,
+    CSV,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Setting<T> {
     pub setting: T,
     pub level: Level,
+    pub file_types: Vec<FileType>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

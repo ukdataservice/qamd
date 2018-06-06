@@ -1,8 +1,8 @@
 [variable_config]
-odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn" }
-missing_variable_labels = { setting = true, level = "Warn" }
+odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn", file_types = ["SAV", "DTA"] }
+missing_variable_labels = { setting = true, level = "Warn", file_types = ["SAV", "DTA"] }
 
 [value_config]
-odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn" }
-system_missing_value_threshold = { setting = 25, level = "Fail" }
+odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
+system_missing_value_threshold = { setting = 25, level = "Fail", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
 
