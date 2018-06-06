@@ -6,6 +6,7 @@ extern crate serde_json;
 
 use qamd::read_sav;
 use qamd::config::Config;
+// use qamd::config::{ VariableConfig, ValueConfig, Setting, Level };
 //use qamd::report::Report;
 
 use std::env;
@@ -33,14 +34,50 @@ fn main() {
     };
 
     // println!("{}, {}", file_path, config_path);
+    /*
+    let config = Config {
+        variable_config: VariableConfig {
+            odd_characters: Setting::<Option<Vec<String>>> {
+                setting: Some(vec!("!", "#", "  ", "@", "ë", "ç", "ô", "ü")
+                              .iter()
+                              .map(|x| x.to_string())
+                              .collect::<Vec<String>>()),
+                level: Level::Warn
+            },
+            missing_variable_labels: Setting::<bool> {
+                setting: true,
+                level: Level::Warn
+            },
+        },
+        value_config: ValueConfig {
+            odd_characters: Setting::<Option<Vec<String>>> {
+                setting: Some(vec!("!", "#", "  ", "@", "ë", "ç", "ô", "ü")
+                              .iter()
+                              .map(|x| x.to_string())
+                              .collect::<Vec<String>>()),
+                level: Level::Warn
+            },
+            system_missing_value_threshold: Setting::<Option<i32>> {
+                setting: Some(25),
+                level: Level::Fail
+            },
+        },
+    };
 
-    let config: Config = parse_config(&config_path).unwrap();
-    // println!("Config: {:?}", config);
+    println!("{}", toml::to_string(&config).unwrap());
+    */
 
-    let report = read_sav(&file_path, &config).unwrap();
-    let serialised = serde_json::to_string(&report).unwrap();
+    match parse_config(&config_path) {
+        Ok(config) => {
+            //println!("Config: {:#?}", config);
 
-    println!("{}", serialised);
+            let report = read_sav(&file_path, &config).unwrap();
+            let serialised = serde_json::to_string(&report).unwrap();
+
+            println!("{}", serialised);
+        },
+        Err(err) => println!("{:?}", err),
+    }
 }
 
 fn parse_config(path: &str) -> Result<Config, String> {
@@ -51,7 +88,9 @@ fn parse_config(path: &str) -> Result<Config, String> {
     f.read_to_string(&mut buffer)
         .expect(&format!("Failed to read data from file: {}", path));
 
-    Ok(toml::from_str(&buffer)
-        .expect("failed to parse toml"))
+    match toml::from_str(&buffer) {
+        Ok(config) => Ok(config),
+        Err(err)   => Err(format!("Failed to parse toml: {}", err)),
+    }
 }
 

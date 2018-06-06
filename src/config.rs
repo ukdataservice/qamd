@@ -3,7 +3,20 @@ trait Valid {
     fn validate(&self) -> Result<(), &'static str>;
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum Level {
+    Pass,
+    Warn,
+    Fail,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Setting<T> {
+    pub setting: T,
+    pub level: Level,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
     pub variable_config: VariableConfig,
     pub value_config: ValueConfig,
@@ -19,15 +32,15 @@ impl Valid for Config {
     }
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct VariableConfig {
-    pub odd_characters: Option<Vec<String>>,
-    pub missing_variable_labels: bool,
+    pub odd_characters: Setting<Option<Vec<String>>>,
+    pub missing_variable_labels: Setting<bool>,
 }
 
 impl Valid for VariableConfig {
     fn validate(&self) -> Result<(), &'static str> {
-        match self.odd_characters {
+        match self.odd_characters.setting {
             None => (),
             Some(ref odd_characters) => if odd_characters.len() < 1 {
                 return Err("variable_config.odd_characters cannot be empty");
@@ -38,22 +51,22 @@ impl Valid for VariableConfig {
     }
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ValueConfig {
-    pub odd_characters: Option<Vec<String>>,
-    pub system_missing_value_threshold: Option<i32>,
+    pub odd_characters: Setting<Option<Vec<String>>>,
+    pub system_missing_value_threshold: Setting<Option<i32>>,
 }
 
 impl Valid for ValueConfig {
     fn validate(&self) -> Result<(), &'static str>{
-        match &self.odd_characters {
+        match &self.odd_characters.setting {
             &None => (),
             &Some(ref odd_characters) => if odd_characters.len() < 1 {
                 return Err("value_config.odd_characters cannot be empty");
             }
         }
 
-        match self.system_missing_value_threshold {
+        match self.system_missing_value_threshold.setting {
             None => (),
             Some(threshold) => if !(threshold > 0 && threshold <= 100) {
                 return Err("threshold out of bounds");

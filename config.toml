@@ -1,8 +1,8 @@
 [variable_config]
-odd_characters = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]
-missing_variable_labels = true
+odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn" }
+missing_variable_labels = { setting = true, level = "Warn" }
 
 [value_config]
-odd_characters = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]
-system_missing_value_threshold = 25
+odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn" }
+system_missing_value_threshold = { setting = 25, level = "Fail" }
 

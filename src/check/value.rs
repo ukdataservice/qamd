@@ -23,7 +23,8 @@ fn odd_characters(value: &Value, ctx: *mut c_void) {
 
         if let Some(ref config_odd_characters) = (*context).config
             .value_config
-            .odd_characters {
+            .odd_characters
+            .setting {
 
             if contains(&format!("{}", &value.value), config_odd_characters) ||
                 contains(&value.label, config_odd_characters) {

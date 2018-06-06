@@ -18,7 +18,7 @@ fn check_label(variable: &Variable, ctx: *mut c_void) {
     unsafe {
         let context = ctx as *mut Context;
 
-        if (*context).config.variable_config.missing_variable_labels {
+        if (*context).config.variable_config.missing_variable_labels.setting {
             if variable.label == "" {
                 if (*context).report.variable_checks.missing_variable_labels.is_none() {
                     (*context).report.variable_checks.missing_variable_labels = Some(vec!());
@@ -40,7 +40,8 @@ fn check_odd_characters(variable: &Variable, ctx: *mut c_void) {
 
         if let Some(ref config_odd_characters) = (*context).config
             .variable_config
-            .odd_characters {
+            .odd_characters
+            .setting {
             if contains(&variable.name, config_odd_characters) ||
                 contains(&variable.label, config_odd_characters) {
 
