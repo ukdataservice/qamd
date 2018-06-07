@@ -9,6 +9,7 @@ use std::os::raw::c_void;
 // Register the checks with the context object
 pub fn register() -> Vec<VariableCheckFn> {
     vec!(check_label,
+         check_label_length,
          check_odd_characters)
 }
 
@@ -18,16 +19,50 @@ fn check_label(variable: &Variable, ctx: *mut c_void) {
     unsafe {
         let context = ctx as *mut Context;
 
-        if (*context).config.variable_config.missing_variable_labels.setting {
-            if variable.label == "" {
-                if (*context).report.variable_checks.missing_variable_labels.is_none() {
-                    (*context).report.variable_checks.missing_variable_labels = Some(vec!());
+        if let Some(ref config_missing_variable_labels) = (*context)
+            .config
+            .variable_config
+            .missing_variable_labels
+            .setting {
+
+                if *config_missing_variable_labels {
+                    if variable.label == "" {
+                        if (*context).report.variable_checks.missing_variable_labels.is_none() {
+                            (*context).report.variable_checks.missing_variable_labels = Some(vec!());
+                        }
+
+                        if let Some(ref mut vars_missing_labels) = (*context).report
+                            .variable_checks
+                            .missing_variable_labels {
+                                vars_missing_labels.push(variable.clone());
+                            }
+                    }
+                }
+        }
+    }
+}
+
+fn check_label_length(variable: &Variable, ctx: *mut c_void) {
+    unsafe {
+        let context = ctx as *mut Context;
+
+        if let Some(ref label_max_length) = (*context)
+            .config
+            .variable_config
+            .label_max_length
+            .setting {
+
+            if variable.label.len() > (*label_max_length) as usize {
+                if (*context).report.variable_checks.label_max_length.is_none() {
+                    (*context).report.variable_checks.label_max_length = Some(vec!());
                 }
 
-                if let Some(ref mut vars_missing_labels) = (*context).report
+                if let Some(ref mut vars_label_max_length) = (*context)
+                    .report
                     .variable_checks
-                    .missing_variable_labels {
-                        vars_missing_labels.push(variable.clone());
+                    .label_max_length {
+
+                    vars_label_max_length.push(variable.clone());
                 }
             }
         }

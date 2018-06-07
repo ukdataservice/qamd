@@ -44,7 +44,8 @@ impl Valid for Config {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct VariableConfig {
     pub odd_characters: Setting<Option<Vec<String>>>,
-    pub missing_variable_labels: Setting<bool>,
+    pub missing_variable_labels: Setting<Option<bool>>,
+    pub label_max_length: Setting<Option<i32>>,
 }
 
 impl Valid for VariableConfig {
@@ -56,6 +57,13 @@ impl Valid for VariableConfig {
             }
         }
 
+        match self.label_max_length.setting {
+            None => (),
+            Some(ref label_max_length) => if label_max_length < &0 {
+                return Err("variable_config.label_max_length cannot be negative");
+            }
+        }
+
         Ok(())
     }
 }
@@ -64,10 +72,11 @@ impl Valid for VariableConfig {
 pub struct ValueConfig {
     pub odd_characters: Setting<Option<Vec<String>>>,
     pub system_missing_value_threshold: Setting<Option<i32>>,
+    pub label_max_length: Setting<Option<i32>>,
 }
 
 impl Valid for ValueConfig {
-    fn validate(&self) -> Result<(), &'static str>{
+    fn validate(&self) -> Result<(), &'static str> {
         match &self.odd_characters.setting {
             &None => (),
             &Some(ref odd_characters) => if odd_characters.len() < 1 {

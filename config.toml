@@ -1,8 +1,10 @@
 [variable_config]
 odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn", file_types = ["SAV", "DTA"] }
 missing_variable_labels = { setting = true, level = "Warn", file_types = ["SAV", "DTA"] }
+label_max_length = { setting = 79, level = "Fail", file_types = ["SAV", "DTA", "SAS7BDAT"] }
 
 [value_config]
 odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
 system_missing_value_threshold = { setting = 25, level = "Fail", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
+label_max_length = { setting = 39, level = "Fail", file_types = ["SAV", "DTA"] }
 

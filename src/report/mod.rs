@@ -56,6 +56,7 @@ impl Metadata {
 pub struct VariableChecks {
     pub odd_characters: Option<Vec<Variable>>,
     pub missing_variable_labels: Option<Vec<Variable>>,
+    pub label_max_length: Option<Vec<Variable>>,
 }
 
 impl VariableChecks {
@@ -63,6 +64,7 @@ impl VariableChecks {
         VariableChecks {
             odd_characters: None,
             missing_variable_labels: None,
+            label_max_length: None,
         }
     }
 }
@@ -71,6 +73,7 @@ impl VariableChecks {
 pub struct ValueChecks {
     pub odd_characters: Option<Vec<Value>>,
     pub defined_missing_no_label: Option<Vec<Value>>,
+    pub label_max_length: Option<Vec<Value>>,
 }
 
 impl ValueChecks {
@@ -78,6 +81,7 @@ impl ValueChecks {
         ValueChecks {
             odd_characters: None,
             defined_missing_no_label: None,
+            label_max_length: None,
         }
     }
 }

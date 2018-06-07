@@ -10,6 +10,7 @@ use std::os::raw::c_void;
 // Register the checks with the context object
 pub fn register() -> Vec<ValueCheckFn> {
     vec!(odd_characters,
+         label_max_length,
          defined_missing_no_label)
 }
 
@@ -27,7 +28,7 @@ fn odd_characters(value: &Value, ctx: *mut c_void) {
             .setting {
 
             if contains(&format!("{}", &value.value), config_odd_characters) ||
-                contains(&value.label, config_odd_characters) {
+                    contains(&value.label, config_odd_characters) {
 
                 if (*context).report
                     .value_checks
@@ -42,6 +43,34 @@ fn odd_characters(value: &Value, ctx: *mut c_void) {
                     .value_checks
                     .odd_characters {
                             odd_characters_vec.push(value.clone());
+                }
+            }
+        }
+    }
+}
+
+fn label_max_length(value: &Value, ctx: *mut c_void) {
+    unsafe {
+        let context = ctx as *mut Context;
+
+        if let Some(ref max_length) = (*context).config
+            .value_config
+            .label_max_length
+            .setting {
+            if value.label.len() > *max_length as usize {
+                if (*context).report
+                    .value_checks
+                    .label_max_length.is_none() {
+                    (*context).report
+                        .value_checks
+                        .label_max_length = Some(vec!());
+                }
+
+                if let Some(ref mut val_vec_max_length) = (*context)
+                    .report
+                    .value_checks
+                    .label_max_length {
+                    val_vec_max_length.push(value.clone());
                 }
             }
         }
