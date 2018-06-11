@@ -333,7 +333,7 @@ mod tests {
             },
         };
 
-        let report = read_dta("test/mtcars.dta", &config).unwrap();
+        let report = ok!(read_dta("test/mtcars.dta", &config));
         assert_eq!(report.metadata.variable_count, 12);
         assert_eq!(report.metadata.raw_case_count, 32);
     }
@@ -351,7 +351,7 @@ mod tests {
             },
         };
 
-        let report = read_sav("test/mtcars.sav", &config).unwrap();
+        let report = ok!(read_sav("test/mtcars.sav", &config));
         assert_eq!(report.metadata.variable_count, 12);
         assert_eq!(report.metadata.raw_case_count, 32);
     }
@@ -369,7 +369,7 @@ mod tests {
             },
         };
 
-        let report = read_sas7bdat("test/mtcars.sas7bdat", &config).unwrap();
+        let report = ok!(read_sas7bdat("test/mtcars.sas7bdat", &config));
         assert_eq!(report.metadata.variable_count, 12);
         assert_eq!(report.metadata.raw_case_count, 32);
     }

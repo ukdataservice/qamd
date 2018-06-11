@@ -66,7 +66,7 @@ fn build_from_src() {
         log!("Directory {:?} already exists", lib_dir);
     } else {
         log!("Creating directory {:?}", lib_dir);
-        fs::create_dir(lib_dir.clone()).unwrap();
+        ok!(fs::create_dir(lib_dir.clone()));
     }
 
     let library_path = lib_dir.join(format!("lib{}.so", LIBRARY));
@@ -102,7 +102,7 @@ fn build_from_src() {
                 .arg("-c")
                 .arg("yes''|./configure")
         });
-        File::create(configure_hint_file).unwrap();
+        ok!(File::create(configure_hint_file));
     }
 
     // make install, this installs it to /usr/local/lib

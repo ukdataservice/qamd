@@ -7,15 +7,17 @@ extern crate serde_json;
 use qamd::read_sav;
 use qamd::config::Config;
 // use qamd::config::{ VariableConfig, ValueConfig, Setting, Level };
-//use qamd::report::Report;
+// use qamd::report::Report;
 
 use std::env;
 use std::process;
 
-//use std::io;
-//use std::error;
+// use std::io;
+// use std::error;
 use std::io::prelude::*;
 use std::fs::File;
+
+macro_rules! ok(($expression:expr) => ($expression.unwrap()));
 
 fn main() {
     if env::args().count() < 2 {
@@ -25,10 +27,10 @@ fn main() {
     }
 
     let (file_path, config_path) = match env::args().count() {
-        2 => (env::args().nth(1).unwrap(),
+        2 => (ok!(env::args().nth(1)),
               "config.toml".into()),
-        3 => (env::args().nth(1).unwrap(),
-              env::args().nth(2).unwrap()),
+        3 => (ok!(env::args().nth(1)),
+              ok!(env::args().nth(2))),
         _ => ("".into(),
               "".into())
     };
@@ -71,8 +73,8 @@ fn main() {
         Ok(config) => {
             //println!("Config: {:#?}", config);
 
-            let report = read_sav(&file_path, &config).unwrap();
-            let serialised = serde_json::to_string(&report).unwrap();
+            let report = ok!(read_sav(&file_path, &config));
+            let serialised = ok!(serde_json::to_string(&report));
 
             println!("{}", serialised);
         },
