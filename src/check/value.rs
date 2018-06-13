@@ -1,97 +1,73 @@
 
-use Context;
-use report::Value;
+use config::Config;
+use report::{Report, Value, Status};
 use report::missing::Missing;
-use check::ValueCheckFn;
-use check::common::contains;
 
-use std::os::raw::c_void;
+use check::{ValueCheckFn, contains};
 
 // Register the checks with the context object
 pub fn register() -> Vec<ValueCheckFn> {
     vec!(odd_characters,
          label_max_length,
-         defined_missing_no_label)
+         value_defined_missing_no_label)
 }
 
 // Value checks
 
 /// Check for odd characters in the value and value label.
-/// If a value is determined to contain any odd character(s), the value is pushed to the report.
-fn odd_characters(value: &Value, ctx: *mut c_void) {
-    unsafe {
-        let context = ctx as *mut Context;
+/// If a value is determined to contain any odd character(s),
+/// the number of fails (or warns) are incremented.
+fn odd_characters(value: &Value,
+                  config: &Config,
+                  report: &mut Report) {
+    include_check!(report.summary.value_odd_characters);
 
-        if let Some(ref config_odd_characters) = (*context).config
-            .value_config
-            .odd_characters
-            .setting {
-
-            if contains(&format!("{}", &value.value), config_odd_characters) ||
-                    contains(&value.label, config_odd_characters) {
-
-                if (*context).report
-                    .value_checks
-                    .odd_characters.is_none() {
-                        (*context).report
-                            .value_checks
-                            .odd_characters = Some(vec!());
-                }
-
-                if let Some(ref mut odd_characters_vec) = (*context)
-                    .report
-                    .value_checks
-                    .odd_characters {
-                            odd_characters_vec.push(value.clone());
-                }
+    if let Some(ref setting) = config.value_config.odd_characters {
+        if let Some(ref mut status) = report.summary.value_odd_characters {
+            if contains(&format!("{}", &value.value), &setting.setting) ||
+                contains(&value.label, &setting.setting) {
+                status.fail += 1;
+            } else {
+                status.pass += 1;
             }
         }
     }
 }
 
-fn label_max_length(value: &Value, ctx: *mut c_void) {
-    unsafe {
-        let context = ctx as *mut Context;
+fn label_max_length(value: &Value,
+                    config: &Config,
+                    report: &mut Report) {
+    include_check!(report.summary.value_label_max_length);
 
-        if let Some(ref max_length) = (*context).config
+    if let Some(ref setting) = config
             .value_config
-            .label_max_length
-            .setting {
-            if value.label.len() > *max_length as usize {
-                if (*context).report
-                    .value_checks
-                    .label_max_length.is_none() {
-                    (*context).report
-                        .value_checks
-                        .label_max_length = Some(vec!());
-                }
-
-                if let Some(ref mut val_vec_max_length) = (*context)
-                    .report
-                    .value_checks
-                    .label_max_length {
-                    val_vec_max_length.push(value.clone());
-                }
+            .label_max_length {
+        if let Some(ref mut status) = report.summary.value_label_max_length {
+            if value.label.len() > setting.setting as usize {
+                status.fail += 1;
+            } else {
+                status.pass += 1;
             }
         }
     }
 }
 
 /// Check for defined missing values that do not have a label
-fn defined_missing_no_label(value: &Value, ctx: *mut c_void) {
-    unsafe {
-        let context = ctx as *mut Context;
+fn value_defined_missing_no_label(value: &Value,
+                            config: &Config,
+                            report: &mut Report) {
+    include_check!(report.summary.value_defined_missing_no_label);
 
-        if value.missing == Missing::DEFINED_MISSING && value.label == "" {
-            if (*context).report.value_checks.defined_missing_no_label.is_none() {
-                (*context).report.value_checks.defined_missing_no_label = Some(vec!())
-            }
-
-            if let Some(ref mut defined_missing_no_label) = (*context)
-                .report
-                .value_checks
-                .defined_missing_no_label {
-                    defined_missing_no_label.push(value.clone());
+    if let Some(ref setting) = config
+            .value_config
+            .defined_missing_no_label {
+        if let Some(ref mut status) = report.summary.value_defined_missing_no_label {
+            if setting.setting &&
+                value.missing == Missing::DEFINED_MISSING &&
+                    value.label == "" {
+                status.fail += 1;
+            } else {
+                status.pass += 1;
             }
         }
     }

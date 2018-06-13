@@ -1,16 +1,22 @@
 
+#[macro_use]
+mod macros;
 pub mod variable;
 pub mod value;
-pub mod common;
 
-use report::{Variable, Value};
+use config::Config;
+use report::{Report, Variable, Value};
 
-use std::os::raw::c_void;
 use std::fmt;
 
-pub type VariableCheckFn = fn(variable: &Variable, ctx: *mut c_void);
-pub type ValueCheckFn = fn(value: &Value, ctx: *mut c_void);
+type CheckFn<T> = fn(value: &T,
+                     config: &Config,
+                     report: &mut Report);
 
+pub type VariableCheckFn = CheckFn<Variable>;
+pub type ValueCheckFn = CheckFn<Value>;
+
+// Holds lists of checks to be run
 pub struct Check {
     pub variable: Vec<VariableCheckFn>,
     pub value: Vec<ValueCheckFn>,
@@ -27,8 +33,16 @@ impl Check {
 
 impl fmt::Debug for Check {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{{ variable: {}, value: {} }}", self.variable.len(), self.value.len())
+        write!(f,
+               "{{ variable: {}, value: {} }}",
+               self.variable.len(),
+               self.value.len())
     }
 }
 
+pub fn contains(string: &str, patterns: &Vec<String>) -> bool {
+    patterns.iter()
+        .map(|p| string.contains(p))
+        .fold(false, |a, b| a || b)
+}
 

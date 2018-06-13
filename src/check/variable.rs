@@ -1,101 +1,72 @@
 
-use Context;
-use report::Variable;
-use check::VariableCheckFn;
-use check::common::contains;
+use config::Config;
+use report::{ Report, Status, Variable };
+use check::{ contains, VariableCheckFn };
 
-use std::os::raw::c_void;
-
-// Register the checks with the context object
+// Register the checks
 pub fn register() -> Vec<VariableCheckFn> {
-    vec!(check_label,
-         check_label_length,
-         check_odd_characters)
+    vec!(variable_missing_label,
+         variable_label_max_length,
+         variable_odd_characters)
 }
 
 /// Variable checks
 
-fn check_label(variable: &Variable, ctx: *mut c_void) {
-    unsafe {
-        let context = ctx as *mut Context;
+fn variable_missing_label(variable: &Variable,
+                          config: &Config,
+                          report: &mut Report) {
+    include_check!(report.summary.variable_label_missing);
 
-        if let Some(ref config_missing_variable_labels) = (*context)
-            .config
+    if let Some(ref setting) = config
             .variable_config
-            .missing_variable_labels
-            .setting {
+            .missing_variable_labels {
+        if setting.setting {
+            if let Some(ref mut status) = report
+                .summary
+                .variable_label_missing {
 
-                if *config_missing_variable_labels {
-                    if variable.label == "" {
-                        if (*context).report.variable_checks.missing_variable_labels.is_none() {
-                            (*context).report.variable_checks.missing_variable_labels = Some(vec!());
-                        }
-
-                        if let Some(ref mut vars_missing_labels) = (*context).report
-                            .variable_checks
-                            .missing_variable_labels {
-                                vars_missing_labels.push(variable.clone());
-                            }
-                    }
-                }
-        }
-    }
-}
-
-fn check_label_length(variable: &Variable, ctx: *mut c_void) {
-    unsafe {
-        let context = ctx as *mut Context;
-
-        if let Some(ref label_max_length) = (*context)
-            .config
-            .variable_config
-            .label_max_length
-            .setting {
-
-            if variable.label.len() > (*label_max_length) as usize {
-                if (*context).report.variable_checks.label_max_length.is_none() {
-                    (*context).report.variable_checks.label_max_length = Some(vec!());
-                }
-
-                if let Some(ref mut vars_label_max_length) = (*context)
-                    .report
-                    .variable_checks
-                    .label_max_length {
-
-                    vars_label_max_length.push(variable.clone());
+                if variable.label == "" {
+                    status.fail += 1;
+                } else {
+                    status.pass += 1;
                 }
             }
         }
     }
 }
 
-fn check_odd_characters(variable: &Variable, ctx: *mut c_void) {
-    unsafe {
-        let context = ctx as *mut Context;
+fn variable_label_max_length(variable: &Variable,
+                             config: &Config,
+                             report: &mut Report) {
+    include_check!(report.summary.variable_label_max_length);
 
-        if let Some(ref config_odd_characters) = (*context).config
-            .variable_config
-            .odd_characters
-            .setting {
-            if contains(&variable.name, config_odd_characters) ||
-                contains(&variable.label, config_odd_characters) {
-
-                if (*context).report.variable_checks.odd_characters.is_none() {
-                    (*context).report
-                        .variable_checks
-                        .odd_characters = Some(vec!());
-                }
-
-                if let Some(ref mut odd_characters_vec) = (*context)
-                        .report
-                        .variable_checks
-                        .odd_characters {
-                    odd_characters_vec.push(variable.clone());
-                }
+    if let Some(ref setting) = config.variable_config.label_max_length {
+        if let Some(ref mut status) = report.summary.variable_label_max_length {
+            if variable.label.len() > setting.setting as usize {
+                status.fail += 1;
+            } else {
+                status.pass += 1;
             }
         }
     }
 }
 
+fn variable_odd_characters(variable: &Variable,
+                  config: &Config,
+                  report: &mut Report) {
+    include_check!(report.summary.variable_odd_characters);
 
+    if let Some(ref setting) = config.variable_config.odd_characters {
+        if let Some(ref mut status) = report
+            .summary
+            .variable_odd_characters {
+            if contains(&variable.name, &setting.setting) ||
+                contains(&variable.label, &setting.setting) {
+                status.fail += 1;
+            } else {
+                status.pass += 1;
+            }
+        }
+    }
+}
 

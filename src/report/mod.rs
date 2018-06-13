@@ -10,16 +10,18 @@ use self::missing::Missing;
 #[derive(Serialize, Debug, Clone)]
 pub struct Report {
     pub metadata: Metadata,
-    pub variable_checks: VariableChecks,
-    pub value_checks: ValueChecks,
+    pub summary: Summary,
+    // pub variable_checks: VariableChecks,
+    // pub value_checks: ValueChecks,
 }
 
 impl Report {
     pub fn new() -> Report {
         Report {
             metadata: Metadata::new(),
-            variable_checks: VariableChecks::new(),
-            value_checks: ValueChecks::new(),
+            summary: Summary::new(),
+            // variable_checks: VariableChecks::new(),
+            // value_checks: ValueChecks::new(),
         }
     }
 }
@@ -51,6 +53,47 @@ impl Metadata {
     }
 }
 
+#[derive(Serialize, Debug, Clone)]
+pub struct Summary {
+    pub variable_label_missing: Option<Status>,
+    pub variable_label_max_length: Option<Status>,
+    pub variable_odd_characters: Option<Status>,
+
+    pub value_label_max_length: Option<Status>,
+    pub value_odd_characters: Option<Status>,
+    pub value_defined_missing_no_label: Option<Status>,
+}
+
+impl Summary {
+    pub fn new() -> Summary {
+        Summary {
+            variable_label_missing: None,
+            variable_label_max_length: None,
+            variable_odd_characters: None,
+
+            value_label_max_length: None,
+            value_odd_characters: None,
+            value_defined_missing_no_label: None,
+        }
+    }
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub struct Status {
+    pub pass: i32,
+    //pub warn: i32,
+    pub fail: i32,
+}
+
+impl Status {
+    pub fn new() -> Status {
+        Status {
+            pass: 0,
+            //warn: 0,
+            fail: 0,
+        }
+    }
+}
 
 #[derive(Serialize, Debug, Clone)]
 pub struct VariableChecks {

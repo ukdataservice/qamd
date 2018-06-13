@@ -186,7 +186,9 @@ unsafe extern "C" fn variable_handler(index: c_int,
     (*context).variables.push(var.clone());
 
     for check in (*context).checks.variable.iter() {
-        check(&var, ctx);
+        check(&var,
+              &(*context).config,
+              &mut (*context).report);
     }
 
     return READSTAT_HANDLER_OK as c_int;
@@ -235,7 +237,9 @@ unsafe extern "C" fn value_handler(obs_index: c_int,
     };
 
     for check in (*context).checks.value.iter() {
-        check(&value, ctx)
+        check(&value,
+              &(*context).config,
+              &mut (*context).report);
     }
 
     // let var_name = ptr_to_str!(readstat_variable_get_name(variable));
