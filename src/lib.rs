@@ -30,7 +30,7 @@ mod check;
 use self::config::Config;
 
 use self::report::Report;
-use self::report::{Variable, Value};
+use self::report::{ Variable, Value };
 use self::report::anyvalue::AnyValue;
 use self::report::missing::Missing;
 
@@ -40,8 +40,8 @@ use self::bindings::*;
 
 use std::collections::HashMap;
 
-use std::os::raw::{c_int, c_void, c_char};
-use std::ffi::{CString, CStr};
+use std::os::raw::{ c_int, c_void, c_char };
+use std::ffi::{ CString, CStr };
 use std::io;
 
 use std::clone::Clone;
@@ -55,24 +55,40 @@ struct Context {
     variables: Vec<Variable>,
 }
 
+/// Fuzzy reader, determines file type by the extention
+pub fn read(path: &str, config: &Config) -> Result<Report, io::Error> {
+    return match (path.ends_with(".dta"),
+                  path.ends_with(".sav"),
+                  path.ends_with(".por"),
+                  path.ends_with(".sas7bdat")) {
+        (true, _, _, _) => read_dta(path, config),
+        (_, true, _, _) => read_sav(path, config),
+        (_, _, true, _) => read_por(path, config),
+        (_, _, _, true) => read_sas7bdat(path, config),
+        _ => Err(io::Error::new(io::ErrorKind::Other,
+                                format!("Failed to determine file type of: {}",
+                                    path))),
+    };
+}
+
 /// Read Stata
 pub fn read_dta(path: &str, config: &Config) -> Result<Report, io::Error> {
     return unsafe {
-        read(path, config, readstat_parse_dta)
+        _read(path, config, readstat_parse_dta)
     };
 }
 
 /// Read SPSS
 pub fn read_sav(path: &str, config: &Config) -> Result<Report, io::Error> {
     return unsafe {
-        read(path, config, readstat_parse_sav)
+        _read(path, config, readstat_parse_sav)
     };
 }
 
 /// Read SPSS (older format)
 pub fn read_por(path: &str, config: &Config) -> Result<Report, io::Error> {
     return unsafe {
-        read(path, config, readstat_parse_por)
+        _read(path, config, readstat_parse_por)
     };
 }
 
@@ -81,7 +97,7 @@ pub fn read_sas7bdat(path: &str, config: &Config)
     -> Result<Report, io::Error> {
 
     return unsafe {
-        read(path, config, readstat_parse_sas7bdat)
+        _read(path, config, readstat_parse_sas7bdat)
     };
 }
 
@@ -92,8 +108,9 @@ type ParseFn =
                          user_ctx: *mut c_void) -> readstat_error_t;
 
 /// Read the file using a given ParseFn
-unsafe fn read(path: &str, config: &Config, file_parser: ParseFn)
-               -> Result<Report, io::Error> {
+unsafe fn _read(path: &str,
+                config: &Config,
+                file_parser: ParseFn) -> Result<Report, io::Error> {
 
     let context: *mut Context = Box::into_raw(Box::new(Context {
         config: (*config).clone(),

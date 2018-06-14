@@ -4,7 +4,7 @@ extern crate toml;
 extern crate serde;
 extern crate serde_json;
 
-use qamd::read_sav;
+use qamd::read;
 use qamd::config::Config;
 // use qamd::config::{ VariableConfig, ValueConfig, Setting, Level };
 // use qamd::report::Report;
@@ -73,7 +73,7 @@ fn main() {
         Ok(config) => {
             //println!("Config: {:#?}", config);
 
-            let report = ok!(read_sav(&file_path, &config));
+            let report = ok!(read(&file_path, &config));
             let serialised = ok!(serde_json::to_string(&report));
 
             println!("{}", serialised);
