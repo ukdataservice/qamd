@@ -3,7 +3,9 @@
 mod macros;
 pub mod variable;
 pub mod value;
+pub mod post;
 
+use Context;
 use config::Config;
 use report::{Report, Variable, Value};
 
@@ -15,11 +17,13 @@ type CheckFn<T> = fn(value: &T,
 
 pub type VariableCheckFn = CheckFn<Variable>;
 pub type ValueCheckFn = CheckFn<Value>;
+pub type PostCheckFn = CheckFn<Context>;
 
-// Holds lists of checks to be run
+/// Holds lists of checks to be run
 pub struct Check {
     pub variable: Vec<VariableCheckFn>,
     pub value: Vec<ValueCheckFn>,
+    pub post: Vec<PostCheckFn>,
 }
 
 impl Check {
@@ -27,6 +31,7 @@ impl Check {
         Check {
             variable: variable::register(),
             value: value::register(),
+            post: post::register(),
         }
     }
 }

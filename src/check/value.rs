@@ -53,10 +53,11 @@ fn label_max_length(value: &Value,
     }
 }
 
+
 /// Check for defined missing values that do not have a label
 fn value_defined_missing_no_label(value: &Value,
-                            config: &Config,
-                            report: &mut Report) {
+                                  config: &Config,
+                                  report: &mut Report) {
     if let Some(ref setting) = config
             .value_config
             .defined_missing_no_label {

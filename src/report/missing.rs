@@ -4,7 +4,7 @@
 use std::fmt::{Display, Formatter, Result};
 
 /// Missing, represent the missingness of a variable
-#[derive(Serialize, PartialEq, Eq, Debug, Clone)]
+#[derive(Serialize, Hash, PartialEq, Eq, Debug, Clone)]
 pub enum Missing {
     NOT_MISSING,
     SYSTEM_MISSING,

@@ -47,12 +47,13 @@ use std::io;
 use std::clone::Clone;
 
 #[derive(Debug)]
-struct Context {
+pub struct Context {
     config: Config,
     report: Report,
     checks: Check,
-    value_labels: HashMap<String, HashMap<String, String>>,
-    variables: Vec<Variable>,
+    pub variables: Vec<Variable>,
+    pub value_labels: HashMap<String, HashMap<String, String>>,
+    pub frequency_table: HashMap<Variable, HashMap<Value, i32>>,
 }
 
 /// Fuzzy reader, determines file type by the extention
@@ -116,6 +117,7 @@ unsafe fn _read(path: &str,
         config: (*config).clone(),
         report: Report::new(),
         checks: Check::new(),
+        frequency_table: HashMap::new(),
         value_labels: HashMap::new(),
         variables: vec!(),
     }));
@@ -131,6 +133,12 @@ unsafe fn _read(path: &str,
     let error = file_parser(parser, path_to_file, context as *mut c_void);
 
     readstat_parser_free(parser);
+
+    for check in &(*context).checks.post {
+        check(&(*context),
+              &(*context).config,
+              &mut (*context).report);
+    }
 
     if error != readstat_error_t::READSTAT_OK {
         Err(handle_error(error))
@@ -253,37 +261,31 @@ unsafe extern "C" fn value_handler(obs_index: c_int,
         missing: missing,
     };
 
+    if let Some(variable) = (*context).variables.iter().nth(var_index as usize) { // get the variable
+        if let Some(ref mut value_occurence_map) = (*context).frequency_table.get_mut(variable) { // check it has been pushed
+            if let Some(occurrence) = value_occurence_map.get_mut(&value) {
+                (*occurrence) += 1; // already exists
+            } else {
+                // variable exists, first encounter with this value
+                match (*context).frequency_table.get_mut(variable) {
+                    Some(val_occ_map) => val_occ_map.insert(value.clone(), 1),
+                    None => None,
+                };
+            }
+        } else {
+            // no variable found, first encounter with this variable and value
+            let mut map: HashMap<Value, i32> = HashMap::new();
+
+            map.insert(value.clone(), 1);
+            (*context).frequency_table.insert(variable.clone(), map);
+        }
+    }
+
     for check in (*context).checks.value.iter() {
         check(&value,
               &(*context).config,
               &mut (*context).report);
     }
-
-    // let var_name = ptr_to_str!(readstat_variable_get_name(variable));
-    // let key = (*context).values
-    //     .keys()
-    //     .find(|&k| {k.name == var_name})
-    //     .unwrap();
-
-    // let value_as_any_value: AnyValue = AnyValue::from(value);
-
-    // // if !(*context).values.contains_key(&key) {
-    // //     println!("Warn: Key missing: {:?}", key);
-    // // }
-
-    // let new_value = Value::new(value_as_any_value, missing);
-
-    // let value_vec = (*context).values.get_mut(&key).unwrap();
-    // value_vec.push(new_value.clone());
-
-    // let frequency_table_map = (*context).frequency_table.get_mut(&key).unwrap();
-
-    // if frequency_table_map.contains_key(&new_value) {
-    //     let count = frequency_table_map.get_mut(&new_value).unwrap();
-    //     (*count) += 1;
-    // } else {
-    //     frequency_table_map.insert(new_value, 1);
-    // }
 
     return READSTAT_HANDLER_OK as c_int;
 }
@@ -341,9 +343,8 @@ mod tests {
     use std::error::Error;
     use self::config::{VariableConfig, ValueConfig};
 
-    #[test]
-    fn test_read_dta() {
-        let config = Config {
+    fn setup() -> Config {
+        Config {
             variable_config: VariableConfig {
                 odd_characters: None,
                 missing_variable_labels: false,
@@ -353,6 +354,11 @@ mod tests {
                 system_missing_value_threshold: None,
             },
         };
+    }
+
+    #[test]
+    fn test_read_dta() {
+        let config = setup();
 
         let report = ok!(read_dta("test/mtcars.dta", &config));
         assert_eq!(report.metadata.variable_count, 12);
@@ -361,16 +367,7 @@ mod tests {
 
     #[test]
     fn test_read_sav() {
-        let config = Config {
-            variable_config: VariableConfig {
-                odd_characters: None,
-                missing_variable_labels: false,
-            },
-            value_config: ValueConfig {
-                odd_characters: None,
-                system_missing_value_threshold: None,
-            },
-        };
+        let config = setup();
 
         let report = ok!(read_sav("test/mtcars.sav", &config));
         assert_eq!(report.metadata.variable_count, 12);
@@ -378,17 +375,8 @@ mod tests {
     }
 
     #[test]
-    fn test_tead_sas7bdat() {
-        let config = Config {
-            variable_config: VariableConfig {
-                odd_characters: None,
-                missing_variable_labels: false,
-            },
-            value_config: ValueConfig {
-                odd_characters: None,
-                system_missing_value_threshold: None,
-            },
-        };
+    fn test_read_sas7bdat() {
+        let config = setup();
 
         let report = ok!(read_sas7bdat("test/mtcars.sas7bdat", &config));
         assert_eq!(report.metadata.variable_count, 12);
@@ -396,24 +384,14 @@ mod tests {
     }
 
     #[test]
-    fn test_read_err() {
-        let config = Config {
-            variable_config: VariableConfig {
-                odd_characters: None,
-                missing_variable_labels: false,
-            },
-            value_config: ValueConfig {
-                odd_characters: None,
-                system_missing_value_threshold: None,
-            },
-        };
+    fn reader_should_error_on_enoent() {
+        let config = setup();
 
         let err = match read_dta("", &config) {
-            Ok(_) => "failed".to_string(),
+            Ok(_) => "this should never be run".to_string(),
             Err(e) => e.description().to_string()
         };
 
-        println!("{:?}", err);
         assert_eq!(err, "Unable to open file");
     }
 }

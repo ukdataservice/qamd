@@ -2,6 +2,8 @@
 pub mod anyvalue;
 pub mod missing;
 
+use std::hash::{ Hash, Hasher };
+
 use self::anyvalue::AnyValue;
 use self::missing::Missing;
 
@@ -31,8 +33,10 @@ pub struct Metadata {
     pub raw_case_count: i32,
     pub case_count: Option<i32>,
     pub variable_count: i32,
+
     pub creation_time: i64,
     pub modified_time: i64,
+
     pub file_label: String,
     pub file_format_version: i64,
     pub file_encoding: Option<String>,
@@ -55,13 +59,17 @@ impl Metadata {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct Summary {
+    // counting variables that failed
     pub variable_label_missing: Option<Status>,
     pub variable_label_max_length: Option<Status>,
     pub variable_odd_characters: Option<Status>,
 
+    // counting values that failed
     pub value_label_max_length: Option<Status>,
     pub value_odd_characters: Option<Status>,
     pub value_defined_missing_no_label: Option<Status>,
+
+    pub system_missing_over_threshold: Option<Status>, // number of variables
 }
 
 impl Summary {
@@ -74,6 +82,8 @@ impl Summary {
             value_label_max_length: None,
             value_odd_characters: None,
             value_defined_missing_no_label: None,
+
+            system_missing_over_threshold: None,
         }
     }
 }
@@ -129,7 +139,7 @@ impl ValueChecks {
     }
 }
 
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Variable {
     pub index: i32,
     pub name: String,
@@ -145,4 +155,18 @@ pub struct Value {
     pub label: String,
     pub missing: Missing,
 }
+
+impl Hash for Value {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.value.hash(state);
+    }
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Value) -> bool {
+        self.value.eq(&other.value)
+    }
+}
+
+impl Eq for Value {}
 

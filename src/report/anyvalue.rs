@@ -1,7 +1,11 @@
 
 use std::borrow::Cow;
 
-use std::fmt::{Display, Formatter, Result};
+use std::collections::hash_map::DefaultHasher;
+
+use std::cmp::{ PartialEq, Eq };
+use std::fmt::{ Display, Formatter, Result };
+use std::hash::{ Hash, Hasher };
 
 use std::ffi::CStr;
 use bindings::*;
@@ -66,6 +70,27 @@ impl From<readstat_value_t> for AnyValue {
             }
         }
     }
+}
+
+/// Hash trait allows for use a key in a HashMap
+impl Hash for AnyValue {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        format!("{}", (*self)).hash(state);
+    }
+}
+
+impl PartialEq for AnyValue {
+    fn eq(&self, other: &AnyValue) -> bool {
+        calculate_hash(self) == calculate_hash(other)
+    }
+}
+
+impl Eq for AnyValue {}
+
+pub fn calculate_hash<T: Hash>(t: &T) -> u64 {
+    let mut s = DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
 }
 
 #[cfg(test)]
