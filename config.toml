@@ -1,3 +1,4 @@
+primary_variable = { setting = "hselec", level = "Fail", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
 
 [variable_config]
 odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn", file_types = ["SAV", "DTA"] }

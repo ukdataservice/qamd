@@ -7,7 +7,8 @@ use check::PostCheckFn;
 
 /// Returns a vec of the functions provided by this module
 pub fn register() -> Vec<PostCheckFn> {
-    vec!(system_missing_over_threshold)
+    vec!(system_missing_over_threshold,
+         primary_variable)
 }
 
 /// Report variables with a number of system missing values over a
@@ -17,7 +18,6 @@ fn system_missing_over_threshold(context: &Context,
                                  report: &mut Report) {
 
     //println!("frequency_table: {:#?}", context.frequency_table);
-
 
     if let Some(ref setting) = config
             .value_config
@@ -55,6 +55,26 @@ fn system_missing_over_threshold(context: &Context,
 
             status.pass = report.metadata.variable_count - status.fail;
 
+        }
+    }
+}
+
+/// Count the number of cases using the provided primary variable_count
+fn primary_variable(context: &Context,
+                    config: &Config,
+                    report: &mut Report) {
+    if let Some(ref primary_variable) = config.primary_variable {
+        if report.metadata.case_count.is_none() {
+            report.metadata.case_count = Some(0);
+        }
+
+        if let Some((_variable, map))= context.frequency_table.iter().find(|(variable, _)| {
+            variable.name == primary_variable.setting
+        }) {
+            // report count of distinct cases for this variable
+            report.metadata.case_count = Some(map
+                .keys()
+                .len() as i32);
         }
     }
 }
