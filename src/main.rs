@@ -5,7 +5,7 @@ extern crate serde;
 extern crate serde_json;
 
 use qamd::read;
-use qamd::config::Config;
+use qamd::config::{ Config, Valid };
 // use qamd::config::{ VariableConfig, ValueConfig, Setting, Level };
 // use qamd::report::Report;
 
@@ -90,8 +90,14 @@ fn parse_config(path: &str) -> Result<Config, String> {
     f.read_to_string(&mut buffer)
         .expect(&format!("Failed to read data from file: {}", path));
 
-    match toml::from_str(&buffer) {
-        Ok(config) => Ok(config),
+    match toml::from_str::<Config>(&buffer) {
+        Ok(config) => {
+            let valid = config.validate();
+            match valid {
+                Ok(()) => Ok(config),
+                Err(err) => Err(format!("Invalid config: {}", err)),
+            }
+        },
         Err(err)   => Err(format!("Failed to parse toml: {}", err)),
     }
 }
