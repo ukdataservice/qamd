@@ -20,9 +20,9 @@ pub fn register() -> Vec<ValueCheckFn> {
 fn odd_characters(value: &Value,
                   config: &Config,
                   report: &mut Report) {
-    include_check!(report.summary.value_odd_characters);
-
     if let Some(ref setting) = config.value_config.odd_characters {
+        include_check!(report.summary.value_odd_characters);
+
         if let Some(ref mut status) = report.summary.value_odd_characters {
             if contains(&format!("{}", &value.value), &setting.setting) ||
                 contains(&value.label, &setting.setting) {
@@ -34,14 +34,15 @@ fn odd_characters(value: &Value,
     }
 }
 
+/// Check for values over a specified max length
 fn label_max_length(value: &Value,
                     config: &Config,
                     report: &mut Report) {
-    include_check!(report.summary.value_label_max_length);
-
     if let Some(ref setting) = config
             .value_config
             .label_max_length {
+        include_check!(report.summary.value_label_max_length);
+
         if let Some(ref mut status) = report.summary.value_label_max_length {
             if value.label.len() > setting.setting as usize {
                 status.fail += 1;
@@ -56,11 +57,11 @@ fn label_max_length(value: &Value,
 fn value_defined_missing_no_label(value: &Value,
                             config: &Config,
                             report: &mut Report) {
-    include_check!(report.summary.value_defined_missing_no_label);
-
     if let Some(ref setting) = config
             .value_config
             .defined_missing_no_label {
+        include_check!(report.summary.value_defined_missing_no_label);
+
         if let Some(ref mut status) = report.summary.value_defined_missing_no_label {
             if setting.setting &&
                 value.missing == Missing::DEFINED_MISSING &&
