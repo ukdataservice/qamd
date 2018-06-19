@@ -69,7 +69,9 @@ pub struct Summary {
     pub value_odd_characters: Option<Status>,
     pub value_defined_missing_no_label: Option<Status>,
 
+    // post checks
     pub system_missing_over_threshold: Option<Status>, // number of variables
+    pub disclosive_outliers: Option<Status>, // number of variables
 }
 
 impl Summary {
@@ -84,6 +86,7 @@ impl Summary {
             value_defined_missing_no_label: None,
 
             system_missing_over_threshold: None,
+            disclosive_outliers: None,
         }
     }
 }

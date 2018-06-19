@@ -28,6 +28,8 @@ pub struct Setting<T> {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
     pub primary_variable: Option<Setting<String>>,
+    pub disclosive_outliers: Option<Setting<i32>>,
+
     pub variable_config: VariableConfig,
     pub value_config: ValueConfig,
 }

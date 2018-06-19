@@ -8,7 +8,8 @@ use check::PostCheckFn;
 /// Returns a vec of the functions provided by this module
 pub fn register() -> Vec<PostCheckFn> {
     vec!(system_missing_over_threshold,
-         primary_variable)
+         primary_variable,
+         disclosive_outliers)
 }
 
 /// Report variables with a number of system missing values over a
@@ -68,13 +69,35 @@ fn primary_variable(context: &Context,
             report.metadata.case_count = Some(0);
         }
 
-        if let Some((_variable, map))= context.frequency_table.iter().find(|(variable, _)| {
+        if let Some((_variable, map)) = context.frequency_table.iter().find(|(variable, _)| {
             variable.name == primary_variable.setting
         }) {
             // report count of distinct cases for this variable
             report.metadata.case_count = Some(map
                 .keys()
                 .len() as i32);
+        }
+    }
+}
+
+/// Count the number of variables with disclosive outliers
+/// Dectects outliers if they are unique values with only one occurrence
+fn disclosive_outliers(context: &Context,
+                       config: &Config,
+                       report: &mut Report) {
+    if let Some(ref setting) = config.disclosive_outliers {
+        include_check!(report.summary.disclosive_outliers);
+
+        if let Some(ref mut status) = report.summary.disclosive_outliers {
+            for (_variable, map) in context.frequency_table.iter() {
+                if let Some(_) = map.iter().find(|(_value, occ)| {
+                    *occ <= &setting.setting
+                }) {
+                    status.fail += 1;
+                } else {
+                    status.pass += 1
+                }
+            }
         }
     }
 }

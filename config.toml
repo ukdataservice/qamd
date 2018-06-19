@@ -1,4 +1,5 @@
 # primary_variable = { setting = "id", level = "Fail", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
+# disclosive_outliers = { setting = 1, level = "Fail", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
 
 [variable_config]
 odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn", file_types = ["SAV", "DTA"] }
