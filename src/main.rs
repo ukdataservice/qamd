@@ -1,9 +1,9 @@
 
 extern crate qamd;
 extern crate clap;
-extern crate toml;
 extern crate serde;
 extern crate serde_json;
+extern crate toml;
 
 use qamd::read;
 use qamd::config::{ Config, Valid };
@@ -15,9 +15,8 @@ use std::fs::File;
 
 use clap::{ Arg, App };
 
-macro_rules! ok(($expression:expr) => ($expression.unwrap()));
-
-
+macro_rules! ok(($expression:expr) =>
+                ($expression.unwrap()));
 
 fn main() {
     let matches = App::new("QA My Data")
@@ -53,7 +52,7 @@ fn main() {
         .value_of("config")
         .unwrap_or("config.toml");
 
-    let include_locators = match matches.occurrences_of("locators") {
+    let _include_locators = match matches.occurrences_of("locators") {
         0 => false,
         1 => true,
         _ => true,
