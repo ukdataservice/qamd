@@ -14,9 +14,10 @@
 
 #[macro_use]
 extern crate serde_derive;
-
 extern crate serde;
 // extern crate serde_json;
+
+extern crate pbr;
 
 #[macro_use]
 pub mod macros;
@@ -40,17 +41,19 @@ use self::bindings::*;
 
 use std::collections::HashMap;
 
-use std::os::raw::{ c_int, c_void, c_char };
+use std::os::raw::{ c_void, c_char, c_int, c_double };
 use std::ffi::{ CString, CStr };
 use std::io;
 
 use std::clone::Clone;
 
-#[derive(Debug)]
+use pbr::ProgressBar;
+
 pub struct Context {
     config: Config,
     report: Report,
     checks: Check,
+    pb: Option<ProgressBar<io::Stdout>>,
     pub variables: Vec<Variable>,
     pub value_labels: HashMap<String, HashMap<String, String>>,
     pub frequency_table: HashMap<Variable, HashMap<Value, i32>>,
@@ -117,10 +120,18 @@ unsafe fn _read(path: &str,
         config: (*config).clone(),
         report: Report::new(),
         checks: Check::new(),
+        pb: None,
         frequency_table: HashMap::new(),
         value_labels: HashMap::new(),
         variables: vec!(),
     }));
+
+    // init the progress bar here
+    // if interactive mode is set
+    (*context).pb = Some(ProgressBar::new(100));
+    if let Some(ref mut pb) = (*context).pb {
+        pb.format("[=>]");
+    }
 
     let parser: *mut readstat_parser_t = readstat_parser_init();
 
@@ -128,11 +139,16 @@ unsafe fn _read(path: &str,
     readstat_set_variable_handler(parser, Some(variable_handler));
     readstat_set_value_handler(parser, Some(value_handler));
     readstat_set_value_label_handler(parser, Some(value_label_handler));
+    readstat_set_progress_handler(parser, Some(progress_handler));
 
     let path_to_file = str_to_ptr!(path);
     let error = file_parser(parser, path_to_file, context as *mut c_void);
 
     readstat_parser_free(parser);
+
+    if let Some(ref mut pb) = (*context).pb {
+        pb.finish_print("");
+    }
 
     for check in &(*context).checks.post {
         check(&(*context),
@@ -261,6 +277,7 @@ unsafe extern "C" fn value_handler(obs_index: c_int,
         missing: missing,
     };
 
+    // build the frequency table as we collect the values
     if let Some(variable) = (*context).variables.iter().nth(var_index as usize) { // get the variable
         if let Some(ref mut value_occurence_map) = (*context).frequency_table.get_mut(variable) { // check it has been pushed
             if let Some(occurrence) = value_occurence_map.get_mut(&value) {
@@ -309,32 +326,19 @@ unsafe extern "C" fn value_label_handler(val_labels: *const c_char,
         (*map).insert(value_str, ptr_to_str!(label));
     }
 
-    // // hack to make the decimal point show up.
-    // if !value_str.contains(".") {
-    //     value_str += ".0";
-    // }
-
-    // let key = if val_labels != std::ptr::null() {
-    //     ptr_to_str!(val_labels)
-    // } else {
-    //     "".to_string()
-    // };
-
-    // if !(*context).value_label_dict.contains_key(&key) {
-    //     (*context).value_label_dict.insert(key.clone(), HashMap::new());
-    // }
-
-    // (*context).value_label_dict.get_mut(&key)
-    //     .unwrap()
-    //     .insert(value_str.clone(), ptr_to_str!(label));
-
-    // // if &key == "labels0" {
-    // //     println!("{}: {{ {}: {} }}", &key, value_str, ptr_to_str!(label));
-    // // }
-
     return READSTAT_HANDLER_OK as c_int;
 }
 
+unsafe extern "C" fn progress_handler(progress: c_double,
+                                      ctx: *mut c_void) -> c_int {
+    let context = ctx as *mut Context;
+
+    if let Some(ref mut pb) = (*context).pb {
+        pb.set((progress * 100.0) as u64);
+    }
+
+    return READSTAT_HANDLER_OK as c_int;
+}
 
 #[cfg(test)]
 mod tests {
