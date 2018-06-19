@@ -1,5 +1,6 @@
 
 extern crate qamd;
+extern crate clap;
 extern crate toml;
 extern crate serde;
 extern crate serde_json;
@@ -9,33 +10,57 @@ use qamd::config::{ Config, Valid };
 // use qamd::config::{ VariableConfig, ValueConfig, Setting, Level };
 // use qamd::report::Report;
 
-use std::env;
-use std::process;
-
-// use std::io;
-// use std::error;
 use std::io::prelude::*;
 use std::fs::File;
 
+use clap::{ Arg, App };
+
 macro_rules! ok(($expression:expr) => ($expression.unwrap()));
 
-fn main() {
-    if env::args().count() < 2 {
-        println!("usage:");
-        println!("\tqamd path/to/data/file.ext [path/to/config/file.toml]");
-        process::exit(1);
-    }
 
-    let (file_path, config_path) = match env::args().count() {
-        2 => (ok!(env::args().nth(1)),
-              "config.toml".into()),
-        3 => (ok!(env::args().nth(1)),
-              ok!(env::args().nth(2))),
-        _ => ("".into(),
-              "".into())
+
+fn main() {
+    let matches = App::new("QA My Data")
+                        .version("0.1.0")
+                        .author("Myles Offord")
+                        .about(format!("{} {} {}",
+                                       "Produces a summary report of common",
+                                       "issues to provide a higher standard of statistical data.",
+                                       "Currently supports SPSS, STATA, SAS and (soon™) CSV!").as_str())
+                        .arg(Arg::with_name("input")
+                             .help("Sets the input file to use.")
+                             .required(true)
+                             .index(1))
+                        .arg(Arg::with_name("config")
+                             .short("c")
+                             .long("config")
+                             .value_name("FILE")
+                             .help("Sets a custom config file")
+                             .takes_value(true))
+                        .arg(Arg::with_name("locators")
+                             .short("l")
+                             .long("include-locators")
+                             .help(format!("{} {} {}",
+                                           "If set the summary report includes",
+                                           "the index of the value(s) & or",
+                                           "variable(s) for any failed checks.").as_str()))
+                        .get_matches();
+
+    let file_path = matches
+        .value_of("input")
+        .unwrap();
+    let config_path = matches
+        .value_of("config")
+        .unwrap_or("config.toml");
+
+    let include_locators = match matches.occurrences_of("locators") {
+        0 => false,
+        1 => true,
+        _ => true,
     };
 
-    // println!("{}, {}", file_path, config_path);
+    // println!("file_path: {}\nconfig_path: {}\nlocators: {}", file_path, config_path, include_locators);
+
     /*
     let config = Config {
         variable_config: VariableConfig {
