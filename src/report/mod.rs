@@ -40,6 +40,8 @@ pub struct Metadata {
     pub file_label: String,
     pub file_format_version: i64,
     pub file_encoding: Option<String>,
+
+    pub compression: String,
 }
 
 impl Metadata {
@@ -53,6 +55,7 @@ impl Metadata {
             file_label: "".into(),
             file_format_version: 0,
             file_encoding: None,
+            compression: "".into(),
         }
     }
 }

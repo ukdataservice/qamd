@@ -185,6 +185,15 @@ unsafe extern "C" fn metadata_handler(metadata: *mut readstat_metadata_t,
     (*context).report.metadata.file_label = ptr_to_str!(readstat_get_file_label(metadata));
     (*context).report.metadata.file_format_version = readstat_get_file_format_version(metadata) as i64;
 
+    // compression
+    use readstat_compress_t::*;
+    (*context).report.metadata.compression =
+        match readstat_get_compression(metadata) {
+        READSTAT_COMPRESS_NONE => "None",
+        READSTAT_COMPRESS_ROWS => "Rows",
+        READSTAT_COMPRESS_BINARY => "Binary",
+    }.to_string();
+
     // dta has no file encoding
     if readstat_get_file_encoding(metadata) != std::ptr::null() {
         (*context).report.metadata.file_encoding = Some(ptr_to_str!(readstat_get_file_encoding(metadata)));
