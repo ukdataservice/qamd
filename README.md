@@ -89,7 +89,7 @@ See LICENCE.md for the full license.
 
 * WizardMac for the amazing [ReadStat] C library
 
-[1]: https://git-scm.com/ "Git"
-[2]: https://rust-lang.org/ "Rust"
-[3]: https://github.com/WizardMac/ReadStat "ReadStat"
+[Git]: https://git-scm.com/
+[Rust]: https://rust-lang.org/
+[ReadStat]: https://github.com/WizardMac/ReadStat
 
