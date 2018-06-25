@@ -88,8 +88,6 @@ See LICENCE.md for the full license.
 ## Acknowledgments
 
 * WizardMac for the amazing [ReadStat] C library
-* Inspiration
-* etc
 
 [1]: https://git-scm.com/ "Git"
 [2]: https://rust-lang.org/ "Rust"
