@@ -358,15 +358,25 @@ mod tests {
 
     fn setup() -> Config {
         Config {
+            primary_variable: None,
+            disclosive_outliers: None,
             variable_config: VariableConfig {
                 odd_characters: None,
-                missing_variable_labels: false,
+                missing_variable_labels: Some(config::Setting {
+                    setting: true,
+                    file_types: vec!(config::FileType::SAV,
+                                     config::FileType::DTA,
+                                     config::FileType::SAS7BDAT)
+                }),
+                label_max_length: None,
             },
             value_config: ValueConfig {
                 odd_characters: None,
                 system_missing_value_threshold: None,
+                defined_missing_no_label: None,
+                label_max_length: None,
             },
-        };
+        }
     }
 
     #[test]

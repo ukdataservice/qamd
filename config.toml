@@ -1,18 +1,17 @@
-# primary_variable = { setting = "id", level = "Fail", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
-# disclosive_outliers = { setting = 1, level = "Fail", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
+# primary_variable = { setting = "id", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
+# disclosive_outliers = { setting = 1, file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
 
 [variable_config]
-odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn", file_types = ["SAV", "DTA"] }
-missing_variable_labels = { setting = true, level = "Warn", file_types = ["SAV", "DTA"] }
-label_max_length = { setting = 79, level = "Fail", file_types = ["SAV", "DTA", "SAS7BDAT"] }
+odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], file_types = ["SAV", "DTA"] }
+missing_variable_labels = { setting = true, file_types = ["SAV", "DTA"] }
+label_max_length = { setting = 79, file_types = ["SAV", "DTA", "SAS7BDAT"] }
 
 [value_config]
-odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], level = "Warn", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
-label_max_length = { setting = 39, level = "Fail", file_types = ["SAV", "DTA"] }
-system_missing_value_threshold = { setting = 25, level = "Fail", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
+odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
+label_max_length = { setting = 39, file_types = ["SAV", "DTA"] }
+system_missing_value_threshold = { setting = 25, file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
 
 [value_config.defined_missing_no_label]
 setting = true
-level = "Fail"
 file_types = ["SAV", "DTA"]
 

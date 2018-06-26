@@ -3,12 +3,14 @@ pub trait Valid {
     fn validate(&self) -> Result<(), &'static str>;
 }
 
+/*
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Level {
     Pass,
     Warn,
     Fail,
 }
+*/
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum FileType {
@@ -21,7 +23,7 @@ pub enum FileType {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Setting<T> {
     pub setting: T,
-    pub level: Level,
+    // pub level: Level,
     pub file_types: Vec<FileType>,
 }
 
