@@ -17,15 +17,10 @@ The following things are required to build the software from source:
 - [Rust], toolchain including the rust compiler (`rustc`) & the `cargo` build system
 - [ReadStat], master branch, installed from source & `LD_LIBRARY_PATH` set correctly!
 
-#### Linux & MacOS
+#### Linux
 
-Before starting, I like to make a director `~/.src` to contain source files for
-building from.
-
-```
-mkdir ~/.src
-cd ~/.src
-```
+To install run the [`setup.sh`](./setup.sh) script. You may needed to
+run `chmod +x setup.sh`.
 
 First, install ReadStat. This is done by cloning the repository from github,
 and then a standard automake installation. This requires sudo/root
@@ -58,7 +53,20 @@ echo 'export PATH="$PATH:$HOME/.src/target/release"' | cat >> ~/.profile
 
 #### Windows
 
-Comming soon.
+First install the [linux subsystem for windows]. `qamd` currently
+requires Ubunut 16.04. Start it and you will be prompted to create
+a new user (this can be different or the same as your windows account).
+
+After this you will be presented with a bash prompt. Run the following.
+
+```
+
+```
+
+Open a Command prompt (Win+R, type `'cmd'` and press enter) and change
+to the directory you downloaded the install.bat. Run the
+`install.bat` and place `qamd.bat` somewhere and add it to your PATH
+environment variable. The install script can take some time.
 
 ## Running the tests
 
@@ -75,8 +83,6 @@ who participated in this project.
 
 ## License
 
-Licenced under the Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0).
-
 See LICENCE.md for the full license.
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">
@@ -92,4 +98,5 @@ See LICENCE.md for the full license.
 [Git]: https://git-scm.com/
 [Rust]: https://rust-lang.org/
 [ReadStat]: https://github.com/WizardMac/ReadStat
+[linux subsystem for windows]: https://docs.microsoft.com/en-us/windows/wsl/install-win10
 
