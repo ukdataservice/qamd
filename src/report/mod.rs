@@ -97,16 +97,31 @@ impl Summary {
 #[derive(Serialize, Debug, Clone)]
 pub struct Status {
     pub pass: i32,
-    //pub warn: i32,
     pub fail: i32,
+    pub locator: Option<Vec<Locator>>,
 }
 
 impl Status {
     pub fn new() -> Status {
         Status {
             pass: 0,
-            //warn: 0,
             fail: 0,
+            locator: None,
+        }
+    }
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub struct Locator {
+    pub variable_index: i32,
+    pub value_index: i32,
+}
+
+impl Locator {
+    pub fn new(variable_index: i32, value_index: i32) -> Locator {
+        Locator {
+            variable_index: variable_index,
+            value_index: value_index,
         }
     }
 }

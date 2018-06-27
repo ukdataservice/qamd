@@ -10,7 +10,9 @@ use qamd::config::{ Config, Valid };
 // use qamd::config::{ VariableConfig, ValueConfig, Setting, Level };
 // use qamd::report::Report;
 
+use std::io;
 use std::io::prelude::*;
+use std::io::BufWriter;
 use std::fs::File;
 
 use clap::{ Arg, App };
@@ -36,6 +38,12 @@ fn main() {
                              .value_name("FILE")
                              .help("Sets a custom config file")
                              .takes_value(true))
+                        .arg(Arg::with_name("output")
+                             .short("o")
+                             .long("output")
+                             .value_name("FILE")
+                             .help("Sets an optional output file.")
+                             .takes_value(true))
                         .arg(Arg::with_name("locators")
                              .short("l")
                              .long("include-locators")
@@ -43,6 +51,12 @@ fn main() {
                                            "If set the summary report includes",
                                            "the index of the value(s) & or",
                                            "variable(s) for any failed checks.").as_str()))
+                        .arg(Arg::with_name("disable-progress")
+                             .short("p")
+                             .long("disable-progress")
+                             .help(format!("{} {}",
+                                           "If set, disables the progress bar.",
+                                           "Useful if running inside scripts").as_str()))
                         .get_matches();
 
     let file_path = matches
@@ -51,56 +65,39 @@ fn main() {
     let config_path = matches
         .value_of("config")
         .unwrap_or("config.toml");
+    let output_path = matches.value_of("output");
 
-    let _include_locators = match matches.occurrences_of("locators") {
+    let include_locators = match matches.occurrences_of("locators") {
         0 => false,
-        1 => true,
         _ => true,
+    };
+
+    let progress = match matches.occurrences_of("disable-progress") {
+        0 => true,
+        _ => false,
     };
 
     // println!("file_path: {}\nconfig_path: {}\nlocators: {}", file_path, config_path, include_locators);
 
-    /*
-    let config = Config {
-        variable_config: VariableConfig {
-            odd_characters: Setting::<Option<Vec<String>>> {
-                setting: Some(vec!("!", "#", "  ", "@", "ë", "ç", "ô", "ü")
-                              .iter()
-                              .map(|x| x.to_string())
-                              .collect::<Vec<String>>()),
-                level: Level::Warn
-            },
-            missing_variable_labels: Setting::<bool> {
-                setting: true,
-                level: Level::Warn
-            },
-        },
-        value_config: ValueConfig {
-            odd_characters: Setting::<Option<Vec<String>>> {
-                setting: Some(vec!("!", "#", "  ", "@", "ë", "ç", "ô", "ü")
-                              .iter()
-                              .map(|x| x.to_string())
-                              .collect::<Vec<String>>()),
-                level: Level::Warn
-            },
-            system_missing_value_threshold: Setting::<Option<i32>> {
-                setting: Some(25),
-                level: Level::Fail
-            },
-        },
-    };
-
-    println!("{}", toml::to_string(&config).unwrap());
-    */
-
     match parse_config(&config_path) {
-        Ok(config) => {
+        Ok(ref mut config) => {
             //println!("Config: {:#?}", config);
+
+            config.include_locators = set_if_none(config.include_locators,
+                                                  include_locators);
+            config.progress = set_if_none(config.progress,
+                                         progress);
 
             let report = ok!(read(&file_path, &config));
             let serialised = ok!(serde_json::to_string(&report));
 
-            println!("{}", serialised);
+            let _ = match output_path {
+                Some(path) => write_to_file(&path, &serialised),
+                None => {
+                    println!("{}", serialised);
+                    Ok(())
+                },
+            };
         },
         Err(err) => println!("{:?}", err),
     }
@@ -124,5 +121,25 @@ fn parse_config(path: &str) -> Result<Config, String> {
         },
         Err(err)   => Err(format!("Failed to parse toml: {}", err)),
     }
+}
+
+fn set_if_none<T>(option: Option<T>, value: T) -> Option<T> {
+    if option.is_none() {
+        Some(value)
+    } else {
+        option
+    }
+}
+
+fn write_to_file(path: &str, contents: &str) -> Result<(), io::Error> {
+    let f = File::create(path)?;
+
+    {
+        let mut writer = BufWriter::new(f);
+
+        let _ = writer.write(contents.as_bytes());
+    }
+
+    Ok(())
 }
 

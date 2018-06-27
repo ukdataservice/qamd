@@ -3,15 +3,6 @@ pub trait Valid {
     fn validate(&self) -> Result<(), &'static str>;
 }
 
-/*
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum Level {
-    Pass,
-    Warn,
-    Fail,
-}
-*/
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum FileType {
     SAV,
@@ -23,12 +14,14 @@ pub enum FileType {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Setting<T> {
     pub setting: T,
-    // pub level: Level,
     pub file_types: Vec<FileType>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
+    pub include_locators: Option<bool>,
+    pub progress: Option<bool>,
+
     pub primary_variable: Option<Setting<String>>,
     pub disclosive_outliers: Option<Setting<i32>>,
 

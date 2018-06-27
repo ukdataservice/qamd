@@ -57,14 +57,14 @@ First install the [linux subsystem for windows]. `qamd` currently
 requires Ubunut 16.04. Start it and you will be prompted to create
 a new user (this can be different or the same as your windows account).
 
-After this you will be presented with a bash prompt. Run the following.
+After this you will be presented with a bash prompt. Run the following:
 
 ```
-
+sudo apt-get update && sudo apt-get upgrade
 ```
 
-Open a Command prompt (Win+R, type `'cmd'` and press enter) and change
-to the directory you downloaded the install.bat. Run the
+Next, open a command prompt (type Win+R, type `'cmd'` and press enter)
+and change to the directory you downloaded the install.bat. Run the
 `install.bat` and place `qamd.bat` somewhere and add it to your PATH
 environment variable. The install script can take some time.
 

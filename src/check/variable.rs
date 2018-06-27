@@ -1,6 +1,6 @@
 
 use config::Config;
-use report::{ Report, Status, Variable };
+use report::{ Report, Variable, Status, Locator };
 use check::{ contains, VariableCheckFn };
 
 // Register the checks
@@ -27,6 +27,18 @@ fn variable_missing_label(variable: &Variable,
 
                 if variable.label == "" {
                     status.fail += 1;
+
+                    if let Some(include_locators) = config.include_locators {
+                        if include_locators {
+                            let locator = Locator::new(variable.index, -1);
+                            if let Some(ref mut locators) = status.locator {
+                                locators.push(locator);
+                            } else {
+                                status.locator = Some(vec!(locator));
+                            }
+                        }
+                    }
+
                 } else {
                     status.pass += 1;
                 }

@@ -127,10 +127,14 @@ unsafe fn _read(path: &str,
     }));
 
     // init the progress bar here
-    // if interactive mode is set
-    (*context).pb = Some(ProgressBar::new(100));
-    if let Some(ref mut pb) = (*context).pb {
-        pb.format("[=>]");
+    if let Some(include_progress) = config.progress {
+        if include_progress {
+            println!("progress bar!");
+            (*context).pb = Some(ProgressBar::new(100));
+            if let Some(ref mut pb) = (*context).pb {
+                pb.format("[=>]");
+            }
+        }
     }
 
     let parser: *mut readstat_parser_t = readstat_parser_init();
