@@ -83,10 +83,10 @@ fn main() {
         Ok(ref mut config) => {
             //println!("Config: {:#?}", config);
 
-            config.include_locators = set_if_none(config.include_locators,
+            config.include_locators = override_config(config.include_locators,
                                                   include_locators);
-            config.progress = set_if_none(config.progress,
-                                         progress);
+            config.progress = override_config(config.progress,
+                                          progress);
 
             let report = ok!(read(&file_path, &config));
             let serialised = ok!(serde_json::to_string(&report));
@@ -123,7 +123,7 @@ fn parse_config(path: &str) -> Result<Config, String> {
     }
 }
 
-fn set_if_none<T>(option: Option<T>, value: T) -> Option<T> {
+fn override_config<T>(option: Option<T>, value: T) -> Option<T> {
     if option.is_none() {
         Some(value)
     } else {
