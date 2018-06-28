@@ -25,7 +25,13 @@ pub fn to_html(report: &Report) -> String {
                         @ if let (name, Some(status)) = check {
                             tr {
                                 td { : format!("{}", name) }
-                                td { : "passed/failed" }
+
+                                @ if status.fail > 0 {
+                                    td { : format!("failed ({})", status.fail) }
+                                } else {
+                                    td { : "passed" }
+                                }
+
                                 td { : "this is a test demonstrating the format " }
                             }
                         }
