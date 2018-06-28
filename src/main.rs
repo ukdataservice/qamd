@@ -7,6 +7,7 @@ extern crate toml;
 
 use qamd::read;
 use qamd::config::{ Config, Valid };
+use qamd::html::to_html;
 // use qamd::config::{ VariableConfig, ValueConfig, Setting, Level };
 // use qamd::report::Report;
 
@@ -44,6 +45,12 @@ fn main() {
                              .value_name("FILE")
                              .help("Sets an optional output file.")
                              .takes_value(true))
+                        .arg(Arg::with_name("output-format")
+                             .long("output-format")
+                             .value_name("FILE_TYPE")
+                             .help("Sets the output format. Can be either json or html Default to JSON.")
+                             .takes_value(true)
+                             .possible_values(&["json", "html"]))
                         .arg(Arg::with_name("locators")
                              .short("l")
                              .long("include-locators")
@@ -65,7 +72,11 @@ fn main() {
     let config_path = matches
         .value_of("config")
         .unwrap_or("config.toml");
-    let output_path = matches.value_of("output");
+    let output_path = matches
+        .value_of("output");
+    let output_format = matches
+        .value_of("output-format")
+        .unwrap_or("json");
 
     let include_locators = match matches.occurrences_of("locators") {
         0 => false,
@@ -89,7 +100,12 @@ fn main() {
                                           progress);
 
             let report = ok!(read(&file_path, &config));
-            let serialised = ok!(serde_json::to_string(&report));
+
+            let serialised = match output_format {
+                "json" => ok!(serde_json::to_string(&report)),
+                "html" => to_html(&report),
+                _ => "".to_string(),
+            };
 
             let _ = match output_path {
                 Some(path) => write_to_file(&path, &serialised),

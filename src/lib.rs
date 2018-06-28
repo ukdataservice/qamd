@@ -13,6 +13,9 @@
 //!
 
 #[macro_use]
+extern crate horrorshow;
+
+#[macro_use]
 extern crate serde_derive;
 extern crate serde;
 // extern crate serde_json;
@@ -25,6 +28,7 @@ pub mod macros;
 pub mod config;
 pub mod report;
 pub mod bindings;
+pub mod html;
 
 mod check;
 
@@ -44,6 +48,7 @@ use std::collections::HashMap;
 use std::os::raw::{ c_void, c_char, c_int, c_double };
 use std::ffi::{ CString, CStr };
 use std::io;
+use std::path::Path;
 
 use std::clone::Clone;
 
@@ -129,7 +134,6 @@ unsafe fn _read(path: &str,
     // init the progress bar here
     if let Some(include_progress) = config.progress {
         if include_progress {
-            println!("progress bar!");
             (*context).pb = Some(ProgressBar::new(100));
             if let Some(ref mut pb) = (*context).pb {
                 pb.format("[=>]");
@@ -137,6 +141,10 @@ unsafe fn _read(path: &str,
         }
     }
 
+    (*context).report.metadata.file_name =
+        ok!(Path::new(&path).file_name().unwrap().to_str()).to_string();
+
+    // init parser & set handlers
     let parser: *mut readstat_parser_t = readstat_parser_init();
 
     readstat_set_metadata_handler(parser, Some(metadata_handler));
@@ -148,12 +156,14 @@ unsafe fn _read(path: &str,
     let path_to_file = str_to_ptr!(path);
     let error = file_parser(parser, path_to_file, context as *mut c_void);
 
+    // cleanup
     readstat_parser_free(parser);
 
     if let Some(ref mut pb) = (*context).pb {
         pb.finish_print("");
     }
 
+    // post checks
     for check in &(*context).checks.post {
         check(&(*context),
               &(*context).config,

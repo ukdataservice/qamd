@@ -3,6 +3,7 @@ pub mod anyvalue;
 pub mod missing;
 
 use std::hash::{ Hash, Hasher };
+use std::iter::Iterator;
 
 use self::anyvalue::AnyValue;
 use self::missing::Missing;
@@ -30,6 +31,8 @@ impl Report {
 
 #[derive(Serialize, Debug, Clone)]
 pub struct Metadata {
+    pub file_name: String,
+
     pub raw_case_count: i32,
     pub case_count: Option<i32>,
     pub variable_count: i32,
@@ -47,6 +50,7 @@ pub struct Metadata {
 impl Metadata {
     pub fn new() -> Metadata {
         Metadata {
+            file_name: "".into(),
             raw_case_count: 0,
             case_count: None,
             variable_count: 0,
@@ -77,6 +81,11 @@ pub struct Summary {
     pub disclosive_outliers: Option<Status>, // number of variables
 }
 
+pub struct SummaryIntoIterator {
+    summary: Summary,
+    index: usize,
+}
+
 impl Summary {
     pub fn new() -> Summary {
         Summary {
@@ -91,6 +100,41 @@ impl Summary {
             system_missing_over_threshold: None,
             disclosive_outliers: None,
         }
+    }
+}
+
+impl IntoIterator for Summary {
+    type Item = (String, Option<Status>);
+    type IntoIter = SummaryIntoIterator;
+
+    fn into_iter(self) -> SummaryIntoIterator {
+        SummaryIntoIterator {
+            summary: self,
+            index: 0,
+        }
+    }
+}
+
+impl Iterator for SummaryIntoIterator {
+    type Item = (String, Option<Status>);
+
+    fn next(&mut self) -> Option<(String, Option<Status>)> {
+        let result = match self.index {
+            0 => ("variable label missing".into(), self.summary.variable_label_missing.clone()),
+            1 => ("variable label max length".into(), self.summary.variable_label_max_length.clone()),
+            2 => ("variable odd characters".into(), self.summary.variable_odd_characters.clone()),
+
+            3 => ("value label max length".into(), self.summary.value_label_max_length.clone()),
+            4 => ("value odd characters".into(), self.summary.value_odd_characters.clone()),
+            5 => ("value defined missing no label".into(), self.summary.value_defined_missing_no_label.clone()),
+
+            6 => ("system missing over threshold".into(), self.summary.system_missing_over_threshold.clone()),
+            7 => ("disclosive outliers".into(), self.summary.disclosive_outliers.clone()),
+            _ => return None,
+        };
+
+        self.index += 1;
+        Some(result)
     }
 }
 
