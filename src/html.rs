@@ -1,4 +1,5 @@
 
+// use horrorshow::prelude::*;
 use horrorshow::helper::doctype;
 
 use report::Report;
@@ -27,12 +28,12 @@ pub fn to_html(report: &Report) -> String {
                                 td { : format!("{}", name) }
 
                                 @ if status.fail > 0 {
-                                    td { : format!("failed ({})", status.fail) }
+                                    td : format!("failed ({})", status.fail);
                                 } else {
-                                    td { : "passed" }
+                                    td : "passed";
                                 }
 
-                                td { : "this is a test demonstrating the format " }
+                                td : status.desc;
                             }
                         }
                     }

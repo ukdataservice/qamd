@@ -142,14 +142,16 @@ impl Iterator for SummaryIntoIterator {
 pub struct Status {
     pub pass: i32,
     pub fail: i32,
+    pub desc: String,
     pub locator: Option<Vec<Locator>>,
 }
 
 impl Status {
-    pub fn new() -> Status {
+    pub fn new(desc: &str) -> Status {
         Status {
             pass: 0,
             fail: 0,
+            desc: desc.to_string(),
             locator: None,
         }
     }

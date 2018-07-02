@@ -23,7 +23,8 @@ fn system_missing_over_threshold(context: &Context,
     if let Some(ref setting) = config
             .value_config
             .system_missing_value_threshold {
-        include_check!(report.summary.system_missing_over_threshold);
+        include_check!(report.summary.system_missing_over_threshold,
+                       "Variables with large quantities of values missing.");
 
         if let Some(ref mut status) = report
                 .summary
@@ -86,7 +87,8 @@ fn disclosive_outliers(context: &Context,
                        config: &Config,
                        report: &mut Report) {
     if let Some(ref setting) = config.disclosive_outliers {
-        include_check!(report.summary.disclosive_outliers);
+        include_check!(report.summary.disclosive_outliers,
+                       "Detects values as outliers if they unique.");
 
         if let Some(ref mut status) = report.summary.disclosive_outliers {
             for (_variable, map) in context.frequency_table.iter() {
