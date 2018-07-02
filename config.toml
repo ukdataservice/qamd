@@ -13,5 +13,5 @@ system_missing_value_threshold = { setting = 25, file_types = ["SAV", "DTA", "SA
 
 [value_config.defined_missing_no_label]
 setting = true
-file_types = ["SAV", "DTA"]
+file_types = ["SAV"]
 
