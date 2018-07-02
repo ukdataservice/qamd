@@ -10,7 +10,19 @@ pub fn to_html(report: &Report) -> String {
         html {
             head {
                 title : &report.metadata.file_name;
-                style : "table, th, td { border: 1px solid black; padding: 4px; }";
+                meta(charset="UTF-8");
+                style : r#"
+                    table, th, td {
+                        border: 1px solid black;
+                        padding: 4px;
+                    }
+                    .passed {
+                        background-color: rgb(212, 237, 218);;
+                    }
+                    .failed {
+                        background-color: rgb(248, 215, 218);;
+                    }
+                    "#;
             }
             body {
                 h1(id="file-name", class="file-name") : &report.metadata.file_name;
@@ -24,16 +36,18 @@ pub fn to_html(report: &Report) -> String {
 
                     @ for check in report.summary.clone() {
                         @ if let (name, Some(status)) = check {
-                            tr {
-                                td { : format!("{}", name) }
-
-                                @ if status.fail > 0 {
+                            @ if status.fail > 0 {
+                                tr(class="failed") {
+                                    td { : format!("{}", name) }
                                     td : format!("failed ({})", status.fail);
-                                } else {
-                                    td : "passed";
+                                    td : &status.desc;
                                 }
-
-                                td : status.desc;
+                            } else {
+                                tr(class="passed") {
+                                    td { : format!("{}", name) }
+                                    td : "passed";
+                                    td : &status.desc;
+                                }
                             }
                         }
                     }
