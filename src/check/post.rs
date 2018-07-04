@@ -24,7 +24,10 @@ fn system_missing_over_threshold(context: &Context,
             .value_config
             .system_missing_value_threshold {
         include_check!(report.summary.system_missing_over_threshold,
-                       "Variables with large quantities of values missing.");
+                       format!("{} {} (Threshold: {}%)",
+                               "Variables with large quantities of",
+                               "values missing.",
+                               setting.setting).as_str());
 
         if let Some(ref mut status) = report
                 .summary
