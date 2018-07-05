@@ -1,7 +1,7 @@
 
 use Context;
 use config::Config;
-use report::{ Report, Status };
+use report::{ Report, Status, Locator };
 use report::missing::Missing;
 use check::PostCheckFn;
 
@@ -36,10 +36,8 @@ fn system_missing_over_threshold(context: &Context,
 
             // pull count of sysmiss values from Context.frequency_table
             // sum to percentage of sysmiss (delivered as NaN)
-            //
-            //
 
-            for (_variable, map) in &context.frequency_table {
+            for (variable, map) in &context.frequency_table {
 
                 let sum = map.iter().fold(0, |mut sum, (_, occ)| {
                     sum += occ;
@@ -54,6 +52,8 @@ fn system_missing_over_threshold(context: &Context,
                     let sys_miss = (*count as f32 / sum as f32) * 100.0;
                     if sys_miss > setting.setting as f32 {
                         status.fail += 1;
+
+                        include_locators!(config, status, variable.index, -1);
                     }
                 }
             }
@@ -94,11 +94,13 @@ fn disclosive_outliers(context: &Context,
                        "Detects values as outliers if they unique.");
 
         if let Some(ref mut status) = report.summary.disclosive_outliers {
-            for (_variable, map) in context.frequency_table.iter() {
+            for (variable, map) in context.frequency_table.iter() {
                 if let Some(_) = map.iter().find(|(_value, occ)| {
                     *occ <= &setting.setting
                 }) {
                     status.fail += 1;
+
+                    include_locators!(config, status, variable.index, -1);
                 } else {
                     status.pass += 1
                 }

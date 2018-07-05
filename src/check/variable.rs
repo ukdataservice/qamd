@@ -29,17 +29,7 @@ fn variable_missing_label(variable: &Variable,
                 if variable.label == "" {
                     status.fail += 1;
 
-                    if let Some(include_locators) = config.include_locators {
-                        if include_locators {
-                            let locator = Locator::new(variable.index, -1);
-                            if let Some(ref mut locators) = status.locator {
-                                locators.push(locator);
-                            } else {
-                                status.locator = Some(vec!(locator));
-                            }
-                        }
-                    }
-
+                    include_locators!(config, status, variable.index, -1);
                 } else {
                     status.pass += 1;
                 }
@@ -60,6 +50,8 @@ fn variable_label_max_length(variable: &Variable,
         if let Some(ref mut status) = report.summary.variable_label_max_length {
             if variable.label.len() > setting.setting as usize {
                 status.fail += 1;
+
+                include_locators!(config, status, variable.index, -1);
             } else {
                 status.pass += 1;
             }
@@ -83,6 +75,8 @@ fn variable_odd_characters(variable: &Variable,
             if contains(&variable.name, &setting.setting) ||
                 contains(&variable.label, &setting.setting) {
                 status.fail += 1;
+
+                include_locators!(config, status, variable.index, -1);
             } else {
                 status.pass += 1;
             }
