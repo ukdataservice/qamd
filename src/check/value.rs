@@ -56,7 +56,7 @@ fn label_max_length(value: &Value,
             if value.label.len() > setting.setting as usize {
                 status.fail += 1;
 
-                include_locators!(config, status, value.var_index, value.row);
+                include_locators!(config, status, value.var_index, -1);
             } else {
                 status.pass += 1;
             }
