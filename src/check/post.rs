@@ -7,9 +7,27 @@ use check::PostCheckFn;
 
 /// Returns a vec of the functions provided by this module
 pub fn register() -> Vec<PostCheckFn> {
-    vec!(system_missing_over_threshold,
-         primary_variable,
-         disclosive_outliers)
+    vec!(primary_variable,
+         system_missing_over_threshold,
+         variables_with_unique_values)
+}
+
+/// Count the number of cases using the provided primary variable_count
+fn primary_variable(context: &Context,
+                    config: &Config,
+                    report: &mut Report) {
+    if let Some(ref primary_variable) = config.primary_variable {
+        if report.metadata.case_count.is_none() {
+            report.metadata.case_count = Some(0);
+        }
+
+        if let Some((_variable, map)) = context.frequency_table.iter().find(|(variable, _)| {
+            variable.name == primary_variable.setting
+        }) {
+            // report count of distinct cases for this variable
+            report.metadata.case_count = Some(map.keys().len() as i32);
+        }
+    }
 }
 
 /// Report variables with a number of system missing values over a
@@ -64,36 +82,15 @@ fn system_missing_over_threshold(context: &Context,
     }
 }
 
-/// Count the number of cases using the provided primary variable_count
-fn primary_variable(context: &Context,
-                    config: &Config,
-                    report: &mut Report) {
-    if let Some(ref primary_variable) = config.primary_variable {
-        if report.metadata.case_count.is_none() {
-            report.metadata.case_count = Some(0);
-        }
-
-        if let Some((_variable, map)) = context.frequency_table.iter().find(|(variable, _)| {
-            variable.name == primary_variable.setting
-        }) {
-            // report count of distinct cases for this variable
-            report.metadata.case_count = Some(map
-                .keys()
-                .len() as i32);
-        }
-    }
-}
-
-/// Count the number of variables with disclosive outliers
-/// Dectects outliers if they are unique values with only one occurrence
-fn disclosive_outliers(context: &Context,
-                       config: &Config,
-                       report: &mut Report) {
-    if let Some(ref setting) = config.disclosive_outliers {
-        include_check!(report.summary.disclosive_outliers,
+/// Count the number of variables with one or more unique values
+fn variables_with_unique_values(context: &Context,
+                                config: &Config,
+                                report: &mut Report) {
+    if let Some(ref setting) = config.variables_with_unique_values {
+        include_check!(report.summary.variables_with_unique_values,
                        "Detects values as outliers if they unique.");
 
-        if let Some(ref mut status) = report.summary.disclosive_outliers {
+        if let Some(ref mut status) = report.summary.variables_with_unique_values {
             for (variable, map) in context.frequency_table.iter() {
                 if let Some(_) = map.iter().find(|(_value, occ)| {
                     *occ <= &setting.setting

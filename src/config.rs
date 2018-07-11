@@ -23,14 +23,41 @@ pub struct Config {
     pub progress: Option<bool>,
 
     pub primary_variable: Option<Setting<String>>,
-    pub disclosive_outliers: Option<Setting<i32>>,
+    pub variables_with_unique_values: Option<Setting<i32>>,
 
     pub variable_config: VariableConfig,
     pub value_config: ValueConfig,
 }
 
+impl Config {
+    pub fn new() -> Config {
+        Config {
+            include_locators: None,
+            progress: None,
+            primary_variable: None,
+            variables_with_unique_values: None,
+            variable_config: VariableConfig::new(),
+            value_config: ValueConfig::new(),
+        }
+    }
+}
+
 impl Valid for Config {
     fn validate(&self) -> Result<(), &'static str> {
+
+        match self.primary_variable {
+            None => (),
+            Some(ref primary_variable) => if primary_variable.setting.len() < 1 {
+                return Err("primary_variable cannot be an empty string");
+            }
+        }
+
+        match self.variables_with_unique_values {
+            None => (),
+            Some(ref threshold) => if !(threshold.setting > 0 && threshold.setting <= 100) {
+                return Err("threshold out of bounds");
+            }
+        }
 
         self.variable_config.validate()?;
         self.value_config.validate()?;
@@ -44,6 +71,16 @@ pub struct VariableConfig {
     pub odd_characters: Option<Setting<Vec<String>>>,
     pub missing_variable_labels: Option<Setting<bool>>,
     pub label_max_length: Option<Setting<i32>>,
+}
+
+impl VariableConfig {
+    pub fn new() -> VariableConfig {
+        VariableConfig {
+                odd_characters: None,
+                missing_variable_labels: None,
+                label_max_length: None,
+        }
+    }
 }
 
 impl Valid for VariableConfig {
@@ -72,6 +109,17 @@ pub struct ValueConfig {
     pub system_missing_value_threshold: Option<Setting<i32>>,
     pub label_max_length: Option<Setting<i32>>,
     pub defined_missing_no_label: Option<Setting<bool>>,
+}
+
+impl ValueConfig {
+    pub fn new() -> ValueConfig {
+        ValueConfig {
+            odd_characters: None,
+            system_missing_value_threshold: None,
+            defined_missing_no_label: None,
+            label_max_length: None,
+        }
+    }
 }
 
 impl Valid for ValueConfig {

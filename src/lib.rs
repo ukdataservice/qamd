@@ -141,8 +141,13 @@ unsafe fn _read(path: &str,
         }
     }
 
-    (*context).report.metadata.file_name =
-        ok!(Path::new(&path).file_name().unwrap().to_str()).to_string();
+    if let Some(file_name) =  Path::new(&path).file_name() {
+        (*context).report.metadata.file_name =
+            ok!(file_name.to_str()).to_string();
+    } else {
+        return Err(io::Error::new(io::ErrorKind::Other,
+                                  "Unable to open file"));
+    }
 
     // init parser & set handlers
     let parser: *mut readstat_parser_t = readstat_parser_init();
@@ -163,16 +168,16 @@ unsafe fn _read(path: &str,
         pb.finish_print("");
     }
 
-    // post checks
-    for check in &(*context).checks.post {
-        check(&(*context),
-              &(*context).config,
-              &mut (*context).report);
-    }
-
     if error != readstat_error_t::READSTAT_OK {
         Err(handle_error(error))
     } else {
+        // post checks
+        for check in &(*context).checks.post {
+            check(&(*context),
+                  &(*context).config,
+                  &mut (*context).report);
+        }
+
         Ok((*context).report.clone())
     }
 }
@@ -368,34 +373,10 @@ mod tests {
     use super::*;
 
     use std::error::Error;
-    use self::config::{VariableConfig, ValueConfig};
-
-    fn setup() -> Config {
-        Config {
-            primary_variable: None,
-            disclosive_outliers: None,
-            variable_config: VariableConfig {
-                odd_characters: None,
-                missing_variable_labels: Some(config::Setting {
-                    setting: true,
-                    file_types: vec!(config::FileType::SAV,
-                                     config::FileType::DTA,
-                                     config::FileType::SAS7BDAT)
-                }),
-                label_max_length: None,
-            },
-            value_config: ValueConfig {
-                odd_characters: None,
-                system_missing_value_threshold: None,
-                defined_missing_no_label: None,
-                label_max_length: None,
-            },
-        }
-    }
 
     #[test]
     fn test_read_dta() {
-        let config = setup();
+        let config = Config::new();
 
         let report = ok!(read_dta("test/mtcars.dta", &config));
         assert_eq!(report.metadata.variable_count, 12);
@@ -404,7 +385,7 @@ mod tests {
 
     #[test]
     fn test_read_sav() {
-        let config = setup();
+        let config = Config::new();
 
         let report = ok!(read_sav("test/mtcars.sav", &config));
         assert_eq!(report.metadata.variable_count, 12);
@@ -413,7 +394,7 @@ mod tests {
 
     #[test]
     fn test_read_sas7bdat() {
-        let config = setup();
+        let config = Config::new();
 
         let report = ok!(read_sas7bdat("test/mtcars.sas7bdat", &config));
         assert_eq!(report.metadata.variable_count, 12);
@@ -422,13 +403,14 @@ mod tests {
 
     #[test]
     fn reader_should_error_on_enoent() {
-        let config = setup();
+        let config = Config::new();
 
         let err = match read_dta("", &config) {
             Ok(_) => "this should never be run".to_string(),
-            Err(e) => e.description().to_string()
+            Err(e) => e.description().to_string(),
         };
 
         assert_eq!(err, "Unable to open file");
     }
 }
+

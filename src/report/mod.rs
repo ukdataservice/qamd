@@ -14,8 +14,6 @@ use self::missing::Missing;
 pub struct Report {
     pub metadata: Metadata,
     pub summary: Summary,
-    // pub variable_checks: VariableChecks,
-    // pub value_checks: ValueChecks,
 }
 
 impl Report {
@@ -23,8 +21,6 @@ impl Report {
         Report {
             metadata: Metadata::new(),
             summary: Summary::new(),
-            // variable_checks: VariableChecks::new(),
-            // value_checks: ValueChecks::new(),
         }
     }
 }
@@ -78,7 +74,7 @@ pub struct Summary {
 
     // post checks
     pub system_missing_over_threshold: Option<Status>, // number of variables
-    pub disclosive_outliers: Option<Status>, // number of variables
+    pub variables_with_unique_values: Option<Status>, // number of variables
 }
 
 pub struct SummaryIntoIterator {
@@ -98,7 +94,7 @@ impl Summary {
             value_defined_missing_no_label: None,
 
             system_missing_over_threshold: None,
-            disclosive_outliers: None,
+            variables_with_unique_values: None,
         }
     }
 }
@@ -129,7 +125,7 @@ impl Iterator for SummaryIntoIterator {
             5 => ("value defined missing no label".into(), self.summary.value_defined_missing_no_label.clone()),
 
             6 => ("system missing over threshold".into(), self.summary.system_missing_over_threshold.clone()),
-            7 => ("disclosive outliers".into(), self.summary.disclosive_outliers.clone()),
+            7 => ("variables with unique values".into(), self.summary.variables_with_unique_values.clone()),
             _ => return None,
         };
 
@@ -168,40 +164,6 @@ impl Locator {
         Locator {
             variable_index: variable_index,
             value_index: value_index,
-        }
-    }
-}
-
-#[derive(Serialize, Debug, Clone)]
-pub struct VariableChecks {
-    pub odd_characters: Option<Vec<Variable>>,
-    pub missing_variable_labels: Option<Vec<Variable>>,
-    pub label_max_length: Option<Vec<Variable>>,
-}
-
-impl VariableChecks {
-    pub fn new() -> VariableChecks {
-        VariableChecks {
-            odd_characters: None,
-            missing_variable_labels: None,
-            label_max_length: None,
-        }
-    }
-}
-
-#[derive(Serialize, Debug, Clone)]
-pub struct ValueChecks {
-    pub odd_characters: Option<Vec<Value>>,
-    pub defined_missing_no_label: Option<Vec<Value>>,
-    pub label_max_length: Option<Vec<Value>>,
-}
-
-impl ValueChecks {
-    pub fn new() -> ValueChecks {
-        ValueChecks {
-            odd_characters: None,
-            defined_missing_no_label: None,
-            label_max_length: None,
         }
     }
 }

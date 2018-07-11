@@ -1,5 +1,5 @@
-# primary_variable = { setting = "id", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
-# disclosive_outliers = { setting = 1, file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
+primary_variable = { setting = "id", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
+variables_with_unique_values = { setting = 1, file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
 
 [variable_config]
 odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], file_types = ["SAV", "DTA"] }
