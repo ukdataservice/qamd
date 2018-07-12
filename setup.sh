@@ -1,5 +1,4 @@
 #!/bin/bash
-
 sudo apt-get -y install update && sudo apt-get -y install upgrade
 
 # Install the required tools

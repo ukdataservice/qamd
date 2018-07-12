@@ -47,7 +47,10 @@ Next clone the `qamd` repository:
 
 ```
 git clone https://github.com/Raymanns/qamd.git
+
+cd ./qamd
 cargo build --release
+
 echo 'export PATH="$PATH:$HOME/.src/target/release"' | cat >> ~/.profile
 ```
 
