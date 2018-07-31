@@ -1,5 +1,5 @@
 
-use Context;
+use readstat::context::Context;
 use config::Config;
 use report::{ Report, Status, Locator };
 use report::missing::Missing;

@@ -5,7 +5,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate toml;
 
-use qamd::read;
+use qamd::readstat::read::read;
 use qamd::config::{ Config, Valid };
 use qamd::html::to_html;
 // use qamd::config::{ VariableConfig, ValueConfig, Setting, Level };

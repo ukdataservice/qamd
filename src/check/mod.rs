@@ -5,7 +5,7 @@ pub mod variable;
 pub mod value;
 pub mod post;
 
-use Context;
+use readstat::context::Context;
 use config::Config;
 use report::{Report, Variable, Value};
 

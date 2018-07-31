@@ -14,7 +14,7 @@ pub enum Missing {
 
 impl Display for Missing {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        use Missing::*;
+        use self::Missing::*;
 
         let s = match self {
             &NOT_MISSING => "NOT_MISSING".into(),

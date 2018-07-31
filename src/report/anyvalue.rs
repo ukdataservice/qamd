@@ -8,7 +8,7 @@ use std::fmt::{ Display, Formatter, Result };
 use std::hash::{ Hash, Hasher };
 
 use std::ffi::CStr;
-use bindings::*;
+use readstat::bindings::*;
 
 /// AnyValue enum allows us to store each colum with different data type.
 #[derive(Serialize, Debug, Clone)]
@@ -48,7 +48,7 @@ impl Display for AnyValue {
 
 impl From<readstat_value_t> for AnyValue {
     fn from(value: readstat_value_t) -> AnyValue {
-        use readstat_type_t::*;
+        use self::readstat_type_t::*;
         use self::AnyValue::*;
 
         unsafe {
