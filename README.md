@@ -19,7 +19,7 @@ The following things are required to build the software from source:
 
 #### Linux
 
-To install run the [`setup.sh`](./setup.sh) script. You may needed to
+If you are on Ubuntu, install run the [`setup.sh`](./setup.sh) script. You may needed to
 run `chmod +x setup.sh`.
 
 First, install ReadStat. This is done by cloning the repository from github,

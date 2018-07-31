@@ -185,6 +185,7 @@ pub struct Value {
     pub missing: Missing,
 }
 
+/// Hash implemtation distiguishes values based on `value` field ONLY
 impl Hash for Value {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.value.hash(state);

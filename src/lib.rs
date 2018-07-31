@@ -59,8 +59,8 @@ pub struct Context {
     report: Report,
     checks: Check,
     pb: Option<ProgressBar<io::Stdout>>,
-    pub variables: Vec<Variable>,
-    pub value_labels: HashMap<String, HashMap<String, String>>,
+    pub variables: Vec<Variable>, // used for post-processing and iter'ing unordered hashmap
+    pub value_labels: HashMap<String, HashMap<String, String>>, // used for getting value labels
     pub frequency_table: HashMap<Variable, HashMap<Value, i32>>,
 }
 
