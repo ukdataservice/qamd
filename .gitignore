@@ -3,6 +3,7 @@
 **/*.rs.bk
 output.json
 index.html
+*scratch*
 
 # Created by https://www.gitignore.io/api/vim,emacs
 

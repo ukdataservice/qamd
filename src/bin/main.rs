@@ -8,8 +8,6 @@ extern crate toml;
 use qamd::readstat::read::read;
 use qamd::config::{ Config, Valid };
 use qamd::html::to_html;
-// use qamd::config::{ VariableConfig, ValueConfig, Setting, Level };
-// use qamd::report::Report;
 
 use std::io;
 use std::io::prelude::*;
@@ -88,12 +86,8 @@ fn main() {
         _ => false,
     };
 
-    // println!("file_path: {}\nconfig_path: {}\nlocators: {}", file_path, config_path, include_locators);
-
     match parse_config(&config_path) {
         Ok(ref mut config) => {
-            //println!("Config: {:#?}", config);
-
             config.include_locators = override_config(config.include_locators,
                                                   include_locators);
             config.progress = override_config(config.progress,

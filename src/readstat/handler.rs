@@ -1,9 +1,7 @@
 
-//use report::Report;
 use report::{ Value, Variable };
 use report::missing::Missing;
 use report::anyvalue::AnyValue;
-//use check::Check;
 
 use readstat::bindings::*;
 use readstat::context::Context;
@@ -50,9 +48,9 @@ pub unsafe extern "C" fn metadata_handler(metadata: *mut readstat_metadata_t,
 
 /// Variable callback
 pub unsafe extern "C" fn variable_handler(index: c_int,
-                                      variable: *mut readstat_variable_t,
-                                      val_labels: *const c_char,
-                                      ctx: *mut c_void) -> c_int {
+                                          variable: *mut readstat_variable_t,
+                                          val_labels: *const c_char,
+                                          ctx: *mut c_void) -> c_int {
     let context = ctx as *mut Context;
 
     let variable_name = ptr_to_str!(readstat_variable_get_name(variable));
@@ -60,7 +58,13 @@ pub unsafe extern "C" fn variable_handler(index: c_int,
     let label = if readstat_variable_get_label(variable) != ptr::null() {
         ptr_to_str!(readstat_variable_get_label(variable))
     } else {
-        "".to_string()
+        String::new()
+    };
+
+    let value_format = if readstat_variable_get_format(variable) != ptr::null() {
+        ptr_to_str!(readstat_variable_get_format(variable))
+    } else {
+        String::new()
     };
 
     let value_labels = if val_labels != ptr::null() {
@@ -74,6 +78,7 @@ pub unsafe extern "C" fn variable_handler(index: c_int,
         index: index as i32 + 1,
         name: variable_name,
         label: label,
+        value_format: value_format,
         value_labels: value_labels,
     };
 

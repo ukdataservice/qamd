@@ -173,6 +173,7 @@ pub struct Variable {
     pub index: i32,
     pub name: String,
     pub label: String,
+    pub value_format: String,
     pub value_labels: String,
 }
 
