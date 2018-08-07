@@ -18,6 +18,11 @@ use pbr::ProgressBar;
 
 /// Fuzzy reader, determines file type by the extention
 pub fn read(path: &str, config: &Config) -> Result<Report, io::Error> {
+    if path.ends_with(".csv") {
+        return Err(io::Error::new(io::ErrorKind::Other,
+                                  "QAMyData does not yet support CSV files!"));
+    }
+
     return match (path.ends_with(".dta"),
                   path.ends_with(".sav"),
                   path.ends_with(".por"),
