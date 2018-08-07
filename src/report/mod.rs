@@ -75,6 +75,7 @@ pub struct Summary {
     // post checks
     pub system_missing_over_threshold: Option<Status>, // number of variables
     pub variables_with_unique_values: Option<Status>, // number of variables
+    pub precise_date_format: Option<Status>, // number of variables
 }
 
 pub struct SummaryIntoIterator {
@@ -95,6 +96,7 @@ impl Summary {
 
             system_missing_over_threshold: None,
             variables_with_unique_values: None,
+            precise_date_format: None,
         }
     }
 }
@@ -114,6 +116,7 @@ impl IntoIterator for Summary {
 impl Iterator for SummaryIntoIterator {
     type Item = (String, Option<Status>);
 
+    // TODO: better system for iterating structs
     fn next(&mut self) -> Option<(String, Option<Status>)> {
         let result = match self.index {
             0 => ("variable label missing".into(), self.summary.variable_label_missing.clone()),
@@ -126,6 +129,7 @@ impl Iterator for SummaryIntoIterator {
 
             6 => ("system missing over threshold".into(), self.summary.system_missing_over_threshold.clone()),
             7 => ("variables with unique values".into(), self.summary.variables_with_unique_values.clone()),
+            8 => ("precise date format".into(), self.summary.precise_date_format.clone()),
             _ => return None,
         };
 

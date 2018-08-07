@@ -1,10 +1,48 @@
-primary_variable = { setting = "id", file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
-variables_with_unique_values = { setting = 1, file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }
+[primary_variable]
+setting = "id"
+file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"]
+
+[variables_with_unique_values]
+setting = 1
+file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"]
 
 [variable_config]
 odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], file_types = ["SAV", "DTA"] }
 missing_variable_labels = { setting = true, file_types = ["SAV", "DTA"] }
 label_max_length = { setting = 79, file_types = ["SAV", "DTA", "SAS7BDAT"] }
+
+[variable_config.precise_date_format]
+setting = [
+            # stata date
+            "JJJ",     # Day within year (001 - 366)
+            "jjj",     # Day within year (1 - 366)
+            "DD",      # Day within month (01 - 31)
+            "dd",      # Day within month (1 - 31)
+            "DAYNAME", # day of week        Sunday, Monday, ... (aligned)
+            "Dayname", # day of week        Sunday, Monday, ... (unaligned)
+            "Day",     # day of week        Sun, Mon, ...
+            "Da",      # day of week        Su, Mo, ...
+            "day",     # day of week        sun, mon, ...
+            "da",      #day of week        su, mo, ...
+            # stata time
+            "HH",   # hour               00 - 23
+            "Hh",   # hour               00 - 12
+            "hH",   # hour               0 - 23
+            "hh",   # hour               0 - 12
+            "MM",   # minute             00 - 59
+            "mm",   # minute             0 - 59
+            "SS",   # second             00 - 60 (sic, due to leap seconds)
+            "ss",   # second             0 - 60 (sic, due to leap seconds)
+            ".s",   # tenths             .0 - .9
+            ".ss",  # hundredths         .00 - .99
+            ".sss", # thousandths        .000 - .999
+            "YY",
+            "yy",
+            # SPSS
+            "SDATE",
+            "TIME"
+]
+file_types = ["SAV", "DTA", "SAS7BDAT"]
 
 [value_config]
 odd_characters = { setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"], file_types = ["SAV", "DTA", "SAS7BDAT", "CSV"] }

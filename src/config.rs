@@ -71,6 +71,8 @@ pub struct VariableConfig {
     pub odd_characters: Option<Setting<Vec<String>>>,
     pub missing_variable_labels: Option<Setting<bool>>,
     pub label_max_length: Option<Setting<i32>>,
+
+    pub precise_date_format: Option<Setting<Vec<String>>>,
 }
 
 impl VariableConfig {
@@ -79,6 +81,8 @@ impl VariableConfig {
                 odd_characters: None,
                 missing_variable_labels: None,
                 label_max_length: None,
+
+                precise_date_format: None,
         }
     }
 }
