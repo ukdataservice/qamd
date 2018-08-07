@@ -75,7 +75,7 @@ pub struct Summary {
     // post checks
     pub system_missing_over_threshold: Option<Status>, // number of variables
     pub variables_with_unique_values: Option<Status>, // number of variables
-    pub precise_date_format: Option<Status>, // number of variables
+    pub date_format: Option<Status>, // number of variables
 }
 
 pub struct SummaryIntoIterator {
@@ -96,7 +96,7 @@ impl Summary {
 
             system_missing_over_threshold: None,
             variables_with_unique_values: None,
-            precise_date_format: None,
+            date_format: None,
         }
     }
 }
@@ -122,14 +122,14 @@ impl Iterator for SummaryIntoIterator {
             0 => ("variable label missing".into(), self.summary.variable_label_missing.clone()),
             1 => ("variable label max length".into(), self.summary.variable_label_max_length.clone()),
             2 => ("variable odd characters".into(), self.summary.variable_odd_characters.clone()),
+            3 => ("date format".into(), self.summary.date_format.clone()),
 
-            3 => ("value label max length".into(), self.summary.value_label_max_length.clone()),
-            4 => ("value odd characters".into(), self.summary.value_odd_characters.clone()),
-            5 => ("value defined missing no label".into(), self.summary.value_defined_missing_no_label.clone()),
+            4 => ("value label max length".into(), self.summary.value_label_max_length.clone()),
+            5 => ("value odd characters".into(), self.summary.value_odd_characters.clone()),
+            6 => ("value defined missing no label".into(), self.summary.value_defined_missing_no_label.clone()),
 
-            6 => ("system missing over threshold".into(), self.summary.system_missing_over_threshold.clone()),
-            7 => ("variables with unique values".into(), self.summary.variables_with_unique_values.clone()),
-            8 => ("precise date format".into(), self.summary.precise_date_format.clone()),
+            7 => ("system missing over threshold".into(), self.summary.system_missing_over_threshold.clone()),
+            8 => ("variables with unique values".into(), self.summary.variables_with_unique_values.clone()),
             _ => return None,
         };
 

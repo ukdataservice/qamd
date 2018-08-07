@@ -3,48 +3,13 @@ use readstat::context::Context;
 use config::Config;
 use report::{ Report, Status, Locator };
 use report::missing::Missing;
-use check::{ PostCheckFn, contains };
+use check::PostCheckFn;
 
 /// Returns a vec of the functions provided by this module
 pub fn register() -> Vec<PostCheckFn> {
     vec!(primary_variable,
-         precise_date_format,
          system_missing_over_threshold,
          variables_with_unique_values)
-}
-
-fn precise_date_format(context: &Context,
-                       config: &Config,
-                       report: &mut Report) {
-    // refer here for the docs on the date format. ReadStat internally
-    // attempts to treat data as-if it were just Stata.
-    // https://www.stata.com/help.cgi?datetime_display_formats
-
-    if let Some(ref setting) = config
-        .variable_config
-        .precise_date_format {
-        include_check!(report.summary.precise_date_format,
-                       format!("{} {} {}",
-                               "Flags date formats that are too",
-                               "specific and could potentially",
-                               "be disclosive.").as_str());
-        let date_time_specifiers = &setting.setting;
-
-        if let Some(ref mut status) = report.summary.precise_date_format {
-            for variable in context.variables.iter() {
-                if contains(&variable.value_format, &date_time_specifiers) {
-                    // println!("variable {} is a date! : {}",
-                    //          variable.name,
-                    //          variable.value_format);
-                    status.fail += 1;
-
-                    include_locators!(config, status, variable.index, -1);
-                } else {
-                    status.pass += 1;
-                }
-            }
-        }
-    }
 }
 
 /// Count the number of cases using the provided primary variable_count
