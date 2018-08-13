@@ -75,7 +75,11 @@ fn system_missing_over_threshold(context: &Context,
                     if sys_miss > setting.setting as f32 {
                         status.fail += 1;
 
-                        include_locators!(config, status, variable.index, -1);
+                        include_locators!(config,
+                                          status,
+                                          variable.name,
+                                          variable.index,
+                                          -1);
                     }
                 }
             }
@@ -102,7 +106,11 @@ fn variables_with_unique_values(context: &Context,
                 }) {
                     status.fail += 1;
 
-                    include_locators!(config, status, variable.index, -1);
+                    include_locators!(config,
+                                      status,
+                                      variable.name,
+                                      variable.index,
+                                      -1);
                 } else {
                     status.pass += 1
                 }

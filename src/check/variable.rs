@@ -34,7 +34,11 @@ fn date_format(variable: &Variable,
             if contains(&variable.value_format, &date_time_specifiers) {
                 status.fail += 1;
 
-                include_locators!(config, status, variable.index, -1);
+                include_locators!(config,
+                                  status,
+                                  variable.name,
+                                  variable.index,
+                                  -1);
             } else {
                 status.pass += 1;
             }
@@ -59,7 +63,11 @@ fn variable_missing_label(variable: &Variable,
                 if variable.label == "" {
                     status.fail += 1;
 
-                    include_locators!(config, status, variable.index, -1);
+                    include_locators!(config,
+                                      status,
+                                      variable.name,
+                                      variable.index,
+                                      -1);
                 } else {
                     status.pass += 1;
                 }
@@ -81,7 +89,11 @@ fn variable_label_max_length(variable: &Variable,
             if variable.label.len() > setting.setting as usize {
                 status.fail += 1;
 
-                include_locators!(config, status, variable.index, -1);
+                include_locators!(config,
+                                  status,
+                                  variable.name,
+                                  variable.index,
+                                  -1);
             } else {
                 status.pass += 1;
             }
@@ -106,7 +118,11 @@ fn variable_odd_characters(variable: &Variable,
                 contains(&variable.label, &setting.setting) {
                 status.fail += 1;
 
-                include_locators!(config, status, variable.index, -1);
+                include_locators!(config,
+                                  status,
+                                  variable.name,
+                                  variable.index,
+                                  -1);
             } else {
                 status.pass += 1;
             }

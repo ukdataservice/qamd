@@ -16,8 +16,7 @@ use std::fs::File;
 
 use clap::{ Arg, App };
 
-macro_rules! ok(($expression:expr) =>
-                ($expression.unwrap()));
+static DEFAULT_CONFIG: &'static str = include_str!("../../config.toml");
 
 fn main() {
     let matches = App::new("QA My Data")
@@ -64,12 +63,15 @@ fn main() {
                                            "Useful if running inside scripts").as_str()))
                         .get_matches();
 
+    let config_file = match matches.value_of("config") {
+        Some(config_path) => read_file(config_path)
+            .expect(&format!("Faile to read file {}", config_path)),
+        None => String::from(DEFAULT_CONFIG),
+    };
+
     let file_path = matches
         .value_of("input")
         .unwrap();
-    let config_path = matches
-        .value_of("config")
-        .unwrap_or("config.toml");
     let output_path = matches
         .value_of("output");
     let output_format = matches
@@ -86,17 +88,17 @@ fn main() {
         _ => false,
     };
 
-    match parse_config(&config_path) {
+    match parse_config(&config_file) {
         Ok(ref mut config) => {
             config.include_locators = override_config(config.include_locators,
-                                                  include_locators);
+                                                      include_locators);
             config.progress = override_config(config.progress,
-                                          progress);
+                                              progress);
 
             match read(&file_path, &config) {
                 Ok(report) => {
                     let serialised = match output_format {
-                        "json" => ok!(serde_json::to_string(&report)),
+                        "json" => serde_json::to_string(&report).unwrap(),
                         "html" => to_html(&report),
                         _ => "".to_string(),
                     };
@@ -109,23 +111,26 @@ fn main() {
                         },
                     };
                 },
-                Err(err) => println!("{}", err),
+                Err(err) => eprintln!("{}", err),
             };
 
         },
-        Err(err) => println!("{}", err),
+        Err(err) => eprintln!("{}", err),
     }
 }
 
-fn parse_config(path: &str) -> Result<Config, String> {
-    let mut f = File::open(path)
-        .expect(&format!("Failed to open file for reading: {}", path));
+fn read_file(path: &str) -> Result<String, io::Error> {
+    let mut f = File::open(path)?;
+        //.expect(&format!("Failed to open file for reading: {}", path));
 
-    let mut buffer: String = "".into();
-    f.read_to_string(&mut buffer)
-        .expect(&format!("Failed to read data from file: {}", path));
+    let mut buffer = String::new();
+    f.read_to_string(&mut buffer)?;
+        //.expect(&format!("Failed to read data from file: {}", path));
+    Ok(buffer)
+}
 
-    match toml::from_str::<Config>(&buffer) {
+fn parse_config(config_file: &str) -> Result<Config, String> {
+    match toml::from_str::<Config>(&config_file) {
         Ok(config) => {
             let valid = config.validate();
             match valid {
@@ -133,7 +138,7 @@ fn parse_config(path: &str) -> Result<Config, String> {
                 Err(err) => Err(format!("Invalid config: {}", err)),
             }
         },
-        Err(err)   => Err(format!("Failed to parse toml: {}", err)),
+        Err(err) => Err(format!("Failed to parse toml: {}", err)),
     }
 }
 
