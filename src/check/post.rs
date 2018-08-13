@@ -16,7 +16,10 @@ pub fn register() -> Vec<PostCheckFn> {
 fn primary_variable(context: &Context,
                     config: &Config,
                     report: &mut Report) {
-    if let Some(ref primary_variable) = config.primary_variable {
+    if let Some(ref primary_variable) = config
+        .variable_config
+        .primary_variable {
+
         if report.metadata.case_count.is_none() {
             report.metadata.case_count = Some(0);
         }
@@ -43,9 +46,8 @@ fn system_missing_over_threshold(context: &Context,
             .value_config
             .system_missing_value_threshold {
         include_check!(report.summary.system_missing_over_threshold,
-                       format!("{} {} (Threshold: {}%)",
-                               "Variables with large quantities of",
-                               "values missing.",
+                       format!("{} (Threshold: {}%)",
+                               setting.desc,
                                setting.setting).as_str());
 
         if let Some(ref mut status) = report
@@ -94,9 +96,11 @@ fn system_missing_over_threshold(context: &Context,
 fn variables_with_unique_values(context: &Context,
                                 config: &Config,
                                 report: &mut Report) {
-    if let Some(ref setting) = config.variables_with_unique_values {
+    if let Some(ref setting) = config
+        .variable_config
+        .variables_with_unique_values {
         include_check!(report.summary.variables_with_unique_values,
-                       "Detects values as outliers if they unique.");
+                       &setting.desc);
 
         if let Some(ref mut status) = report.summary
             .variables_with_unique_values {

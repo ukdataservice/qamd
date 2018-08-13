@@ -5,7 +5,7 @@ use check::{ contains, VariableCheckFn };
 
 // Register the checks
 pub fn register() -> Vec<VariableCheckFn> {
-    vec!(variable_missing_label,
+    vec!(missing_variable_labels,
          date_format,
          variable_label_max_length,
          variable_odd_characters)
@@ -24,10 +24,7 @@ fn date_format(variable: &Variable,
         .variable_config
         .date_format {
         include_check!(report.summary.date_format,
-                       format!("{} {} {}",
-                               "Flags date formats that are too",
-                               "specific and could potentially",
-                               "be disclosive.").as_str());
+                       &setting.desc);
         let date_time_specifiers = &setting.setting;
 
         if let Some(ref mut status) = report.summary.date_format {
@@ -46,19 +43,19 @@ fn date_format(variable: &Variable,
     }
 }
 
-fn variable_missing_label(variable: &Variable,
-                          config: &Config,
-                          report: &mut Report) {
+fn missing_variable_labels(variable: &Variable,
+                           config: &Config,
+                           report: &mut Report) {
     if let Some(ref setting) = config
             .variable_config
             .missing_variable_labels {
-        include_check!(report.summary.variable_label_missing,
-                       "Variables should have a label.");
+        include_check!(report.summary.missing_variable_labels,
+                       &setting.desc);
 
         if setting.setting {
             if let Some(ref mut status) = report
                 .summary
-                .variable_label_missing {
+                .missing_variable_labels {
 
                 if variable.label == "" {
                     status.fail += 1;
@@ -82,7 +79,7 @@ fn variable_label_max_length(variable: &Variable,
     if let Some(ref setting) = config.variable_config.label_max_length {
         include_check!(report.summary.variable_label_max_length,
                        format!("{} ({} characters)",
-                               "Variable labels cannot exceed a max length",
+                               setting.desc,
                                &setting.setting).as_str());
 
         if let Some(ref mut status) = report.summary.variable_label_max_length {
@@ -106,9 +103,8 @@ fn variable_odd_characters(variable: &Variable,
                   report: &mut Report) {
     if let Some(ref setting) = config.variable_config.odd_characters {
         include_check!(report.summary.variable_odd_characters,
-                       format!("{} {} {:?}",
-                               "Variable names and lables cannot contain",
-                               "certain 'odd' characters. ",
+                       format!("{} {:?}",
+                               setting.desc,
                                setting.setting).as_str());
 
         if let Some(ref mut status) = report

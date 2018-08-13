@@ -22,9 +22,8 @@ fn odd_characters(value: &Value,
                   report: &mut Report) {
     if let Some(ref setting) = config.value_config.odd_characters {
         include_check!(report.summary.value_odd_characters,
-                       format!("{} {} {:?}",
-                               "Values & value labels shouldn't contain",
-                               "certain 'odd' characters.",
+                       format!("{} {:?}",
+                               setting.desc,
                                &setting.setting).as_str());
 
         if let Some(ref mut status) = report.summary.value_odd_characters {
@@ -53,7 +52,7 @@ fn label_max_length(value: &Value,
             .label_max_length {
         include_check!(report.summary.value_label_max_length,
                        format!("{} ({} characters)",
-                               "Value labels cannot exceed a maximum length",
+                               setting.desc,
                                &setting.setting).as_str());
 
         if let Some(ref mut status) = report.summary.value_label_max_length {
@@ -81,7 +80,7 @@ fn value_defined_missing_no_label(value: &Value,
             .value_config
             .defined_missing_no_label {
         include_check!(report.summary.value_defined_missing_no_label,
-                       "Values defined as missing must have a label");
+                       &setting.desc);
 
         if let Some(ref mut status) = report.summary.value_defined_missing_no_label {
             if setting.setting &&

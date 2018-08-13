@@ -63,7 +63,7 @@ impl Metadata {
 #[derive(Serialize, Debug, Clone)]
 pub struct Summary {
     // counting variables that failed
-    pub variable_label_missing: Option<Status>,
+    pub missing_variable_labels: Option<Status>,
     pub variable_label_max_length: Option<Status>,
     pub variable_odd_characters: Option<Status>,
 
@@ -86,7 +86,7 @@ pub struct SummaryIntoIterator {
 impl Summary {
     pub fn new() -> Summary {
         Summary {
-            variable_label_missing: None,
+            missing_variable_labels: None,
             variable_label_max_length: None,
             variable_odd_characters: None,
 
@@ -119,7 +119,7 @@ impl Iterator for SummaryIntoIterator {
     // TODO: better system for iterating structs
     fn next(&mut self) -> Option<(String, Option<Status>)> {
         let result = match self.index {
-            0 => ("variable label missing".into(), self.summary.variable_label_missing.clone()),
+            0 => ("missing variable labels".into(), self.summary.missing_variable_labels.clone()),
             1 => ("variable label max length".into(), self.summary.variable_label_max_length.clone()),
             2 => ("variable odd characters".into(), self.summary.variable_odd_characters.clone()),
             3 => ("date format".into(), self.summary.date_format.clone()),
