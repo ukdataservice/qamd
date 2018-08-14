@@ -15,7 +15,7 @@ use std::ptr;
 
 /// Process file metadata
 pub unsafe extern "C" fn metadata_handler(metadata: *mut readstat_metadata_t,
-                                      ctx: *mut c_void) -> c_int {
+                                          ctx: *mut c_void) -> c_int {
     let context = ctx as *mut Context;
 
     (*context).report.metadata.raw_case_count = readstat_get_row_count(metadata);
@@ -53,37 +53,10 @@ pub unsafe extern "C" fn variable_handler(index: c_int,
                                           ctx: *mut c_void) -> c_int {
     let context = ctx as *mut Context;
 
-    let variable_name = ptr_to_str!(readstat_variable_get_name(variable));
-
-    let label = if readstat_variable_get_label(variable) != ptr::null() {
-        ptr_to_str!(readstat_variable_get_label(variable))
-    } else {
-        String::new()
-    };
-
-    let value_format = if readstat_variable_get_format(variable) != ptr::null() {
-        ptr_to_str!(readstat_variable_get_format(variable))
-    } else {
-        String::new()
-    };
-
-    let value_labels = if val_labels != ptr::null() {
-        ptr_to_str!(val_labels)
-    } else {
-        "".into()
-    };
-
-    let var = Variable {
-        // index is zero based, add one to make it human usable
-        index: index as i32 + 1,
-        name: variable_name,
-        label: label,
-        value_format: value_format,
-        value_labels: value_labels,
-    };
+    let var = Variable::from_raw_parts(variable, val_labels);
+    assert_eq!(var.index, index as i32);
 
     (*context).variables.push(var.clone());
-
     for check in (*context).checks.variable.iter() {
         check(&var,
               &(*context).config,
@@ -95,14 +68,13 @@ pub unsafe extern "C" fn variable_handler(index: c_int,
 
 /// Value callback
 pub unsafe extern "C" fn value_handler(obs_index: c_int,
-                                   variable: *mut readstat_variable_t,
-                                   value: readstat_value_t,
-                                   ctx: *mut c_void) -> c_int {
+                                       variable: *mut readstat_variable_t,
+                                       value: readstat_value_t,
+                                       ctx: *mut c_void) -> c_int {
     let context = ctx as *mut Context;
 
-    let var_index = readstat_variable_get_index(variable);
+    let var = Variable::from_raw_parts(variable, ptr::null());
     let anyvalue = AnyValue::from(value);
-
 
     // determine the MISSINGESS
     let missing: Missing = match (
@@ -113,46 +85,47 @@ pub unsafe extern "C" fn value_handler(obs_index: c_int,
         (_, 1, _) => Missing::TAGGED_MISSING(readstat_value_tag(value) as u8 as char),
         (_, _, 1) => Missing::DEFINED_MISSING,
         (1, _, _) => Missing::SYSTEM_MISSING,
-        _            => panic!("default case hit"),
+        _         => panic!("default case hit"),
     };
 
-    let label: String = if let Some(variable) = (*context).variables.iter().nth(var_index as usize) {
-        if let Some(map) = (*context).value_labels.get_mut(&variable.value_labels) {
-            map.get(&format!("{}", anyvalue)).unwrap_or(&"".to_string()).to_string()
-        } else {
-            "".to_string()
-        }
+    let value_labels = &(*context).variables.iter().nth(var.index as usize).unwrap().value_labels; 
+
+    let label: String = if let Some(map) = (*context).value_labels
+        .get_mut(value_labels) {
+
+            map.get(&format!("{}", anyvalue))
+                .unwrap_or(&"".to_string())
+                .to_string()
     } else {
         "".to_string()
     };
 
     let value = Value {
-        var_index: var_index + 1,
-        row: obs_index + 1,
+        variable: var.clone(),
+        row: obs_index,
         value: anyvalue,
         label: label,
         missing: missing,
     };
 
     // build the frequency table as we collect the values
-    if let Some(variable) = (*context).variables.iter().nth(var_index as usize) { // get the variable
-        if let Some(ref mut value_occurence_map) = (*context).frequency_table.get_mut(variable) { // check it has been pushed
-            if let Some(occurrence) = value_occurence_map.get_mut(&value) {
-                (*occurrence) += 1; // already exists
-            } else {
-                // variable exists, first encounter with this value
-                match (*context).frequency_table.get_mut(variable) {
-                    Some(val_occ_map) => val_occ_map.insert(value.clone(), 1),
-                    None => None,
-                };
-            }
+    if let Some(ref mut value_occurence_map) = (*context).frequency_table.get_mut(&var) { // check it has been pushed
+        if let Some(occurrence) = value_occurence_map.get_mut(&value) {
+            (*occurrence) += 1; // already exists
         } else {
-            // no variable found, first encounter with this variable and value
-            let mut map: HashMap<Value, i32> = HashMap::new();
-
-            map.insert(value.clone(), 1);
-            (*context).frequency_table.insert(variable.clone(), map);
+            // variable exists, first encounter with this value
+            match (*context).frequency_table.get_mut(&var) {
+                Some(val_occ_map) => val_occ_map.insert(value.clone(), 1),
+                None => None,
+            };
         }
+    } else {
+        // variable not found
+        // first encounter with this variable and value
+        let mut map: HashMap<Value, i32> = HashMap::new();
+
+        map.insert(value.clone(), 1);
+        (*context).frequency_table.insert(var.clone(), map);
     }
 
     for check in (*context).checks.value.iter() {
@@ -166,9 +139,9 @@ pub unsafe extern "C" fn value_handler(obs_index: c_int,
 
 /// Value label callback
 pub unsafe extern "C" fn value_label_handler(val_labels: *const c_char,
-                                         value: readstat_value_t,
-                                         label: *const c_char,
-                                         ctx: *mut c_void) -> c_int {
+                                             value: readstat_value_t,
+                                             label: *const c_char,
+                                             ctx: *mut c_void) -> c_int {
     let context = ctx as *mut Context;
 
     let value_label_id = ptr_to_str!(val_labels);
@@ -187,7 +160,7 @@ pub unsafe extern "C" fn value_label_handler(val_labels: *const c_char,
 }
 
 pub unsafe extern "C" fn progress_handler(progress: c_double,
-                                      ctx: *mut c_void) -> c_int {
+                                          ctx: *mut c_void) -> c_int {
     let context = ctx as *mut Context;
 
     if let Some(ref mut pb) = (*context).pb {

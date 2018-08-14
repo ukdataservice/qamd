@@ -17,15 +17,21 @@ use std::fs::File;
 use clap::{ Arg, App };
 
 static DEFAULT_CONFIG: &'static str = include_str!("../../config.toml");
+static ABOUT_TEXT: &'static str =
+    concat!("QAMyData offers a free easy-to-use",
+            " tool that automatically detects some",
+            " of the most common problems in",
+            " survey and other numeric data and",
+            " creates a ‘data health check’,",
+            " assisting with the clean up of data",
+            " and providing an assurance that data",
+            " is of a high quality.");
 
 fn main() {
     let matches = App::new("QA My Data")
                         .version("0.1.0")
-                        .author("Myles Offord")
-                        .about(format!("{} {} {}",
-                                       "Produces a summary report of common",
-                                       "issues to provide a higher standard of statistical data.",
-                                       "Currently supports SPSS, STATA, SAS and (soon™) CSV!").as_str())
+                        .author("Myles Offord - moffor@essex.ac.uk")
+                        .about(ABOUT_TEXT)
                         .arg(Arg::with_name("input")
                              .help("Sets the input file to use.")
                              .required(true)

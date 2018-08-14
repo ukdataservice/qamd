@@ -33,8 +33,8 @@ fn odd_characters(value: &Value,
 
                 include_locators!(config,
                                   status,
-                                  String::from(""),
-                                  value.var_index,
+                                  value.variable.name,
+                                  value.variable.index,
                                   value.row);
             } else {
                 status.pass += 1;
@@ -47,9 +47,7 @@ fn odd_characters(value: &Value,
 fn label_max_length(value: &Value,
                     config: &Config,
                     report: &mut Report) {
-    if let Some(ref setting) = config
-            .value_config
-            .label_max_length {
+    if let Some(ref setting) = config.value_config.label_max_length {
         include_check!(report.summary.value_label_max_length,
                        format!("{} ({} characters)",
                                setting.desc,
@@ -61,8 +59,8 @@ fn label_max_length(value: &Value,
 
                 include_locators!(config,
                                   status,
-                                  String::from(""),
-                                  value.var_index,
+                                  value.variable.name,
+                                  value.variable.index,
                                   -1);
             } else {
                 status.pass += 1;
@@ -90,8 +88,8 @@ fn value_defined_missing_no_label(value: &Value,
 
                 include_locators!(config,
                                   status,
-                                  String::from(""),
-                                  value.var_index,
+                                  value.variable.name,
+                                  value.variable.index,
                                   value.row);
             } else {
                 status.pass += 1;

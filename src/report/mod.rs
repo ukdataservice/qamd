@@ -2,11 +2,18 @@
 pub mod anyvalue;
 pub mod missing;
 
+use self::anyvalue::AnyValue;
+use self::missing::Missing;
+
+use readstat::bindings::*;
+
 use std::hash::{ Hash, Hasher };
 use std::iter::Iterator;
 
-use self::anyvalue::AnyValue;
-use self::missing::Missing;
+use std::os::raw::c_char;
+use std::ffi::{ /*CString,*/ CStr };
+
+use std::ptr;
 
 // use std::collections::HashMap;
 
@@ -185,9 +192,46 @@ pub struct Variable {
     pub value_labels: String,
 }
 
+impl Variable {
+    pub fn from_raw_parts(variable: *mut readstat_variable_s,
+                          val_labels: *const c_char) -> Self {
+        unsafe {
+            let index = readstat_variable_get_index(variable);
+
+            let variable_name = ptr_to_str!(readstat_variable_get_name(variable));
+
+            let label = if readstat_variable_get_label(variable) != ptr::null() {
+                ptr_to_str!(readstat_variable_get_label(variable))
+            } else {
+                String::new()
+            };
+
+            let value_format = if readstat_variable_get_format(variable) != ptr::null() {
+                ptr_to_str!(readstat_variable_get_format(variable))
+            } else {
+                String::new()
+            };
+
+            let value_labels = if val_labels != ptr::null() {
+                ptr_to_str!(val_labels)
+            } else {
+                "".into()
+            };
+
+            Variable {
+                index: index as i32,
+                name: variable_name,
+                label: label,
+                value_format: value_format,
+                value_labels: value_labels,
+            }
+        }
+    }
+}
+
 #[derive(Serialize, Debug, Clone)]
 pub struct Value {
-    pub var_index: i32,
+    pub variable: Variable,
     pub row: i32,
     pub value: AnyValue,
     pub label: String,

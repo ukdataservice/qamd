@@ -116,14 +116,14 @@ fn locators_table(name: String, locators: Vec<Locator>) -> Box<Render> {
             table(id=name.replace(" ", "_"), class="table table-striped table-bordered d-none") {
                 tr {
                     th(scope="col") : "# (limited to 1000)";
-                    th(scope="col") : "Variable Index";
-                    th(scope="col") : "Value Index";
+                    th(scope="col") : "Variable (Index)";
+                    th(scope="col") : "Row Index";
                 }
 
                 @ for (i, pair) in locators.iter().take(1000).enumerate() {
                     tr(class="locator") {
                         td(scope="row") : i + 1;
-                        td : pair.variable_index;
+                        td : format!("{} ({})", pair.variable_name, pair.variable_index);
 
                         : value_if_positive(pair.value_index, "-");
                     }
