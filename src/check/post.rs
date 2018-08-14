@@ -5,6 +5,8 @@ use report::{ Report, Status, Locator };
 use report::missing::Missing;
 use check::PostCheckFn;
 
+use std::collections::HashSet;
+
 /// Returns a vec of the functions provided by this module
 pub fn register() -> Vec<PostCheckFn> {
     vec!(primary_variable,

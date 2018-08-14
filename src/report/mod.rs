@@ -7,13 +7,13 @@ use self::missing::Missing;
 
 use readstat::bindings::*;
 
+use std::collections::HashSet;
 use std::hash::{ Hash, Hasher };
 use std::iter::Iterator;
 
+use std::ptr;
 use std::os::raw::c_char;
 use std::ffi::{ /*CString,*/ CStr };
-
-use std::ptr;
 
 // use std::collections::HashMap;
 
@@ -150,7 +150,7 @@ pub struct Status {
     pub pass: i32,
     pub fail: i32,
     pub desc: String,
-    pub locator: Option<Vec<Locator>>,
+    pub locator: Option<HashSet<Locator>>,
 }
 
 impl Status {
@@ -164,7 +164,7 @@ impl Status {
     }
 }
 
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Locator {
     pub variable_name: String,
     pub variable_index: i32,

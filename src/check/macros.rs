@@ -15,9 +15,11 @@ macro_rules! include_locators(($config:expr,
                                        $variable_index,
                                        $value_index);
             if let Some(ref mut locators) = $status.locator {
-                locators.push(locator);
+                locators.insert(locator);
             } else {
-                $status.locator = Some(vec!(locator));
+                let mut set = HashSet::new();
+                set.insert(locator);
+                $status.locator = Some(set);
             }
         }
     }));

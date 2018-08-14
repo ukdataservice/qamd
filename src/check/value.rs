@@ -5,6 +5,8 @@ use report::missing::Missing;
 
 use check::{ValueCheckFn, contains};
 
+use std::collections::HashSet;
+
 /// Register the checks with the context object
 pub fn register() -> Vec<ValueCheckFn> {
     vec!(odd_characters,

@@ -3,6 +3,8 @@ use config::Config;
 use report::{ Report, Variable, Status, Locator };
 use check::{ contains, VariableCheckFn };
 
+use std::collections::HashSet;
+
 // Register the checks
 pub fn register() -> Vec<VariableCheckFn> {
     vec!(missing_variable_labels,

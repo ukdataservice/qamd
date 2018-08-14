@@ -6,6 +6,8 @@ use horrorshow::{ Render };
 
 use report::{ Report, Locator };
 
+use std::collections::HashSet;
+
 pub fn to_html(report: &Report) -> String {
     let javascript = r#"
 'use strict';
@@ -110,7 +112,7 @@ $(function() {
     })
 }
 
-fn locators_table(name: String, locators: Vec<Locator>) -> Box<Render> {
+fn locators_table(name: String, locators: HashSet<Locator>) -> Box<Render> {
     box_html! {
         div(class="row") {
             table(id=name.replace(" ", "_"), class="table table-striped table-bordered d-none") {
