@@ -3,7 +3,7 @@ use readstat::context::Context;
 use config::Config;
 use report::{ Report, Status, Locator };
 use report::missing::Missing;
-use check::PostCheckFn;
+use check::{ PostCheckFn, contains };
 
 use std::collections::HashSet;
 
@@ -11,7 +11,9 @@ use std::collections::HashSet;
 pub fn register() -> Vec<PostCheckFn> {
     vec!(primary_variable,
          system_missing_over_threshold,
-         variables_with_unique_values)
+         variables_with_unique_values,
+         value_label_max_length,
+         value_odd_characters)
 }
 
 /// Count the number of cases using the provided primary variable_count
@@ -41,9 +43,6 @@ fn primary_variable(context: &Context,
 fn system_missing_over_threshold(context: &Context,
                                  config: &Config,
                                  report: &mut Report) {
-
-    //println!("frequency_table: {:#?}", context.frequency_table);
-
     if let Some(ref setting) = config
             .value_config
             .system_missing_value_threshold {
@@ -119,6 +118,78 @@ fn variables_with_unique_values(context: &Context,
                                       -1);
                 } else {
                     status.pass += 1
+                }
+            }
+        }
+    }
+}
+
+/// Check for values over a specified max length
+fn value_label_max_length(context: &Context,
+                          config: &Config,
+                          report: &mut Report) {
+    if let Some(ref setting) = config.value_config.label_max_length {
+        include_check!(report.summary.value_label_max_length,
+                       format!("{} ({} characters)",
+                               setting.desc,
+                               &setting.setting).as_str());
+
+        if let Some(ref mut status) = report.summary.value_label_max_length {
+            for variable in (*context).variables.iter() {
+                // println!("{}", &variable.name);
+                if let Some(values) = (*context).frequency_table.get(&variable) {
+                    for (value, occ) in values.iter() {
+                        if variable.name == "sex2" {
+                            println!("{:?} : {}", &value, occ);
+                        }
+
+                        if value.label.len() > setting.setting as usize {
+                            status.fail += 1;
+
+                            include_locators!(config,
+                                              status,
+                                              value.variable.name,
+                                              value.variable.index,
+                                              -1);
+                        } else {
+                            status.pass += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Check for odd characters in the value and value label.
+/// If a value is determined to contain any odd character(s),
+/// the number of fails (or warns) are incremented.
+fn value_odd_characters(context: &Context,
+                        config: &Config,
+                        report: &mut Report) {
+    if let Some(ref setting) = config.value_config.odd_characters {
+        include_check!(report.summary.value_odd_characters,
+                       format!("{} {:?}",
+                               setting.desc,
+                               &setting.setting).as_str());
+
+        if let Some(ref mut status) = report.summary.value_odd_characters {
+            for variable in (*context).variables.iter() {
+                if let Some(values) = (*context).frequency_table.get(&variable) {
+                    for (value, _occ) in values.iter() {
+                        if contains(&format!("{}", &value.value), &setting.setting) ||
+                            contains(&value.label, &setting.setting) {
+                            status.fail += 1;
+
+                            include_locators!(config,
+                                              status,
+                                              value.variable.name,
+                                              value.variable.index,
+                                              value.row);
+                        } else {
+                            status.pass += 1;
+                        }
+                    }
                 }
             }
         }

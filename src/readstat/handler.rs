@@ -73,7 +73,9 @@ pub unsafe extern "C" fn value_handler(obs_index: c_int,
                                        ctx: *mut c_void) -> c_int {
     let context = ctx as *mut Context;
 
-    let var = Variable::from_raw_parts(variable, ptr::null());
+    let var = (*context).variables.iter()
+        .nth(readstat_variable_get_index(variable) as usize)
+        .unwrap();
     let anyvalue = AnyValue::from(value);
 
     // determine the MISSINGESS
@@ -88,10 +90,9 @@ pub unsafe extern "C" fn value_handler(obs_index: c_int,
         _         => panic!("default case hit"),
     };
 
-    let value_labels = &(*context).variables.iter().nth(var.index as usize).unwrap().value_labels; 
 
     let label: String = if let Some(map) = (*context).value_labels
-        .get_mut(value_labels) {
+        .get_mut(&var.value_labels) {
 
             map.get(&format!("{}", anyvalue))
                 .unwrap_or(&"".to_string())
