@@ -71,7 +71,7 @@ fn main() {
 
     let config_file = match matches.value_of("config") {
         Some(config_path) => read_file(config_path)
-            .expect(&format!("Faile to read file {}", config_path)),
+            .expect(&format!("Failed to read file {}", config_path)),
         None => String::from(DEFAULT_CONFIG),
     };
 
@@ -117,21 +117,20 @@ fn main() {
                         },
                     };
                 },
-                Err(err) => eprintln!("{}", err),
+                Err(err) => eprintln!("{} : {}:{}:{}", err, file!(), line!(), column!()),
             };
 
         },
-        Err(err) => eprintln!("{}", err),
+        Err(err) => eprintln!("{} : {}", err, line!()),
     }
 }
 
-fn read_file(path: &str) -> Result<String, io::Error> {
+fn read_file(path: &str) -> io::Result<String> {
     let mut f = File::open(path)?;
-        //.expect(&format!("Failed to open file for reading: {}", path));
 
     let mut buffer = String::new();
     f.read_to_string(&mut buffer)?;
-        //.expect(&format!("Failed to read data from file: {}", path));
+
     Ok(buffer)
 }
 
@@ -156,7 +155,7 @@ fn override_config<T>(option: Option<T>, value: T) -> Option<T> {
     }
 }
 
-fn write_to_file(path: &str, contents: &str) -> Result<(), io::Error> {
+fn write_to_file(path: &str, contents: &str) -> io::Result<()> {
     let f = File::create(path)?;
 
     {

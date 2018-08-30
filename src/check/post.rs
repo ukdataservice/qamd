@@ -136,13 +136,8 @@ fn value_label_max_length(context: &Context,
 
         if let Some(ref mut status) = report.summary.value_label_max_length {
             for variable in (*context).variables.iter() {
-                // println!("{}", &variable.name);
                 if let Some(values) = (*context).frequency_table.get(&variable) {
-                    for (value, occ) in values.iter() {
-                        if variable.name == "sex2" {
-                            println!("{:?} : {}", &value, occ);
-                        }
-
+                    for (value, _occ) in values.iter() {
                         if value.label.len() > setting.setting as usize {
                             status.fail += 1;
 

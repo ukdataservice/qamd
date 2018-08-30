@@ -7,6 +7,8 @@ use readstat::bindings::*;
 use readstat::handler::*;
 use readstat::context::Context;
 
+use readstat::csv::read::qamd_parse_csv;
+
 use std::collections::HashMap;
 
 use std::os::raw::{ c_void, c_char };
@@ -17,20 +19,17 @@ use std::path::Path;
 use pbr::ProgressBar;
 
 /// Fuzzy reader, determines file type by the extention
-pub fn read(path: &str, config: &Config) -> Result<Report, io::Error> {
-    if path.ends_with(".csv") {
-        return Err(io::Error::new(io::ErrorKind::Other,
-                                  "QAMyData does not yet support CSV files!"));
-    }
-
-    return match (path.ends_with(".dta"),
+pub fn read(path: &str, config: &Config) -> io::Result<Report> {
+    return match (path.ends_with(".csv"),
+                  path.ends_with(".dta"),
                   path.ends_with(".sav"),
                   path.ends_with(".por"),
                   path.ends_with(".sas7bdat")) {
-        (true, _, _, _) => read_dta(path, config),
-        (_, true, _, _) => read_sav(path, config),
-        (_, _, true, _) => read_por(path, config),
-        (_, _, _, true) => read_sas7bdat(path, config),
+        (true, _, _, _, _) => read_csv(path, config),
+        (_, true, _, _, _) => read_dta(path, config),
+        (_, _, true, _, _) => read_sav(path, config),
+        (_, _, _, true, _) => read_por(path, config),
+        (_, _, _, _, true) => read_sas7bdat(path, config),
         _ => Err(io::Error::new(io::ErrorKind::Other,
                                 format!("Failed to determine file type of: {}",
                                     path))),
@@ -64,6 +63,12 @@ pub fn read_sas7bdat(path: &str, config: &Config)
 
     return unsafe {
         _read(path, config, readstat_parse_sas7bdat)
+    };
+}
+
+pub fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error> {
+    return unsafe {
+        _read(path, config, qamd_parse_csv)
     };
 }
 
@@ -134,6 +139,8 @@ unsafe fn _read(path: &str,
                   &(*context).config,
                   &mut (*context).report);
         }
+
+        debug!("{:#?}", *context);
 
         Ok((*context).report.clone())
     }
