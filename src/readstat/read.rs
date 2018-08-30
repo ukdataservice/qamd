@@ -7,7 +7,7 @@ use readstat::bindings::*;
 use readstat::handler::*;
 use readstat::context::Context;
 
-use readstat::csv::read::qamd_parse_csv;
+use readstat::csv::read::read_csv;
 
 use std::collections::HashMap;
 
@@ -25,7 +25,7 @@ pub fn read(path: &str, config: &Config) -> io::Result<Report> {
                   path.ends_with(".sav"),
                   path.ends_with(".por"),
                   path.ends_with(".sas7bdat")) {
-        (true, _, _, _, _) => read_csv(path, config),
+        (true, _, _, _, _) => unsafe { read_csv(path, config) },
         (_, true, _, _, _) => read_dta(path, config),
         (_, _, true, _, _) => read_sav(path, config),
         (_, _, _, true, _) => read_por(path, config),
@@ -63,12 +63,6 @@ pub fn read_sas7bdat(path: &str, config: &Config)
 
     return unsafe {
         _read(path, config, readstat_parse_sas7bdat)
-    };
-}
-
-pub fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error> {
-    return unsafe {
-        _read(path, config, qamd_parse_csv)
     };
 }
 
@@ -140,7 +134,7 @@ unsafe fn _read(path: &str,
                   &mut (*context).report);
         }
 
-        debug!("{:#?}", *context);
+        // debug!("{:#?}", *context);
 
         Ok((*context).report.clone())
     }
