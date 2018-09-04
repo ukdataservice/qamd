@@ -72,6 +72,14 @@ impl From<readstat_value_t> for AnyValue {
     }
 }
 
+impl<'a> From<&'a str> for AnyValue {
+    fn from(s: &'a str) -> AnyValue {
+        use self::AnyValue::Str;
+
+        Str(Box::new(Cow::Borrowed(s).into_owned()))
+    }
+}
+
 /// Hash trait allows for use a key in a HashMap
 impl Hash for AnyValue {
     fn hash<H: Hasher>(&self, state: &mut H) {

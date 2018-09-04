@@ -21,7 +21,7 @@ extern crate serde;
 // extern crate serde_json;
 
 extern crate pbr;
-extern crate csv;
+extern crate csv as csv_crate;
 
 #[macro_use]
 pub mod macros;
