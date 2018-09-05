@@ -126,17 +126,28 @@ impl Iterator for SummaryIntoIterator {
     // TODO: better system for iterating structs
     fn next(&mut self) -> Option<(String, Option<Status>)> {
         let result = match self.index {
-            0 => ("missing variable labels".into(), self.summary.missing_variable_labels.clone()),
-            1 => ("variable label max length".into(), self.summary.variable_label_max_length.clone()),
-            2 => ("variable odd characters".into(), self.summary.variable_odd_characters.clone()),
+            0 => ("missing variable labels".into(),
+                  self.summary.missing_variable_labels.clone()),
+            1 => ("variable label max length".into(),
+                  self.summary.variable_label_max_length.clone()),
+            2 => ("variable odd characters".into(),
+                  self.summary.variable_odd_characters.clone()),
             3 => ("date format".into(), self.summary.date_format.clone()),
 
-            4 => ("value label max length".into(), self.summary.value_label_max_length.clone()),
-            5 => ("value odd characters".into(), self.summary.value_odd_characters.clone()),
-            6 => ("value defined missing no label".into(), self.summary.value_defined_missing_no_label.clone()),
+            4 => ("value label max length".into(),
+                  self.summary.value_label_max_length.clone()),
+            5 => ("value odd characters".into(),
+                  self.summary.value_odd_characters.clone()),
 
-            7 => ("system missing over threshold".into(), self.summary.system_missing_over_threshold.clone()),
-            8 => ("variables with unique values".into(), self.summary.variables_with_unique_values.clone()),
+            6 => ("value defined missing no label".into(),
+                  self.summary.value_defined_missing_no_label.clone()),
+            7 => ("value_regex_patterns".into(),
+                  self.summary.value_regex_patterns.clone()),
+
+            8 => ("system missing over threshold".into(),
+                  self.summary.system_missing_over_threshold.clone()),
+            9 => ("variables with unique values".into(),
+                  self.summary.variables_with_unique_values.clone()),
             _ => return None,
         };
 

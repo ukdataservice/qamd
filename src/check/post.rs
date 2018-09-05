@@ -191,3 +191,40 @@ fn value_odd_characters(context: &Context,
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use config::Setting;
+    use check::Check;
+    use std::collections::HashMap;
+    // use report::anyvalue::AnyValue;
+
+    fn setup() -> Context {
+        let mut config = Config::new();
+        config.value_config.regex_patterns = Some(Setting {
+            setting: vec!(r"^foo".to_string()),
+            desc: "description from config".to_string(),
+        });
+
+        config.value_config.defined_missing_no_label = Some(Setting {
+            setting: true,
+            desc: "description from config".to_string(),
+        });
+
+        Context {
+            config: config,
+            report: Report::new(),
+            checks: Check::new(),
+            pb: None,
+            variables: vec!(),
+            value_labels: HashMap::new(),
+            frequency_table: HashMap::new(),
+        }
+    }
+
+    // #[test]
+    // fn test_name() {
+    // }
+}
+
+

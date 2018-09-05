@@ -128,3 +128,36 @@ fn variable_odd_characters(variable: &Variable,
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    // fn setup() -> (Variable, Config, Report) {
+    //     let variable = Variable::from("foo");
+
+    //     let mut config = Config::new();
+    //     config.variable_config.missing_variable_labels = Some(Setting {
+    //         setting: true,
+    //         desc: "variables with no labels"
+    //     });
+
+    //     (variable, config, Report::new())
+    // }
+
+    #[test]
+    fn test_missing_variable_labels() {
+    }
+
+    #[test]
+    fn test_date_format() {
+    }
+
+    #[test]
+    fn test_variable_label_max_length() {
+    }
+
+    #[test]
+    fn test_variable_odd_characters() {
+    }
+}
+
