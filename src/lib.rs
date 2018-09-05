@@ -5,11 +5,9 @@
 //! [ReadStat](https://github.com/WizardMac/ReadStat) C library, with thanks
 //! to WizardMac.
 //!
-//! # Examples
-//! ```
-//! println!("Hello, World!");
-//! assert!(4 == 2 + 2);
-//! ```
+//! The core library revolves arround a forigen function interface (FFI) with
+//! the ReadStat C library. From here the check module defines the checks to
+//! be carried out and at what stage.
 //!
 
 #[macro_use]
@@ -18,10 +16,10 @@ extern crate horrorshow;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
-// extern crate serde_json;
 
 extern crate pbr;
 extern crate csv as csv_crate;
+extern crate regex;
 
 #[macro_use]
 pub mod macros;

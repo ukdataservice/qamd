@@ -115,6 +115,7 @@ pub struct ValueConfig {
     pub system_missing_value_threshold: Option<Setting<i32>>,
     pub label_max_length: Option<Setting<i32>>,
     pub defined_missing_no_label: Option<Setting<bool>>,
+    pub regex_patterns: Option<Setting<Vec<String>>>,
 }
 
 impl ValueConfig {
@@ -124,6 +125,7 @@ impl ValueConfig {
             system_missing_value_threshold: None,
             defined_missing_no_label: None,
             label_max_length: None,
+            regex_patterns: None,
         }
     }
 }
