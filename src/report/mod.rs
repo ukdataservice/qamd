@@ -1,4 +1,3 @@
-
 pub mod anyvalue;
 pub mod missing;
 
@@ -8,12 +7,12 @@ use self::missing::Missing;
 use readstat::bindings::*;
 
 use std::collections::HashSet;
-use std::hash::{ Hash, Hasher };
+use std::hash::{Hash, Hasher};
 use std::iter::Iterator;
 
-use std::ptr;
+use std::ffi::CStr;
 use std::os::raw::c_char;
-use std::ffi::{ /*CString,*/ CStr };
+use std::ptr;
 
 // use std::collections::HashMap;
 
@@ -83,8 +82,8 @@ pub struct Summary {
 
     // post checks
     pub system_missing_over_threshold: Option<Status>, // number of variables
-    pub variables_with_unique_values: Option<Status>, // number of variables
-    pub date_format: Option<Status>, // number of variables
+    pub variables_with_unique_values: Option<Status>,  // number of variables
+    pub date_format: Option<Status>,                   // number of variables
 }
 
 pub struct SummaryIntoIterator {
@@ -130,28 +129,46 @@ impl Iterator for SummaryIntoIterator {
     // TODO: better system for iterating structs
     fn next(&mut self) -> Option<(String, Option<Status>)> {
         let result = match self.index {
-            0 => ("missing variable labels".into(),
-                  self.summary.missing_variable_labels.clone()),
-            1 => ("variable label max length".into(),
-                  self.summary.variable_label_max_length.clone()),
-            2 => ("variable odd characters".into(),
-                  self.summary.variable_odd_characters.clone()),
+            0 => (
+                "missing variable labels".into(),
+                self.summary.missing_variable_labels.clone(),
+            ),
+            1 => (
+                "variable label max length".into(),
+                self.summary.variable_label_max_length.clone(),
+            ),
+            2 => (
+                "variable odd characters".into(),
+                self.summary.variable_odd_characters.clone(),
+            ),
             3 => ("date format".into(), self.summary.date_format.clone()),
 
-            4 => ("value label max length".into(),
-                  self.summary.value_label_max_length.clone()),
-            5 => ("value odd characters".into(),
-                  self.summary.value_odd_characters.clone()),
+            4 => (
+                "value label max length".into(),
+                self.summary.value_label_max_length.clone(),
+            ),
+            5 => (
+                "value odd characters".into(),
+                self.summary.value_odd_characters.clone(),
+            ),
 
-            6 => ("value defined missing no label".into(),
-                  self.summary.value_defined_missing_no_label.clone()),
-            7 => ("value_regex_patterns".into(),
-                  self.summary.value_regex_patterns.clone()),
+            6 => (
+                "value defined missing no label".into(),
+                self.summary.value_defined_missing_no_label.clone(),
+            ),
+            7 => (
+                "value_regex_patterns".into(),
+                self.summary.value_regex_patterns.clone(),
+            ),
 
-            8 => ("system missing over threshold".into(),
-                  self.summary.system_missing_over_threshold.clone()),
-            9 => ("variables with unique values".into(),
-                  self.summary.variables_with_unique_values.clone()),
+            8 => (
+                "system missing over threshold".into(),
+                self.summary.system_missing_over_threshold.clone(),
+            ),
+            9 => (
+                "variables with unique values".into(),
+                self.summary.variables_with_unique_values.clone(),
+            ),
             _ => return None,
         };
 
@@ -187,9 +204,7 @@ pub struct Locator {
 }
 
 impl Locator {
-    pub fn new(variable_name: String,
-               variable_index: i32,
-               value_index: i32) -> Locator {
+    pub fn new(variable_name: String, variable_index: i32, value_index: i32) -> Locator {
         Locator {
             variable_name: variable_name,
             variable_index: variable_index,
@@ -208,8 +223,7 @@ pub struct Variable {
 }
 
 impl Variable {
-    pub fn from_raw_parts(variable: *mut readstat_variable_s,
-                          val_labels: *const c_char) -> Self {
+    pub fn from_raw_parts(variable: *mut readstat_variable_s, val_labels: *const c_char) -> Self {
         unsafe {
             let index = readstat_variable_get_index(variable);
 
@@ -244,6 +258,18 @@ impl Variable {
     }
 }
 
+impl<'a> From<&'a str> for Variable {
+    fn from(s: &str) -> Self {
+        Variable {
+            index: 0i32,
+            name: s.to_string(),
+            label: String::new(),
+            value_format: String::new(),
+            value_labels: String::new(),
+        }
+    }
+}
+
 #[derive(Serialize, Debug, Clone)]
 pub struct Value {
     pub variable: Variable,
@@ -251,6 +277,18 @@ pub struct Value {
     pub value: AnyValue,
     pub label: String,
     pub missing: Missing,
+}
+
+impl<'a> From<&'a str> for Value {
+    fn from(s: &str) -> Self {
+        Value {
+            variable: Variable::from("foo"),
+            row: 0,
+            value: AnyValue::from(s),
+            label: String::new(),
+            missing: Missing::NOT_MISSING,
+        }
+    }
 }
 
 /// Hash implemtation distiguishes values based on `value` field ONLY
@@ -267,4 +305,3 @@ impl PartialEq for Value {
 }
 
 impl Eq for Value {}
-

@@ -1,4 +1,3 @@
-
 macro_rules! str_to_ptr(($name:expr) =>
                         (ok!(CString::new($name)).into_raw()));
 macro_rules! ptr_to_str(($name:expr) =>
@@ -21,3 +20,14 @@ macro_rules! debug {
                                     );
 }
 
+#[cfg(test)]
+macro_rules! assert_setting {
+    ($setting:expr, $pass:expr, $fail:expr) => {
+        if let Some(ref status) = $setting {
+            assert_eq!(status.pass, $pass);
+            assert_eq!(status.fail, $fail);
+        } else {
+            assert!(false, " is None and should be Some(Setting)");
+        }
+    };
+}

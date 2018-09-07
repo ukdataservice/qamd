@@ -1,4 +1,3 @@
-
 pub trait Valid {
     fn validate(&self) -> Result<(), &'static str>;
 }
@@ -80,29 +79,28 @@ impl Valid for VariableConfig {
             None => (),
             Some(ref primary_variable) => if primary_variable.setting.len() < 1 {
                 return Err("primary_variable cannot be an empty string");
-            }
+            },
         }
 
         match self.variables_with_unique_values {
             None => (),
             Some(ref threshold) => if !(threshold.setting > 0 && threshold.setting <= 100) {
                 return Err("threshold out of bounds");
-            }
+            },
         }
-
 
         match self.odd_characters {
             None => (),
             Some(ref odd_characters) => if odd_characters.setting.len() < 1 {
                 return Err("variable_config.odd_characters cannot be empty");
-            }
+            },
         }
 
         match self.label_max_length {
             None => (),
             Some(ref label_max_length) => if label_max_length.setting < 0 {
                 return Err("variable_config.label_max_length cannot be negative");
-            }
+            },
         }
 
         Ok(())
@@ -136,24 +134,23 @@ impl Valid for ValueConfig {
             None => (),
             Some(ref odd_characters) => if odd_characters.setting.len() < 1 {
                 return Err("value_config.odd_characters cannot be empty");
-            }
+            },
         }
 
         match self.label_max_length {
             None => (),
             Some(ref label_max_length) => if label_max_length.setting < 0 {
                 return Err("value_config.label_max_length cannot be negative");
-            }
+            },
         }
 
         match self.system_missing_value_threshold {
             None => (),
             Some(ref threshold) => if !(threshold.setting > 0 && threshold.setting <= 100) {
                 return Err("threshold out of bounds");
-            }
+            },
         }
 
         Ok(())
     }
 }
-
