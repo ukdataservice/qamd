@@ -7,7 +7,7 @@ pub mod post;
 
 use readstat::context::Context;
 use config::Config;
-use report::{Report, Variable, Value};
+use report::{ Report, Variable, Value };
 
 use std::fmt;
 

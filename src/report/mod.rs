@@ -74,10 +74,12 @@ pub struct Summary {
     pub variable_label_max_length: Option<Status>,
     pub variable_odd_characters: Option<Status>,
 
-    // counting values that failed
     pub value_label_max_length: Option<Status>,
     pub value_odd_characters: Option<Status>,
+
+    // counting values that failed
     pub value_defined_missing_no_label: Option<Status>,
+    pub value_regex_patterns: Option<Status>,
 
     // post checks
     pub system_missing_over_threshold: Option<Status>, // number of variables
@@ -99,7 +101,9 @@ impl Summary {
 
             value_label_max_length: None,
             value_odd_characters: None,
+
             value_defined_missing_no_label: None,
+            value_regex_patterns: None,
 
             system_missing_over_threshold: None,
             variables_with_unique_values: None,
