@@ -7,7 +7,7 @@ use readstat::bindings::*;
 use readstat::handler::*;
 use readstat::context::Context;
 
-use readstat::csv::read::read_csv;
+use readstat::csv::read;
 
 use std::collections::HashMap;
 
@@ -25,7 +25,7 @@ pub fn read(path: &str, config: &Config) -> io::Result<Report> {
                   path.ends_with(".sav"),
                   path.ends_with(".por"),
                   path.ends_with(".sas7bdat")) {
-        (true, _, _, _, _) => unsafe { read_csv(path, config) },
+        (true, _, _, _, _) => read_csv(path, config),
         (_, true, _, _, _) => read_dta(path, config),
         (_, _, true, _, _) => read_sav(path, config),
         (_, _, _, true, _) => read_por(path, config),
@@ -33,6 +33,12 @@ pub fn read(path: &str, config: &Config) -> io::Result<Report> {
         _ => Err(io::Error::new(io::ErrorKind::Other,
                                 format!("Failed to determine file type of: {}",
                                     path))),
+    };
+}
+
+pub fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error> {
+    return unsafe {
+        read::read_csv(path, config)
     };
 }
 
@@ -177,6 +183,15 @@ mod tests {
         let config = Config::new();
 
         let report = ok!(read_sas7bdat("test/mtcars.sas7bdat", &config));
+        assert_eq!(report.metadata.variable_count, 12);
+        assert_eq!(report.metadata.raw_case_count, 32);
+    }
+
+    #[test]
+    fn test_read_csv() {
+        let config = Config::new();
+
+        let report = ok!(read_csv("test/mtcars.csv", &config));
         assert_eq!(report.metadata.variable_count, 12);
         assert_eq!(report.metadata.raw_case_count, 32);
     }
