@@ -162,11 +162,8 @@ fn override_config<T>(option: Option<T>, value: T) -> Option<T> {
 fn write_to_file(path: &str, contents: &str) -> io::Result<()> {
     let f = File::create(path)?;
 
-    {
-        let mut writer = BufWriter::new(f);
-
-        let _ = writer.write(contents.as_bytes());
-    }
+    let mut writer = BufWriter::new(f);
+    let _ = writer.write(contents.as_bytes());
 
     Ok(())
 }
