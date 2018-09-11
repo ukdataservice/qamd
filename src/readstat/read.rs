@@ -135,9 +135,7 @@ unsafe fn _read(path: &str,
     } else {
         // post checks
         for check in &(*context).checks.post {
-            check(&(*context),
-                  &(*context).config,
-                  &mut (*context).report);
+            check(&mut (*context));
         }
 
         // debug!("{:#?}", *context);

@@ -1,8 +1,7 @@
 use check::{contains, PostCheckFn};
-use config::Config;
 use readstat::context::Context;
 use report::missing::Missing;
-use report::{Locator, Report, Status};
+use report::{Locator, Status};
 
 use std::collections::HashSet;
 
@@ -18,7 +17,9 @@ pub fn register() -> Vec<PostCheckFn> {
 }
 
 /// Count the number of cases using the provided primary variable_count
-fn primary_variable(context: &Context, config: &Config, report: &mut Report) {
+fn primary_variable(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
     if let Some(ref primary_variable) = config.variable_config.primary_variable {
         if report.metadata.case_count.is_none() {
             report.metadata.case_count = Some(0);
@@ -37,7 +38,9 @@ fn primary_variable(context: &Context, config: &Config, report: &mut Report) {
 
 /// Report variables with a number of system missing values over a
 /// specified threhold.
-fn system_missing_over_threshold(context: &Context, config: &Config, report: &mut Report) {
+fn system_missing_over_threshold(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
     if let Some(ref setting) = config.value_config.system_missing_value_threshold {
         include_check!(
             report.summary.system_missing_over_threshold,
@@ -78,7 +81,9 @@ fn system_missing_over_threshold(context: &Context, config: &Config, report: &mu
 }
 
 /// Count the number of variables with one or more unique values
-fn variables_with_unique_values(context: &Context, config: &Config, report: &mut Report) {
+fn variables_with_unique_values(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
     if let Some(ref setting) = config.variable_config.variables_with_unique_values {
         include_check!(report.summary.variables_with_unique_values, &setting.desc);
 
@@ -97,7 +102,9 @@ fn variables_with_unique_values(context: &Context, config: &Config, report: &mut
 }
 
 /// Check for values over a specified max length
-fn value_label_max_length(context: &Context, config: &Config, report: &mut Report) {
+fn value_label_max_length(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
     if let Some(ref setting) = config.value_config.label_max_length {
         include_check!(
             report.summary.value_label_max_length,
@@ -131,7 +138,9 @@ fn value_label_max_length(context: &Context, config: &Config, report: &mut Repor
 /// Check for odd characters in the value and value label.
 /// If a value is determined to contain any odd character(s),
 /// the number of fails (or warns) are incremented.
-fn value_odd_characters(context: &Context, config: &Config, report: &mut Report) {
+fn value_odd_characters(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
     if let Some(ref setting) = config.value_config.odd_characters {
         include_check!(
             report.summary.value_odd_characters,
@@ -169,43 +178,59 @@ mod tests {
     use super::*;
 
     use check::Check;
-    use config::Setting;
-    use report::{Report, Value, Variable};
+    use config::{ Config, Setting };
+    use report::{ Report, Value, Variable };
 
     use std::collections::HashMap;
     // use report::anyvalue::AnyValue;
 
     fn setup() -> Context {
-        let mut config = Config::new();
-
-        config.variable_config.primary_variable = Some(Setting {
-            setting: String::from("foo"),
-            desc: String::from("primary variable"),
-        });
-
         let mut freq_table: HashMap<Variable, HashMap<Value, i32>> = HashMap::new();
 
         {
             let mut temp: HashMap<Value, i32> = HashMap::new();
-            temp.insert(Value::from("bar"), 3);
-            temp.insert(Value::from("baz"), 2);
-            temp.insert(Value::from("qux"), 5);
-            freq_table.insert(Variable::from("foo"), temp.clone());
 
-            temp.insert(Value::from("baz"), 5);
-            freq_table.insert(Variable::from("bar"), temp);
+            let mut qux = Value::from("qux");
+            qux.label = String::from("this is fine");
+
+            let mut bar = Value::from("bar#");
+            bar.label = String::from("this is far too long to pass the test");
+
+            temp.insert(bar, 3);
+            temp.insert(Value::from("!baz"), 3);
+            temp.insert(qux, 4);
+
+            freq_table.insert(Variable::from("first"), temp.clone());
         }
 
+        {
+            let mut temp: HashMap<Value, i32> = HashMap::new();
+            let mut missing_value: Value = Value::from("");
+            missing_value.missing = Missing::SYSTEM_MISSING;
+
+            temp.insert(Value::from("g@regs"), 2);
+            temp.insert(missing_value, 8);
+
+            freq_table.insert(Variable::from("second"), temp);
+        }
+
+        let mut report = Report::new();
+        report.metadata.variable_count = 2;
+        report.metadata.raw_case_count = 10;
+
         Context {
-            config: config,
-            report: Report::new(),
+            config: Config::new(),
+            report: report,
             checks: Check {
                 variable: vec![],
                 value: vec![],
                 post: vec![],
             },
             pb: None,
-            variables: vec![],
+            variables: vec![
+                Variable::from("first"), 
+                Variable::from("second")
+            ],
             value_labels: HashMap::new(),
             frequency_table: freq_table,
         }
@@ -213,14 +238,16 @@ mod tests {
 
     #[test]
     fn test_primary_variable() {
-        let context = setup();
-        let config = &context.config;
-        let mut report = context.report.clone();
+        let mut context = setup();
+        assert!(context.report.metadata.case_count.is_none());
 
-        assert!(report.metadata.case_count.is_none());
+        context.config.variable_config.primary_variable = Some(Setting {
+            setting: String::from("first"),
+            desc: String::from("primary variable"),
+        });
 
-        primary_variable(&context, config, &mut report);
-        if let Some(case_count) = report.metadata.case_count {
+        primary_variable(&mut context);
+        if let Some(case_count) = context.report.metadata.case_count {
             assert_eq!(case_count, 3);
         } else {
             assert!(
@@ -230,8 +257,62 @@ mod tests {
         }
     }
 
-    // fn test_system_missing_over_threshold() {}
-    // fn test_variables_with_unique_values() {}
-    // fn test_value_label_max_length() {}
-    // fn test_value_odd_characters() {}
+    #[test]
+    fn test_system_missing_over_threshold() {
+        let mut context = setup();
+        assert!(context.report.summary.system_missing_over_threshold.is_none());
+
+        context.config.value_config.system_missing_value_threshold = Some(Setting {
+            setting: 25,
+            desc: String::from("sysmiss values over a threshold")
+        });
+
+        system_missing_over_threshold(&mut context);
+        assert_setting!(context.report.summary.system_missing_over_threshold, 1, 1);
+    }
+
+    #[test]
+    fn test_variables_with_unique_values() {
+        let mut context = setup();
+        assert!(context.report.summary.variables_with_unique_values.is_none());
+
+        context.config.variable_config.variables_with_unique_values = Some(Setting {
+            setting: 2,
+            desc: String::from("outliers as defined by the threshold"),
+        });
+
+        variables_with_unique_values(&mut context);
+        assert_setting!(context.report.summary.variables_with_unique_values, 1, 1);
+    }
+
+    #[test]
+    fn test_value_label_max_length() {
+        let mut context = setup();
+        assert!(context.report.summary.value_label_max_length.is_none());
+
+        context.config.value_config.label_max_length = Some(Setting {
+            setting: 20,
+            desc: String::from("value labels cannot be too long"),
+        });
+
+        value_label_max_length(&mut context);
+        assert_setting!(context.report.summary.value_label_max_length, 4, 1);
+    }
+
+    #[test]
+    fn test_value_odd_characters() {
+        let mut context = setup();
+        assert!(context.report.summary.value_odd_characters.is_none());
+
+        context.config.value_config.odd_characters = Some(Setting {
+            setting: vec!["#", "@", "!"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<String>>(),
+            desc: String::from("value names and labels shouldn't contain some characters"),
+        });
+
+        value_odd_characters(&mut context);
+        assert_setting!(context.report.summary.value_odd_characters, 2, 3);
+    }
 }

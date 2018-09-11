@@ -17,7 +17,7 @@ type CheckFn<T> = fn(value: &T,
 
 pub type VariableCheckFn = CheckFn<Variable>;
 pub type ValueCheckFn = CheckFn<Value>;
-pub type PostCheckFn = CheckFn<Context>;
+pub type PostCheckFn = fn(context: &mut Context);
 
 /// Holds lists of checks to be run
 pub struct Check {

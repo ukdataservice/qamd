@@ -68,9 +68,7 @@ pub unsafe fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error>
     } else {
         // post checks
         for check in &(*context).checks.post {
-            check(&(*context),
-                  &(*context).config,
-                  &mut (*context).report);
+            check(&mut (*context));
         }
 
         Ok((*context).report.clone())
