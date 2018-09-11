@@ -28,46 +28,7 @@ static ABOUT_TEXT: &'static str =
             " is of a high quality.");
 
 fn main() {
-    let matches = App::new("QA My Data")
-                        .version("0.1.0")
-                        .author("Myles Offord - moffor@essex.ac.uk")
-                        .about(ABOUT_TEXT)
-                        .arg(Arg::with_name("input")
-                             .help("Sets the input file to use.")
-                             .required(true)
-                             .index(1))
-                        .arg(Arg::with_name("config")
-                             .short("c")
-                             .long("config")
-                             .value_name("FILE")
-                             .help("Sets a custom config file")
-                             .takes_value(true))
-                        .arg(Arg::with_name("output")
-                             .short("o")
-                             .long("output")
-                             .value_name("FILE")
-                             .help("Sets an optional output file.")
-                             .takes_value(true))
-                        .arg(Arg::with_name("output-format")
-                             .long("output-format")
-                             .value_name("FILE_TYPE")
-                             .help("Sets the output format. Can be either json or html Default to JSON.")
-                             .takes_value(true)
-                             .possible_values(&["json", "html"]))
-                        .arg(Arg::with_name("locators")
-                             .short("l")
-                             .long("include-locators")
-                             .help(format!("{} {} {}",
-                                           "If set the summary report includes",
-                                           "the index of the value(s) & or",
-                                           "variable(s) for any failed checks.").as_str()))
-                        .arg(Arg::with_name("disable-progress")
-                             .short("p")
-                             .long("disable-progress")
-                             .help(format!("{} {}",
-                                           "If set, disables the progress bar.",
-                                           "Useful if running inside scripts").as_str()))
-                        .get_matches();
+    let matches = parse_arguments();
 
     let config_file = match matches.value_of("config") {
         Some(config_path) => read_file(config_path)
@@ -123,6 +84,49 @@ fn main() {
         },
         Err(err) => eprintln!("{} : {}", err, line!()),
     }
+}
+
+fn parse_arguments() -> clap::ArgMatches<'static> {
+    App::new("QA My Data")
+        .version("0.1.0")
+        .author("Myles Offord - moffor@essex.ac.uk")
+        .about(ABOUT_TEXT)
+        .arg(Arg::with_name("input")
+            .help("Sets the input file to use.")
+            .required(true)
+            .index(1))
+        .arg(Arg::with_name("config")
+            .short("c")
+            .long("config")
+            .value_name("FILE")
+            .help("Sets a custom config file")
+            .takes_value(true))
+        .arg(Arg::with_name("output")
+            .short("o")
+            .long("output")
+            .value_name("FILE")
+            .help("Sets an optional output file.")
+            .takes_value(true))
+        .arg(Arg::with_name("output-format")
+            .long("output-format")
+            .value_name("FILE_TYPE")
+            .help("Sets the output format. Can be either json or html Default to JSON.")
+            .takes_value(true)
+            .possible_values(&["json", "html"]))
+        .arg(Arg::with_name("locators")
+            .short("l")
+            .long("include-locators")
+            .help(format!("{} {} {}",
+                          "If set the summary report includes",
+                          "the index of the value(s) & or",
+                          "variable(s) for any failed checks.").as_str()))
+        .arg(Arg::with_name("disable-progress")
+            .short("p")
+            .long("disable-progress")
+            .help(format!("{} {}",
+                          "If set, disables the progress bar.",
+                          "Useful if running inside scripts").as_str()))
+        .get_matches()
 }
 
 fn read_file(path: &str) -> io::Result<String> {
