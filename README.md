@@ -7,75 +7,7 @@ assurance that data is of a high quality.
 
 ## Getting Started
 
-## Installing
-
-### Prerequisites
-
-The following things are required to build the software from source:
-
-- [Git], to clone the repository
-- [Rust], toolchain including the rust compiler (`rustc`) & the `cargo` build system
-- [ReadStat], master branch, installed from source & `LD_LIBRARY_PATH` set correctly!
-
-#### Linux
-
-If you are on Ubuntu, install run the [`setup.sh`](./setup.sh) script. You may needed to
-run `chmod +x setup.sh`.
-
-First, install ReadStat. This is done by cloning the repository from github,
-and then a standard automake installation. This requires sudo/root
-permission to install.
-
-```
-git clone https://github.com/WizardMac/ReadStat.git
-cd ReadStat
-./autogen.sh
-./configure
-make
-sudo make install
-```
-
-Make sure to set `LD_LIBRARY_PATH` to `/usr/local/lib` by adding running the
-following commands. This only needs to be done once per install.
-
-```
-echo 'export LD_LIBRARY_PATH="/usr/local/lib"' | cat >> ~/.profile
-source ~/.profile
-```
-
-Next clone the `qamd` repository:
-
-```
-git clone https://github.com/Raymanns/qamd.git
-
-cd ./qamd
-cargo build --release
-
-echo 'export PATH="$PATH:$HOME/.src/target/release"' | cat >> ~/.profile
-```
-
-#### Windows
-
-First install the [linux subsystem for windows]. `qamd` currently
-requires Ubunut 16.04. Start it and you will be prompted to create
-a new user (this can be different or the same as your windows account).
-
-After this you will be presented with a bash prompt. Run the following:
-
-```
-sudo apt-get update && sudo apt-get upgrade
-```
-
-Next, open a command prompt (type Win+R, type `'cmd'` and press enter)
-and change to the directory you downloaded the install.bat. Run the
-`install.bat` and place `qamd.bat` somewhere and add it to your PATH
-environment variable. The install script can take some time.
-
-## Running the tests
-
-To run the unit & documentation tests run,
-
-`cargo test`
+See the [Wiki] for more information!
 
 ## Authors
 
@@ -102,4 +34,5 @@ See LICENCE.md for the full license.
 [Rust]: https://rust-lang.org/
 [ReadStat]: https://github.com/WizardMac/ReadStat
 [linux subsystem for windows]: https://docs.microsoft.com/en-us/windows/wsl/install-win10
+[Wiki]: https://github.com/Raymanns/qamd/wiki
 
