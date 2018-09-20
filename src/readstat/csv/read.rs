@@ -15,8 +15,8 @@ use std::ffi::CStr;
 
 use config::Config;
 use report::{ Report, Variable, Value };
-use report::missing::Missing;
-use report::anyvalue::AnyValue;
+use model::missing::Missing;
+use model::anyvalue::AnyValue;
 use readstat::context::Context;
 use check::Check;
 

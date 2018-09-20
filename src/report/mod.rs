@@ -1,10 +1,8 @@
-pub mod anyvalue;
-pub mod missing;
-
-use self::anyvalue::AnyValue;
-use self::missing::Missing;
 
 use readstat::bindings::*;
+
+use model::anyvalue::AnyValue;
+use model::missing::Missing;
 
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
