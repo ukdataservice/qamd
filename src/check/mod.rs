@@ -7,7 +7,9 @@ pub mod post;
 
 use readstat::context::Context;
 use config::Config;
-use report::{ Report, Variable, Value };
+use model::value::Value;
+use model::variable::Variable;
+use report::Report;
 
 use std::fmt;
 

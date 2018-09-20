@@ -1,8 +1,8 @@
 
 use config::Config;
-
+use model::value::Value;
+use model::variable::Variable;
 use report::Report;
-use report::{ Variable, Value };
 
 use check::Check;
 

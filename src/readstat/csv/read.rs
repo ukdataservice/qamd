@@ -13,12 +13,14 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::ffi::CStr;
 
+use check::Check;
 use config::Config;
-use report::{ Report, Variable, Value };
+use readstat::context::Context;
 use model::missing::Missing;
 use model::anyvalue::AnyValue;
-use readstat::context::Context;
-use check::Check;
+use model::value::Value;
+use model::variable::Variable;
+use report::Report;
 
 pub unsafe fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error> {
     let context: *mut Context = Box::into_raw(Box::new(Context {
@@ -196,7 +198,7 @@ fn get_file_contents(path: &str) -> io::Result<String> {
 
 // fn as_fixed_size(a: &mut [i8], s: &mut String) {
 //     let bytes = unsafe { s.as_mut_vec() };
-// 
+//
 //     for (first, second) in a.iter_mut().zip(bytes) {
 //         *first = *second as i8;
 //     }

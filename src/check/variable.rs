@@ -1,6 +1,7 @@
-use check::{contains, VariableCheckFn};
+use check::{ contains, VariableCheckFn };
 use config::Config;
-use report::{Locator, Report, Status, Variable};
+use model::variable::Variable;
+use report::{ Locator, Report, Status };
 
 use std::collections::HashSet;
 

@@ -1,6 +1,7 @@
 use config::Config;
 use model::missing::Missing;
-use report::{Locator, Report, Status, Value};
+use model::value::Value;
+use report::{ Locator, Report, Status };
 
 use check::ValueCheckFn;
 
@@ -42,7 +43,7 @@ mod tests {
 
     use config::Setting;
     use model::anyvalue::AnyValue;
-    use report::Variable;
+    use model::variable::Variable;
 
     fn setup() -> (Value, Config, Report) {
         let value = Value {

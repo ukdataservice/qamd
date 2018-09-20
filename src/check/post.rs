@@ -1,7 +1,7 @@
-use check::{contains, PostCheckFn};
+use check::{ contains, PostCheckFn };
 use readstat::context::Context;
 use model::missing::Missing;
-use report::{Locator, Status};
+use report::{ Locator, Status };
 
 use std::collections::HashSet;
 
@@ -217,7 +217,9 @@ mod tests {
 
     use check::Check;
     use config::{ Config, Setting };
-    use report::{ Report, Value, Variable };
+    use model::value::Value;
+    use model::variable::Variable;
+    use report::Report;
 
     use std::collections::HashMap;
     // use report::anyvalue::AnyValue;

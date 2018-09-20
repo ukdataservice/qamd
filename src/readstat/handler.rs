@@ -1,7 +1,8 @@
 
-use report::{ Value, Variable };
 use model::missing::Missing;
 use model::anyvalue::AnyValue;
+use model::value::Value;
+use model::variable::Variable;
 
 use readstat::bindings::*;
 use readstat::context::Context;
