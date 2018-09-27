@@ -2,7 +2,7 @@
 // use horrorshow::prelude::*;
 use horrorshow::helper::doctype;
 
-use horrorshow::{ Render };
+use horrorshow::{ Render, RenderBox };
 
 use report::{ Report, Locator };
 
@@ -33,7 +33,7 @@ $(function() {
 });
 "#;
 
-    format!("{}", html!{
+    format!("{}", html! {
         : doctype::HTML;
         html {
             head {
@@ -44,6 +44,7 @@ $(function() {
                      integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB",
                      crossorigin="anonymous");
             }
+
             body {
                 div(class="container") {
                     div(class="row") {
@@ -60,20 +61,18 @@ $(function() {
                                 th(scope="col") : "Description";
                             }
 
-                            @ for check in report.summary.clone() {
-                                @ if let (name, Some(status)) = check {
-                                    @ if status.fail > 0 {
-                                        tr(class="table-danger") {
-                                            td(scope="row") : format!("{}", name);
-                                            td : format!("failed ({})", status.fail);
-                                            td : &status.desc;
-                                        }
-                                    } else {
-                                        tr(class="table-success") {
-                                            td(scope="row") : format!("{}", name);
-                                            td : "passed";
-                                            td : &status.desc;
-                                        }
+                            @ for (name, status) in report.summary.iter() {
+                                @ if status.fail > 0 {
+                                    tr(class="table-danger") {
+                                        td(scope="row") : format!("{}", name);
+                                        td : format!("failed ({})", status.fail);
+                                        td : &status.desc;
+                                    }
+                                } else {
+                                    tr(class="table-success") {
+                                        td(scope="row") : format!("{}", name);
+                                        td : "passed";
+                                        td : &status.desc;
                                     }
                                 }
                             }
@@ -86,11 +85,10 @@ $(function() {
                         h2(id="selected-check", class="d-none") : "hidden";
                     }
 
-                    @ for check in report.summary.clone() {
-                        @ if let (name, Some(status)) = check {
-                            @ if let Some(locators) = status.locator {
-                                : locators_table(name, locators);
-                            }
+                    @ for (name, status) in report.summary.iter() {
+                        @ if let Some(ref locators) = status.locator {
+                            : locators_table(format!("{}", name),
+                                             locators.clone());
                         }
                     }
                 }
@@ -112,10 +110,12 @@ $(function() {
     })
 }
 
-fn locators_table(name: String, locators: HashSet<Locator>) -> Box<Render> {
+fn locators_table<'a>(name: String,
+                      locators: HashSet<Locator>) -> Box<RenderBox> {
     box_html! {
         div(class="row") {
-            table(id=name.replace(" ", "_"), class="table table-striped table-bordered d-none") {
+            table(id=name.to_lowercase().replace(" ", "_"),
+                  class="table table-striped table-bordered d-none") {
                 tr {
                     th(scope="col") : "# (limited to 1000)";
                     th(scope="col") : "Variable (Index)";
@@ -125,7 +125,9 @@ fn locators_table(name: String, locators: HashSet<Locator>) -> Box<Render> {
                 @ for (i, pair) in locators.iter().take(1000).enumerate() {
                     tr(class="locator") {
                         td(scope="row") : i + 1;
-                        td : format!("{} ({})", pair.variable_name, pair.variable_index);
+                        td : format!("{} ({})",
+                                     pair.variable_name,
+                                     pair.variable_index);
 
                         : value_if_positive(pair.value_index, "-");
                     }

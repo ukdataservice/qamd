@@ -138,8 +138,6 @@ unsafe fn _read(path: &str,
             check(&mut (*context));
         }
 
-        // debug!("{:#?}", *context);
-
         Ok((*context).report.clone())
     }
 }

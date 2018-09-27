@@ -44,13 +44,18 @@ fn primary_variable(context: &mut Context) {
 fn system_missing_over_threshold(context: &mut Context) {
     let (config, report) = (&context.config, &mut context.report);
 
-    if let Some(ref setting) = config.value_config.system_missing_value_threshold {
-        include_check!(
-            report.summary.system_missing_over_threshold,
-            format!("{} (Threshold: {}%)", setting.desc, setting.setting).as_str()
-        );
+    if let Some(ref setting) = config.value_config
+                                .system_missing_value_threshold {
 
-        if let Some(ref mut status) = report.summary.system_missing_over_threshold {
+        use check::CheckName::SystemMissingOverThreshold;
+        include_check!(report.summary,
+                       SystemMissingOverThreshold,
+                       format!("{} (Threshold: {}%)",
+                               setting.desc,
+                               setting.setting).as_str());
+
+        if let Some(ref mut status) = report.summary
+                                        .get_mut(&SystemMissingOverThreshold) {
             // map between variable and % missing
 
             // pull count of sysmiss values from Context.frequency_table
@@ -73,7 +78,11 @@ fn system_missing_over_threshold(context: &mut Context) {
                     if sys_miss > setting.setting as f32 {
                         status.fail += 1;
 
-                        include_locators!(config, status, variable.name, variable.index, -1);
+                        include_locators!(config,
+                                          status,
+                                          variable.name,
+                                          variable.index,
+                                          -1);
                     }
                 }
             }
@@ -88,14 +97,22 @@ fn variables_with_unique_values(context: &mut Context) {
     let (config, report) = (&context.config, &mut context.report);
 
     if let Some(ref setting) = config.variable_config.variables_with_unique_values {
-        include_check!(report.summary.variables_with_unique_values, &setting.desc);
+        use check::CheckName::VariablesWithUniqueValues;
+        include_check!(report.summary,
+                       VariablesWithUniqueValues,
+                       &setting.desc);
 
-        if let Some(ref mut status) = report.summary.variables_with_unique_values {
+        if let Some(ref mut status) = report.summary
+                                        .get_mut(&VariablesWithUniqueValues) {
             for (variable, map) in context.frequency_table.iter() {
                 if let Some(_) = map.iter().find(|(_value, occ)| *occ <= &setting.setting) {
                     status.fail += 1;
 
-                    include_locators!(config, status, variable.name, variable.index, -1);
+                    include_locators!(config,
+                                      status,
+                                      variable.name,
+                                      variable.index,
+                                      -1);
                 } else {
                     status.pass += 1
                 }
@@ -109,25 +126,26 @@ fn value_label_max_length(context: &mut Context) {
     let (config, report) = (&context.config, &mut context.report);
 
     if let Some(ref setting) = config.value_config.label_max_length {
-        include_check!(
-            report.summary.value_label_max_length,
-            format!("{} ({} characters)", setting.desc, &setting.setting).as_str()
-        );
+        use check::CheckName::ValueLabelMaxLength;
+        include_check!(report.summary,
+                       ValueLabelMaxLength,
+                       format!("{} ({} characters)",
+                               setting.desc,
+                               &setting.setting).as_str());
 
-        if let Some(ref mut status) = report.summary.value_label_max_length {
+        if let Some(ref mut status) = report.summary
+                                        .get_mut(&ValueLabelMaxLength) {
             for variable in (*context).variables.iter() {
                 if let Some(values) = (*context).frequency_table.get(&variable) {
                     for (value, _occ) in values.iter() {
                         if value.label.len() > setting.setting as usize {
                             status.fail += 1;
 
-                            include_locators!(
-                                config,
-                                status,
-                                value.variable.name,
-                                value.variable.index,
-                                -1
-                            );
+                            include_locators!(config,
+                                              status,
+                                              value.variable.name,
+                                              value.variable.index,
+                                              -1);
                         }
                     }
                 }
@@ -145,12 +163,15 @@ fn value_odd_characters(context: &mut Context) {
     let (config, report) = (&context.config, &mut context.report);
 
     if let Some(ref setting) = config.value_config.odd_characters {
-        include_check!(
-            report.summary.value_odd_characters,
-            format!("{} {:?}", setting.desc, &setting.setting).as_str()
-        );
+        use check::CheckName::ValueOddCharacters;
+        include_check!(report.summary,
+                       ValueOddCharacters,
+                       format!("{} {:?}",
+                               setting.desc,
+                               &setting.setting).as_str());
 
-        if let Some(ref mut status) = report.summary.value_odd_characters {
+        if let Some(ref mut status) = report.summary
+                                        .get_mut(&ValueOddCharacters) {
             for variable in (*context).variables.iter() {
                 if let Some(values) = (*context).frequency_table.get(&variable) {
                     for (value, _occ) in values.iter() {
@@ -159,13 +180,11 @@ fn value_odd_characters(context: &mut Context) {
                         {
                             status.fail += 1;
 
-                            include_locators!(
-                                config,
-                                status,
-                                value.variable.name,
-                                value.variable.index,
-                                value.row
-                            );
+                            include_locators!(config,
+                                              status,
+                                              value.variable.name,
+                                              value.variable.index,
+                                              value.row);
                         } else {
                             status.pass += 1;
                         }
@@ -178,10 +197,16 @@ fn value_odd_characters(context: &mut Context) {
 
 /// Flags values that match a regex pattern
 fn regex_patterns(context: &mut Context) {
-    if let Some(ref setting) = context.config.value_config.regex_patterns {
-        include_check!(context.report.summary.value_regex_patterns, &setting.desc);
+    let (config, report) = (&context.config, &mut context.report);
 
-        if let Some(ref mut status) = context.report.summary.value_regex_patterns {
+    if let Some(ref setting) = config.value_config.regex_patterns {
+        use check::CheckName::ValueRegexPatterns;
+        include_check!(report.summary,
+                       ValueRegexPatterns,
+                       &setting.desc);
+
+        if let Some(ref mut status) = report.summary
+                                        .get_mut(&ValueRegexPatterns) {
             for variable in context.variables.iter() {
                 for (value, _occ) in context.frequency_table.get(&variable).unwrap() {
                     for pattern in &setting.setting {
@@ -191,14 +216,11 @@ fn regex_patterns(context: &mut Context) {
                            || re.is_match(&value.label) {
                             status.fail += 1;
 
-                            include_locators!(
-                                context.config,
-                                status,
-                                value.variable.name,
-                                value.variable.index,
-                                value.row
-                            );
-
+                            include_locators!(config,
+                                              status,
+                                              value.variable.name,
+                                              value.variable.index,
+                                              value.row);
                             break;
                         }
                     }
@@ -206,7 +228,7 @@ fn regex_patterns(context: &mut Context) {
                 }
             }
 
-            status.pass = context.report.metadata.variable_count - status.fail;
+            status.pass = report.metadata.variable_count - status.fail;
         }
     }
 }
@@ -290,45 +312,69 @@ mod tests {
         if let Some(case_count) = context.report.metadata.case_count {
             assert_eq!(case_count, 3);
         } else {
-            assert!(
-                false,
-                "report.metadata.case_count should be Some(i32) but is None"
-            )
+            assert!(false, concat!("report.metadata.case_count should ",
+                                   "be Some(i32) but is None"));
         }
     }
 
     #[test]
     fn test_system_missing_over_threshold() {
         let mut context = setup();
-        assert!(context.report.summary.system_missing_over_threshold.is_none());
 
-        context.config.value_config.system_missing_value_threshold = Some(Setting {
-            setting: 25,
-            desc: String::from("sysmiss values over a threshold")
-        });
+        use check::CheckName::SystemMissingOverThreshold;
+
+        assert!(context.report
+                       .summary
+                       .get(&SystemMissingOverThreshold)
+                       .is_none());
+
+        context.config.value_config.system_missing_value_threshold
+            = Some(Setting {
+                setting: 25,
+                desc: String::from("sysmiss values over a threshold")
+            });
 
         system_missing_over_threshold(&mut context);
-        assert_setting!(context.report.summary.system_missing_over_threshold, 1, 1);
+        assert_setting!(context.report
+                               .summary
+                               .get(&SystemMissingOverThreshold),
+                        1, 1);
     }
 
     #[test]
     fn test_variables_with_unique_values() {
         let mut context = setup();
-        assert!(context.report.summary.variables_with_unique_values.is_none());
 
-        context.config.variable_config.variables_with_unique_values = Some(Setting {
-            setting: 2,
-            desc: String::from("outliers as defined by the threshold"),
-        });
+        use check::CheckName::VariablesWithUniqueValues;
+
+        assert!(context.report
+                       .summary
+                       .get(&VariablesWithUniqueValues)
+                       .is_none());
+
+        context.config.variable_config.variables_with_unique_values
+            = Some(Setting {
+                setting: 2,
+                desc: String::from("outliers as defined by the threshold"),
+            });
 
         variables_with_unique_values(&mut context);
-        assert_setting!(context.report.summary.variables_with_unique_values, 1, 1);
+        assert_setting!(context.report
+                               .summary
+                               .get(&VariablesWithUniqueValues),
+                        1, 1);
     }
 
     #[test]
     fn test_value_label_max_length() {
         let mut context = setup();
-        assert!(context.report.summary.value_label_max_length.is_none());
+
+        use check::CheckName::ValueLabelMaxLength;
+
+        assert!(context.report
+                       .summary
+                       .get(&ValueLabelMaxLength)
+                       .is_none());
 
         context.config.value_config.label_max_length = Some(Setting {
             setting: 20,
@@ -336,13 +382,22 @@ mod tests {
         });
 
         value_label_max_length(&mut context);
-        assert_setting!(context.report.summary.value_label_max_length, 1, 1);
+        assert_setting!(context.report
+                               .summary
+                               .get(&ValueLabelMaxLength),
+                        1, 1);
     }
 
     #[test]
     fn test_value_odd_characters() {
         let mut context = setup();
-        assert!(context.report.summary.value_odd_characters.is_none());
+
+        use check::CheckName::ValueOddCharacters;
+
+        assert!(context.report
+                       .summary
+                       .get(&ValueOddCharacters)
+                       .is_none());
 
         context.config.value_config.odd_characters = Some(Setting {
             setting: vec!["#", "@", "!"]
@@ -353,13 +408,22 @@ mod tests {
         });
 
         value_odd_characters(&mut context);
-        assert_setting!(context.report.summary.value_odd_characters, 2, 3);
+        assert_setting!(context.report
+                               .summary
+                               .get(&ValueOddCharacters),
+                        2, 3);
     }
 
     #[test]
     fn test_regex_patterns() {
         let mut context = setup();
-        assert!(context.report.summary.value_regex_patterns.is_none());
+
+        use check::CheckName::ValueRegexPatterns;
+
+        assert!(context.report
+                       .summary
+                       .get(&ValueRegexPatterns)
+                       .is_none());
 
         context.config.value_config.regex_patterns = Some(Setting {
             setting: vec![r"^qux".to_string()],
@@ -367,6 +431,9 @@ mod tests {
         });
 
         regex_patterns(&mut context);
-        assert_setting!(context.report.summary.value_regex_patterns, 1, 1);
+        assert_setting!(context.report
+                               .summary
+                               .get(&ValueRegexPatterns),
+                        1, 1);
     }
 }

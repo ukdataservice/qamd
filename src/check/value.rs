@@ -15,12 +15,20 @@ pub fn register() -> Vec<ValueCheckFn> {
 // Value checks
 
 /// Check for defined missing values that do not have a label
-fn value_defined_missing_no_label(value: &Value, config: &Config, report: &mut Report) {
+fn value_defined_missing_no_label(value: &Value,
+                                  config: &Config,
+                                  report: &mut Report) {
     if let Some(ref setting) = config.value_config.defined_missing_no_label {
-        include_check!(report.summary.value_defined_missing_no_label, &setting.desc);
+        use check::CheckName::ValueDefinedMissingNoLabel;
+        include_check!(report.summary,
+                       ValueDefinedMissingNoLabel,
+                       &setting.desc);
 
-        if let Some(ref mut status) = report.summary.value_defined_missing_no_label {
-            if setting.setting && value.missing == Missing::DEFINED_MISSING && value.label == "" {
+        if let Some(ref mut status) = report.summary
+                                      .get_mut(&ValueDefinedMissingNoLabel) {
+            if setting.setting &&
+                value.missing == Missing::DEFINED_MISSING &&
+                    value.label == "" {
                 status.fail += 1;
 
                 include_locators!(
@@ -65,24 +73,29 @@ mod tests {
 
     #[test]
     fn test_value_defined_missing_no_label() {
+        use check::CheckName::ValueDefinedMissingNoLabel;
         let (mut value, mut config, mut report) = setup();
-        assert!(report.summary.value_defined_missing_no_label.is_none());
 
         config.value_config.defined_missing_no_label = Some(Setting {
             setting: true,
             desc: "description from config".to_string(),
         });
 
+        assert!(report.summary.get_mut(&ValueDefinedMissingNoLabel).is_none());
+
+
         value.missing = Missing::DEFINED_MISSING;
         value.label = "".to_string();
 
         value_defined_missing_no_label(&value, &config, &mut report);
-        assert_setting!(report.summary.value_defined_missing_no_label, 0, 1);
+        assert_setting!(report.summary.get_mut(&ValueDefinedMissingNoLabel),
+                        0, 1);
 
         value.missing = Missing::NOT_MISSING;
 
         value_defined_missing_no_label(&value, &config, &mut report);
-        assert_setting!(report.summary.value_defined_missing_no_label, 1, 1);
+        assert_setting!(report.summary.get_mut(&ValueDefinedMissingNoLabel),
+                        1, 1);
     }
 
 }
