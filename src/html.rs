@@ -20,7 +20,7 @@ $(function() {
     $('h2#selected-check').first().removeClass('d-none');
     $('h2#selected-check')[0].innerText = name;
 
-    var selector = 'table#' + name.replace(/ /g, '_');
+    var selector = 'table#' + name.toLowerCase().replace(/ /g, '_');
 
     // hide all the tables
     $('table.table.table-striped').each(function(index, elem) {
