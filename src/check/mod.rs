@@ -29,6 +29,7 @@ pub enum CheckName {
     ValueLabelMaxLength,
     ValueOddCharacters,
     ValueRegexPatterns,
+    Spellcheck,
 }
 
 impl fmt::Display for CheckName {
@@ -71,6 +72,12 @@ pub fn contains(string: &str, patterns: &Vec<String>) -> bool {
         .fold(false, |a, b| { a || b })
 }
 
+pub fn only_contains(string: &str, patterns: &Vec<String>) -> bool {
+    string.split(" ")
+        .map(|w| patterns.contains(&w.to_string()))
+        .fold(true, |a, b| a && b)
+}
+
 fn to_sentence(s: &str) -> String {
     let r = s.chars().fold(String::new(), |a, b| {
         if b.is_uppercase() {
@@ -98,4 +105,38 @@ mod macros;
 pub mod variable;
 pub mod value;
 pub mod post;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_contains() {
+        let patterns = vec!["bar".to_string()];
+
+        assert!(contains("foo bar baz", &patterns));
+        assert_eq!(contains("foo baz qux", &patterns), false);
+    }
+
+    #[test]
+    fn test_only_contains() {
+        let patterns = vec!["foo", "baz", "qux"].iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>();
+
+        assert!(only_contains("foo baz qux", &patterns));
+        assert_eq!(only_contains("foo bar baz", &patterns), false);
+    }
+
+    #[test]
+    fn test_to_sentence() {
+        assert_eq!(to_sentence("ThisIsASentence"), "This is a sentence");
+        assert_eq!(to_sentence("thisIsAlsoASentence"), "This is also a sentence");
+    }
+
+    #[test]
+    fn test_capitalize() {
+        assert_eq!(capitalize("word"), "Word".to_string());
+    }
+}
 
