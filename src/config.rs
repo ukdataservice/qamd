@@ -1,3 +1,7 @@
+use std::io;
+use std::io::prelude::*;
+use std::fs::File;
+
 pub trait Valid {
     fn validate(&self) -> Result<(), &'static str>;
 }
@@ -21,6 +25,8 @@ pub struct Config {
     pub include_locators: Option<bool>,
     pub progress: Option<bool>,
 
+    pub spellcheck: Option<Setting<Vec<String>>>,
+
     pub variable_config: VariableConfig,
     pub value_config: ValueConfig,
 }
@@ -31,9 +37,40 @@ impl Config {
             include_locators: None,
             progress: None,
 
+            spellcheck: None,
+
             variable_config: VariableConfig::new(),
             value_config: ValueConfig::new(),
         }
+    }
+
+    pub fn get_dictonary(&self) -> Result<Vec<String>, String> {
+        if let Some(ref paths) = self.spellcheck {
+            let mut result: Vec<String> = vec!();
+
+            for path in paths.setting.iter() {
+                match Config::read_file(&path) {
+                    Ok(contents) => result.extend(contents.split("\n")
+                                                  .map(|s| {
+                                                      s.trim().to_string()
+                                                  }).collect::<Vec<String>>()),
+                    Err(e) => return Err(e.to_string()),
+                }
+            }
+
+            return Ok(result);
+        }
+
+        Err("No file specified.".to_string())
+    }
+
+    fn read_file(path: &str) -> io::Result<String> {
+        let mut f = File::open(path)?;
+
+        let mut buffer = String::new();
+        f.read_to_string(&mut buffer)?;
+
+        Ok(buffer)
     }
 }
 

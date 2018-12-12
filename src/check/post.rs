@@ -1,9 +1,12 @@
-use check::{ contains, PostCheckFn };
+use check::{ contains, only_contains, PostCheckFn };
+use model::value::Value;
+use model::variable::Variable;
 use readstat::context::Context;
 use model::missing::Missing;
 use report::{ Locator, Status };
 
 use std::collections::HashSet;
+use std::collections::HashMap;
 
 use regex::Regex;
 
@@ -16,6 +19,7 @@ pub fn register() -> Vec<PostCheckFn> {
         value_label_max_length,
         value_odd_characters,
         regex_patterns,
+        spellcheck,
     ]
 }
 
@@ -233,6 +237,81 @@ fn regex_patterns(context: &mut Context) {
     }
 }
 
+fn spellcheck(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
+    if config.spellcheck.is_none() {
+        return;
+    }
+
+    let setting_desc = match config.spellcheck {
+        Some(ref setting) => &setting.desc,
+        None => "spellcheck not set",
+    };
+
+    match config.get_dictonary() {
+        Ok(words) => {
+            use check::CheckName::Spellcheck;
+            include_check!(report.summary,
+                           Spellcheck,
+                           &setting_desc);
+
+            if let Some(ref mut status) = report.summary
+                .get_mut(&Spellcheck) {
+
+                for variable in context.variables.iter() {
+                    let variable_text = format!(
+                        "{} {}",
+                        variable.name,
+                        variable.label);
+                    if only_contains(&variable_text, &words) {
+                        include_locators!(
+                            config,
+                            status,
+                            variable.name,
+                            variable.index,
+                            -1);
+                        status.fail += 1;
+                    }
+
+                    for (value, _occ) in context.frequency_table
+                        .get(&variable)
+                        .unwrap() {
+
+                        let value_text = format!(
+                            "{} {}",
+                            value.value,
+                            value.label);
+                        if !only_contains(&value_text, &words) {
+                            include_locators!(
+                                config,
+                                status,
+                                value.variable.name,
+                                value.variable.index,
+                                value.row);
+                            status.fail += 1;
+                        }
+                    }
+                }
+
+                //status.pass = 0;
+                //report.metadata.variable_count - status.fail;
+                status.pass =
+                    total_checked(&context.frequency_table) - status.fail;
+            }
+        },
+        Err(e) => {
+            panic!("An Error occurred: {}", e);
+        },
+    }
+}
+
+fn total_checked(frequency_table: &HashMap<Variable, HashMap<Value, i32>>) -> i32 {
+    frequency_table.iter().fold(0, |total, (_var, val)| {
+        total + val.len() as i32 + 1
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -435,5 +514,22 @@ mod tests {
                                .summary
                                .get(&ValueRegexPatterns),
                         1, 1);
+    }
+
+    #[test]
+    fn test_spellcheck() {
+        let mut context = setup();
+
+        use check::CheckName::Spellcheck;
+
+        assert!(context.report.summary.get(&Spellcheck).is_none());
+
+        context.config.spellcheck = Some(Setting {
+            setting: vec!["test/words.txt".to_string()],
+            desc: "spellcheck: description from config".to_string(),
+        });
+
+        spellcheck(&mut context);
+        assert_setting!(context.report.summary.get(&Spellcheck), 1, 6);
     }
 }
