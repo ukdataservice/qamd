@@ -78,14 +78,19 @@ pub struct Locator {
     pub variable_name: String,
     pub variable_index: i32,
     pub value_index: i32,
+    pub reason: Option<String>,
 }
 
 impl Locator {
-    pub fn new(variable_name: String, variable_index: i32, value_index: i32) -> Locator {
+    pub fn new(variable_name: String,
+               variable_index: i32,
+               value_index: i32,
+               reason: Option<String>) -> Locator {
         Locator {
             variable_name: variable_name,
             variable_index: variable_index,
             value_index: value_index,
+            reason: reason,
         }
     }
 }

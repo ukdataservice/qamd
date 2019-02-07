@@ -30,6 +30,7 @@ pub enum CheckName {
     ValueOddCharacters,
     ValueRegexPatterns,
     Spellcheck,
+    BadFileName,
 }
 
 impl fmt::Display for CheckName {

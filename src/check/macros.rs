@@ -14,7 +14,8 @@ macro_rules! include_locators(($config:expr,
         if include_locators {
             let locator = Locator::new($variable_name.clone(),
                                        $variable_index,
-                                       $value_index);
+                                       $value_index,
+                                       None);
             if let Some(ref mut locators) = $status.locator {
                 locators.insert(locator);
             } else {

@@ -26,6 +26,7 @@ pub struct Config {
     pub progress: Option<bool>,
 
     pub spellcheck: Option<Setting<Vec<String>>>,
+    pub bad_filename: Option<Setting<String>>,
 
     pub variable_config: VariableConfig,
     pub value_config: ValueConfig,
@@ -38,6 +39,7 @@ impl Config {
             progress: None,
 
             spellcheck: None,
+            bad_filename: None,
 
             variable_config: VariableConfig::new(),
             value_config: ValueConfig::new(),

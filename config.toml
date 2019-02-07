@@ -7,6 +7,10 @@ setting = [
 ]
 desc = "Word file use for spell check."
 
+[bad_filename]
+setting = '^([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$'
+desc = "Filenames must match a given regular expression to be considered valid"
+
 [variable_config.odd_characters]
 setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]
 desc = "Variable names and lables cannot contain certain 'odd' characters."
