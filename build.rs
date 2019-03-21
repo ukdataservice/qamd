@@ -1,40 +1,41 @@
 extern crate bindgen;
+extern crate curl;
 extern crate pkg_config;
 
+use curl::easy::Easy;
+
+use std::io::prelude::*;
+use std::io::BufWriter;
+use std::fs::File;
 use std::path::PathBuf;
 use std::env;
 
 const LIBRARY: &'static str = "readstat";
-const FRAMEWORK_LIBRARY: &'static str = "readstat_framework";
+const LIB_SEARCH_PATH: &'static str = "readstat/lib/static/";
 
-macro_rules! get(($name:expr) => (ok!(env::var($name))));
-macro_rules! ok(($expression:expr) => ($expression.unwrap()));
+const READSTAT_URL: &'static str = "https://github.com/WizardMac/ReadStat/archive/master.zip";
+
+macro_rules! get(($name:expr) => (env::var($name).unwrap()));
 macro_rules! log {
     ($fmt:expr) => (println!(concat!("libreadstat/build.rs:{}: ", $fmt), line!()));
     ($fmt:expr, $($arg:tt)*) => (println!(concat!("libreadstat/build.rs:{}: ", $fmt),
                                           line!(), $($arg)*));
 }
-macro_rules! log_var(($var:ident) =>
-                     (log!(concat!(stringify!($var), " = {:?}"), $var)));
+// macro_rules! log_var(($var:ident) =>
+//                      (log!(concat!(stringify!($var), " = {:?}"), $var)));
 
 fn main() {
-    if pkg_config::find_library(LIBRARY).is_ok() {
-        log!("Returning early because {} was already found", LIBRARY);
-        return;
-    }
+    // if pkg_config::find_library(LIBRARY).is_ok() {
+    //     log!("Returning early because {} was already found", LIBRARY);
+    //     return;
+    // }
 
-    let lib_dir = PathBuf::from("/usr/local/lib");
-    log_var!(lib_dir);
-    let framework_library_path =
-        lib_dir.join(format!("lib{}.so", FRAMEWORK_LIBRARY));
-    log_var!(framework_library_path);
+    println!("cargo:rustc-link-lib=static={}", LIBRARY);
+    println!("cargo:rustc-link-search={}", LIB_SEARCH_PATH);
 
-    if !framework_library_path.exists() {
-        log!("ReadStat not installed, exiting.");
-    }
+    get_readstat();
 
-    println!("cargo:rustc-link-lib=dylib={}", LIBRARY);
-    println!("cargo:rustc-link-search=/usr/local/lib");
+    // build_readstat(); // ???
 
     generate_bindings();
 }
@@ -63,6 +64,28 @@ fn generate_bindings() {
         log!("Successfully written bindings to {:?}", &bindings_file);
     } else {
         log!("Bindings already generated. Skipping.");
+    }
+}
+
+fn get_readstat() {
+    let out_path = PathBuf::from(&get!("OUT_DIR"));
+    let tmp_file_path = out_path.join("readstat_master.zip");
+    let tmp_file_path_clone = tmp_file_path.clone();
+
+    // Dowload zip
+    if !&tmp_file_path.exists() {
+        let mut easy = Easy::new();
+
+        let _ = easy.url(READSTAT_URL);
+        easy.write_function(move |data| {
+            let tmp_file = File::create(&tmp_file_path_clone).unwrap();
+            let mut buffer = BufWriter::new(tmp_file);
+
+            Ok(buffer.write(data).unwrap())
+        }).unwrap();
+        log!("Downloading: {}", &READSTAT_URL);
+        easy.perform().unwrap();
+        log!("Donloaded: {} to {:?}", &READSTAT_URL, &tmp_file_path);
     }
 }
 
