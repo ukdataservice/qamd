@@ -80,6 +80,8 @@ desc = "Values defined as missing must have a label. This only affects SPSS file
 
 [value_config.regex_patterns]
 setting = [
+  # Suffers from Leaning toothpick syndrome methinks.
+  # YAML should be a better option.
   # Simple Email address Regex
   # "^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,4})+)$"
   # UK post code regex

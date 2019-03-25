@@ -16,6 +16,5 @@ regex = "1.0.4"
 
 [build-dependencies]
 bindgen = "0.26.3"
-curl = "0.4.20"
 pkg-config = "0.3.11"
 

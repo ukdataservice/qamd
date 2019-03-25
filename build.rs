@@ -1,46 +1,76 @@
 extern crate bindgen;
-extern crate curl;
 extern crate pkg_config;
 
-use curl::easy::Easy;
-
-use std::io::prelude::*;
-use std::io::BufWriter;
-use std::fs::File;
 use std::path::PathBuf;
 use std::env;
+use std::process::Command;
 
-const LIBRARY: &'static str = "readstat";
-const LIB_SEARCH_PATH: &'static str = "readstat/lib/static/";
+const LIBS: [&'static str; 3]= [
+    "static=ReadStat",
+    "dylib=iconv",
+    "dylib=z",
+];
 
-const READSTAT_URL: &'static str = "https://github.com/WizardMac/ReadStat/archive/master.zip";
+const LIB_SEARCH_PATHS: [&'static str; 1] = [
+    "/usr/lib",
+];
+
+const READSTAT_URL: &'static str = "https://github.com/WizardMac/ReadStat.git";
+const READSTAT_DIR: &'static str = "ReadStat/";
 
 macro_rules! get(($name:expr) => (env::var($name).unwrap()));
 macro_rules! log {
-    ($fmt:expr) => (println!(concat!("libreadstat/build.rs:{}: ", $fmt), line!()));
-    ($fmt:expr, $($arg:tt)*) => (println!(concat!("libreadstat/build.rs:{}: ", $fmt),
+    ($fmt:expr) => (println!(concat!("qamd/build.rs:{}: ", $fmt), line!()));
+    ($fmt:expr, $($arg:tt)*) => (println!(concat!("qamd/build.rs:{}: ", $fmt),
                                           line!(), $($arg)*));
 }
-// macro_rules! log_var(($var:ident) =>
-//                      (log!(concat!(stringify!($var), " = {:?}"), $var)));
+macro_rules! log_var(($var:ident) =>
+                     (log!(concat!(stringify!($var), " = {:?}"), $var)));
 
+/// Setup the rustc link search directories & library
 fn main() {
-    // if pkg_config::find_library(LIBRARY).is_ok() {
-    //     log!("Returning early because {} was already found", LIBRARY);
-    //     return;
-    // }
+    LIBS.iter()
+        .for_each(|lib| println!("cargo:rustc-link-lib={}", lib));
 
-    println!("cargo:rustc-link-lib=static={}", LIBRARY);
-    println!("cargo:rustc-link-search={}", LIB_SEARCH_PATH);
+    LIB_SEARCH_PATHS.iter()
+        .for_each(|lib| println!("cargo:rustc-link-search={}", lib));
+
+    let out_path = PathBuf::from(&get!("OUT_DIR"));
+    log_var!(out_path);
+    let mut readstat_search_path = out_path.join(&READSTAT_DIR);
+    readstat_search_path.push("src");
+    println!("cargo:rustc-link-search={}", &readstat_search_path.display());
 
     get_readstat();
 
-    // build_readstat(); // ???
+    run("make", |command| {
+        command.current_dir(&out_path)
+    });
 
     generate_bindings();
 }
 
-/// Use bindgen to generate the rust code required to interact with the C header file
+/// Clone the readstat directory if it isn't already present.
+fn get_readstat() {
+    let out_path = PathBuf::from(&get!("OUT_DIR"));
+    let clone_dir = out_path.join(&READSTAT_DIR);
+
+    // Clone repo
+    if !&clone_dir.exists() {
+        run("git", |command| {
+            command.current_dir(&out_path)
+                .arg("clone")
+                .arg(&READSTAT_URL)
+        });
+
+        run("cp", |command| {
+            command.arg("Makefile")
+                .arg(&out_path)
+        });
+    }
+}
+
+/// Use bindgen to generate the rust code required to interact with the C code.
 fn generate_bindings() {
     let out_path = PathBuf::from(&get!("OUT_DIR"));
     let bindings_file = out_path.join("bindings.rs");
@@ -67,25 +97,15 @@ fn generate_bindings() {
     }
 }
 
-fn get_readstat() {
-    let out_path = PathBuf::from(&get!("OUT_DIR"));
-    let tmp_file_path = out_path.join("readstat_master.zip");
-    let tmp_file_path_clone = tmp_file_path.clone();
+/// Build and run a Command and log the result.
+fn run<F>(name: &str, mut configure: F) where F: FnMut(&mut Command) -> &mut Command {
+    let mut command = Command::new(name);
+    let configured = configure(&mut command);
 
-    // Dowload zip
-    if !&tmp_file_path.exists() {
-        let mut easy = Easy::new();
-
-        let _ = easy.url(READSTAT_URL);
-        easy.write_function(move |data| {
-            let tmp_file = File::create(&tmp_file_path_clone).unwrap();
-            let mut buffer = BufWriter::new(tmp_file);
-
-            Ok(buffer.write(data).unwrap())
-        }).unwrap();
-        log!("Downloading: {}", &READSTAT_URL);
-        easy.perform().unwrap();
-        log!("Donloaded: {} to {:?}", &READSTAT_URL, &tmp_file_path);
+    log!("Executing {:?}", configured);
+    if !configured.status().unwrap().success() {
+        panic!("Failed to execute {:?}", configured);
     }
+    log!("Command {:?} finished sucessfully.", configured);
 }
 
