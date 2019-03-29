@@ -15,6 +15,6 @@ csv = "1.0.1"
 regex = "1.0.4"
 
 [build-dependencies]
-pkg-config = "0.3.11"
 bindgen = "0.26.3"
+pkg-config = "0.3.11"
 

@@ -3,43 +3,74 @@ extern crate pkg_config;
 
 use std::path::PathBuf;
 use std::env;
+use std::process::Command;
 
-const LIBRARY: &'static str = "readstat";
-const FRAMEWORK_LIBRARY: &'static str = "readstat_framework";
+const LIBS: [&'static str; 3]= [
+    "static=ReadStat",
+    "dylib=iconv",
+    "dylib=z",
+];
 
-macro_rules! get(($name:expr) => (ok!(env::var($name))));
-macro_rules! ok(($expression:expr) => ($expression.unwrap()));
+const LIB_SEARCH_PATHS: [&'static str; 1] = [
+    "/usr/lib",
+];
+
+const READSTAT_URL: &'static str = "https://github.com/WizardMac/ReadStat.git";
+const READSTAT_DIR: &'static str = "ReadStat/";
+
+macro_rules! get(($name:expr) => (env::var($name).unwrap()));
 macro_rules! log {
-    ($fmt:expr) => (println!(concat!("libreadstat/build.rs:{}: ", $fmt), line!()));
-    ($fmt:expr, $($arg:tt)*) => (println!(concat!("libreadstat/build.rs:{}: ", $fmt),
+    ($fmt:expr) => (println!(concat!("qamd/build.rs:{}: ", $fmt), line!()));
+    ($fmt:expr, $($arg:tt)*) => (println!(concat!("qamd/build.rs:{}: ", $fmt),
                                           line!(), $($arg)*));
 }
 macro_rules! log_var(($var:ident) =>
                      (log!(concat!(stringify!($var), " = {:?}"), $var)));
 
+/// Setup the rustc link search directories & library
 fn main() {
-    if pkg_config::find_library(LIBRARY).is_ok() {
-        log!("Returning early because {} was already found", LIBRARY);
-        return;
-    }
+    LIBS.iter()
+        .for_each(|lib| println!("cargo:rustc-link-lib={}", lib));
 
-    let lib_dir = PathBuf::from("/usr/local/lib");
-    log_var!(lib_dir);
-    let framework_library_path =
-        lib_dir.join(format!("lib{}.so", FRAMEWORK_LIBRARY));
-    log_var!(framework_library_path);
+    LIB_SEARCH_PATHS.iter()
+        .for_each(|lib| println!("cargo:rustc-link-search={}", lib));
 
-    if !framework_library_path.exists() {
-        log!("ReadStat not installed, exiting.");
-    }
+    let out_path = PathBuf::from(&get!("OUT_DIR"));
+    log_var!(out_path);
+    let mut readstat_search_path = out_path.join(&READSTAT_DIR);
+    readstat_search_path.push("src");
+    println!("cargo:rustc-link-search={}", &readstat_search_path.display());
 
-    println!("cargo:rustc-link-lib=dylib={}", LIBRARY);
-    println!("cargo:rustc-link-search=/usr/local/lib");
+    get_readstat();
+
+    run("make", |command| {
+        command.current_dir(&out_path)
+    });
 
     generate_bindings();
 }
 
-/// Use bindgen to generate the rust code required to interact with the C header file
+/// Clone the readstat directory if it isn't already present.
+fn get_readstat() {
+    let out_path = PathBuf::from(&get!("OUT_DIR"));
+    let clone_dir = out_path.join(&READSTAT_DIR);
+
+    // Clone repo
+    if !&clone_dir.exists() {
+        run("git", |command| {
+            command.current_dir(&out_path)
+                .arg("clone")
+                .arg(&READSTAT_URL)
+        });
+
+        run("cp", |command| {
+            command.arg("Makefile")
+                .arg(&out_path)
+        });
+    }
+}
+
+/// Use bindgen to generate the rust code required to interact with the C code.
 fn generate_bindings() {
     let out_path = PathBuf::from(&get!("OUT_DIR"));
     let bindings_file = out_path.join("bindings.rs");
@@ -64,5 +95,17 @@ fn generate_bindings() {
     } else {
         log!("Bindings already generated. Skipping.");
     }
+}
+
+/// Build and run a Command and log the result.
+fn run<F>(name: &str, mut configure: F) where F: FnMut(&mut Command) -> &mut Command {
+    let mut command = Command::new(name);
+    let configured = configure(&mut command);
+
+    log!("Executing {:?}", configured);
+    if !configured.status().unwrap().success() {
+        panic!("Failed to execute {:?}", configured);
+    }
+    log!("Command {:?} finished sucessfully.", configured);
 }
 
