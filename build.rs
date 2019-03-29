@@ -30,6 +30,13 @@ macro_rules! log_var(($var:ident) =>
 /// Setup the rustc link search directories & library
 fn main() {
     LIBS.iter()
+        .map(|lib| {
+            if cfg!(target_os = "windows") {
+                lib.replace("dylib", "static")
+            } else {
+                lib.to_string()
+            }
+        })
         .for_each(|lib| println!("cargo:rustc-link-lib={}", lib));
 
     LIB_SEARCH_PATHS.iter()
@@ -43,9 +50,7 @@ fn main() {
 
     get_readstat();
 
-    run("make", |command| {
-        command.current_dir(&out_path)
-    });
+    make_readstat(&out_path);
 
     generate_bindings();
 }
@@ -62,23 +67,24 @@ fn get_readstat() {
                 .arg("clone")
                 .arg(&READSTAT_URL)
         });
-
-        run("cp", |command| {
-            command.arg("Makefile")
-                .arg(&out_path)
-        });
     }
+
+    run("cp", |command| {
+        command.arg("Makefile")
+            .arg(&out_path)
+    });
 }
 
 /// Use bindgen to generate the rust code required to interact with the C code.
 fn generate_bindings() {
     let out_path = PathBuf::from(&get!("OUT_DIR"));
     let bindings_file = out_path.join("bindings.rs");
+    let header_file = out_path.join("ReadStat/src/readstat.h");
 
     if !&bindings_file.exists() {
         log!("Attempting to generate bindings via bindgen.");
         let bindings = bindgen::Builder::default()
-            .header("wrapper.h")
+            .header(header_file.to_str().expect("Failed to convert path to str"))
             .whitelisted_function(r"readstat_[a-z0-9_]+")
             .whitelisted_type(r"readstat_[a-z]+_t")
             .whitelisted_var(r"READSTAT_HANDLER_[A-Z]+")
@@ -94,6 +100,19 @@ fn generate_bindings() {
         log!("Successfully written bindings to {:?}", &bindings_file);
     } else {
         log!("Bindings already generated. Skipping.");
+    }
+}
+
+/// Build ReadStat with make to get a statically linkable library
+fn make_readstat(out_path: &PathBuf) {
+    if cfg!(target_os = "windows") {
+        run("make", |command| {
+            command.current_dir(&out_path)
+        });
+    } else {
+        run("make", |command| {
+            command.current_dir(&out_path).arg("windows")
+        });
     }
 }
 

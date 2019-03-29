@@ -1,17 +1,21 @@
 
-STATIC_LIB := ReadStat/src/libReadStat.a
+OTHER_STATIC_LIB := ReadStat/src/libReadStat.a
+WIN_STATIC_LIB := ReadStat/src/ReadStat.lib
 
 SOURCES := $(wildcard ReadStat/src/*.c ReadStat/src/sas/*.c ReadStat/src/spss/*.c ReadStat/src/stata/*.c)
 OBJECTS = $(SOURCES:.c=.o)
 
 CC := clang
-INC := -I/usr/local/include -IReadStat
+INC := -IReadStat
 CCFLAGS := -DNDEBUG $(INC) -DHAVE_ZLIB -g -O2 -Wall -std=c99
 
-.PHONY: all clean
+.PHONY: all winodws clean
 
 all : clean $(OBJECTS)
-	libtool -static -o $(STATIC_LIB) $(OBJECTS)
+	ar rcs $(OTHER_STATIC_LIB) $(OBJECTS)
+
+windows : clean $(OBJECTS)
+	ar rcs $(WIN_STATIC_LIB) $(OBJECTS)
 
 %.o : %.c
 	$(CC) $(CCFLAGS) -c $< -o $@

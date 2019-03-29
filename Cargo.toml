@@ -13,6 +13,7 @@ toml = "0.4.6"
 horrorshow = "0.6.4"
 csv = "1.0.1"
 regex = "1.0.4"
+libz-sys = "1.0.25"
 
 [build-dependencies]
 bindgen = "0.26.3"
