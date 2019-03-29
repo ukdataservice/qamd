@@ -246,7 +246,7 @@ fn spellcheck(context: &mut Context) {
 
     let setting_desc = match config.spellcheck {
         Some(ref setting) => &setting.desc,
-        None => "spellcheck not set",
+        None => "",
     };
 
     match config.get_dictonary() {
@@ -301,7 +301,9 @@ fn spellcheck(context: &mut Context) {
             }
         },
         Err(e) => {
-            panic!("An Error occurred: {}", e);
+            // panic!("An Error occurred: {}", e);
+            println!("Warning: Spell check dictonary file {:#?} could not be found. Skipping spell check.", e);
+            return;
         },
     }
 }
