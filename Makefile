@@ -9,7 +9,7 @@ CC := clang
 INC := -IReadStat
 CCFLAGS := -DNDEBUG $(INC) -DHAVE_ZLIB -g -O2 -Wall -std=c99
 
-.PHONY: all winodws clean
+.PHONY: all windows clean
 
 all : clean $(OBJECTS)
 	ar rcs $(OTHER_STATIC_LIB) $(OBJECTS)

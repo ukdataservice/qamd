@@ -107,11 +107,11 @@ fn generate_bindings() {
 fn make_readstat(out_path: &PathBuf) {
     if cfg!(target_os = "windows") {
         run("make", |command| {
-            command.current_dir(&out_path)
+            command.current_dir(&out_path).arg("windows")
         });
     } else {
         run("make", |command| {
-            command.current_dir(&out_path).arg("windows")
+            command.current_dir(&out_path)
         });
     }
 }
