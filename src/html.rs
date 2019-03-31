@@ -1,10 +1,9 @@
-
 // use horrorshow::prelude::*;
 use horrorshow::helper::doctype;
 
-use horrorshow::{ Render, RenderBox };
+use horrorshow::{Render, RenderBox};
 
-use report::{ Report, Locator };
+use report::{Locator, Report};
 
 use std::collections::HashSet;
 
@@ -33,85 +32,135 @@ $(function() {
 });
 "#;
 
-    format!("{}", html! {
-        : doctype::HTML;
-        html {
-            head {
-                title : &report.metadata.file_name;
-                meta(charset="UTF-8");
-                link(rel="stylesheet",
-                     href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css",
-                     integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB",
-                     crossorigin="anonymous");
-            }
+    format!(
+        "{}",
+        html! {
+            : doctype::HTML;
+            html {
+                head {
+                    title : &report.metadata.file_name;
+                    meta(charset="UTF-8");
+                    link(rel="stylesheet",
+                         href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css",
+                         integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB",
+                         crossorigin="anonymous");
+                }
 
-            body {
-                div(class="container") {
-                    div(class="row") {
-                        h1(id="file-name") : &report.metadata.file_name;
-                    }
+                body {
+                    div(class="container") {
+                        div(id="title", class="row") {
+                            h1(id="file-name") : &report.metadata.file_name;
+                        }
 
-                    br;
+                        div(class="row metadata") {
+                            strong : format!("Raw Case Count: {}",
+                                      report.metadata.raw_case_count);
+                        }
 
-                    div(class="row") {
-                        table(class="table table-bordered") {
-                            tr {
-                                th(scope="col") : "Name";
-                                th(scope="col") : "Status";
-                                th(scope="col") : "Description";
+                        div(class="row metadata") {
+                            @ if let Some(case_count) = report.metadata.case_count {
+                                strong : format!("Aggregated Case Count: {}",
+                                          case_count);
                             }
+                        }
 
-                            @ for (name, status) in report.summary.iter() {
-                                @ if status.fail > 0 {
-                                    tr(class="table-danger") {
-                                        td(scope="row") : format!("{}", name);
-                                        td : format!("failed ({})", status.fail);
-                                        td : &status.desc;
-                                    }
-                                } else {
-                                    tr(class="table-success") {
-                                        td(scope="row") : format!("{}", name);
-                                        td : "passed";
-                                        td : &status.desc;
+                        div(class="row metadata") {
+                            strong : format!("Total Variables: {}",
+                                      report.metadata.variable_count);
+                        }
+
+                        div(class="row metadata") {
+                            strong : format!("Created At: {}",
+                                      report.metadata.creation_time);
+                        }
+
+                        div(class="row metadata") {
+                            strong : format!("Last modified at: {}",
+                                             report.metadata.modified_time);
+                        }
+
+                        div(class="row metadata") {
+                            strong : format!("File Label: {}",
+                                      &report.metadata.file_label);
+                        }
+
+                        div(class="row metadata") {
+                            strong : format!("File Format Version: {}",
+                                      report.metadata.file_format_version);
+                        }
+
+                        div(class="row metadata") {
+                            @ if let Some(ref file_encoding) = &report.metadata.file_encoding {
+                                strong : format!("File Encoding: {}", file_encoding);
+                            }
+                        }
+
+                        div(class="row metadata") {
+                            strong : format!("Compression type: {}",
+                                      &report.metadata.compression);
+                        }
+
+                        br;
+
+                        div(id="report", class="row") {
+                            table(class="table table-bordered") {
+                                tr {
+                                    th(scope="col") : "Name";
+                                    th(scope="col") : "Status";
+                                    th(scope="col") : "Description";
+                                }
+
+                                @ for (name, status) in report.summary.iter() {
+                                    @ if status.fail > 0 {
+                                        tr(class="table-danger") {
+                                            td(scope="row") : format!("{}", name);
+                                            td : format!("failed ({})", status.fail);
+                                            td : &status.desc;
+                                        }
+                                    } else {
+                                        tr(class="table-success") {
+                                            td(scope="row") : format!("{}", name);
+                                            td : "passed";
+                                            td : &status.desc;
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    br;
+                        br;
 
-                    div(class="row") {
-                        h2(id="selected-check", class="d-none") : "hidden";
-                    }
+                        div(class="row") {
+                            h2(id="selected-check", class="d-none") : "hidden";
+                        }
 
-                    @ for (name, status) in report.summary.iter() {
-                        @ if let Some(ref locators) = status.locator {
-                            : locators_table(format!("{}", name),
-                                             locators.clone());
+                        @ for (name, status) in report.summary.iter() {
+                            @ if let Some(ref locators) = status.locator {
+                                : locators_table(format!("{}", name),
+                                                 locators.clone());
+                            }
                         }
                     }
-                }
 
-                script(src="https://code.jquery.com/jquery-3.3.1.slim.min.js",
-                       integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",
-                       crossorigin="anonymous") {}
-                script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js",
-                       integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
-                       crossorigin="anonymous") {}
-                script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js",
-                       integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T",
-                       crossorigin="anonymous") {}
-                script(type="text/javascript") {
-                     : javascript;
+                    script(src="https://code.jquery.com/jquery-3.3.1.slim.min.js",
+                           integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",
+                           crossorigin="anonymous") {}
+                    script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js",
+                           integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
+                           crossorigin="anonymous") {}
+                    script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js",
+                           integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T",
+                           crossorigin="anonymous") {}
+                    script(type="text/javascript") {
+                         : javascript;
+                    }
                 }
             }
         }
-    })
+    )
 }
 
-fn locators_table<'a>(name: String,
-                      locators: HashSet<Locator>) -> Box<RenderBox> {
+fn locators_table<'a>(name: String, locators: HashSet<Locator>) -> Box<RenderBox> {
     box_html! {
         div(class="row") {
             table(id=name.to_lowercase().replace(" ", "_"),
@@ -146,4 +195,3 @@ fn value_if_positive(value: i32, default: &'static str) -> Box<Render> {
         }
     }
 }
-
