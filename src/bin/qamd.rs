@@ -1,49 +1,45 @@
-
-extern crate qamd;
 extern crate clap;
+extern crate qamd;
 extern crate serde;
 extern crate serde_json;
 extern crate toml;
 
-use qamd::readstat::read::read;
-use qamd::config::{ Config, Valid };
+use qamd::config::{Config, Valid};
 use qamd::html::to_html;
+use qamd::readstat::read::read;
 
+use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::io::BufWriter;
-use std::fs::File;
 
-use clap::{ Arg, App };
+use clap::{App, Arg};
 
 static DEFAULT_CONFIG: &'static str = include_str!("../../config.toml");
-static ABOUT_TEXT: &'static str =
-    concat!("QAMyData offers a free easy-to-use",
-            " tool that automatically detects some",
-            " of the most common problems in",
-            " survey and other numeric data and",
-            " creates a ‘data health check’,",
-            " assisting with the clean up of data",
-            " and providing an assurance that data",
-            " is of a high quality.");
+static ABOUT_TEXT: &'static str = concat!(
+    "QAMyData offers a free easy-to-use",
+    " tool that automatically detects some",
+    " of the most common problems in",
+    " survey and other numeric data and",
+    " creates a ‘data health check’,",
+    " assisting with the clean up of data",
+    " and providing an assurance that data",
+    " is of a high quality."
+);
 
 fn main() {
     let matches = parse_arguments();
 
     let config_file = match matches.value_of("config") {
-        Some(config_path) => read_file(config_path)
-            .expect(&format!("Failed to read file {}", config_path)),
+        Some(config_path) => {
+            read_file(config_path).expect(&format!("Failed to read file {}", config_path))
+        }
         None => String::from(DEFAULT_CONFIG),
     };
 
-    let file_path = matches
-        .value_of("input")
-        .unwrap();
-    let output_path = matches
-        .value_of("output");
-    let output_format = matches
-        .value_of("output-format")
-        .unwrap_or("json");
+    let file_path = matches.value_of("input").unwrap();
+    let output_path = matches.value_of("output");
+    let output_format = matches.value_of("output-format").unwrap_or("json");
 
     let include_locators = match matches.occurrences_of("locators") {
         0 => false,
@@ -57,10 +53,8 @@ fn main() {
 
     match parse_config(&config_file) {
         Ok(ref mut config) => {
-            config.include_locators = override_config(config.include_locators,
-                                                      include_locators);
-            config.progress = override_config(config.progress,
-                                              progress);
+            config.include_locators = override_config(config.include_locators, include_locators);
+            config.progress = override_config(config.progress, progress);
 
             match read(&file_path, &config) {
                 Ok(report) => {
@@ -75,13 +69,12 @@ fn main() {
                         None => {
                             println!("{}", serialised);
                             Ok(())
-                        },
+                        }
                     };
-                },
+                }
                 Err(err) => eprintln!("{} : {}:{}:{}", err, file!(), line!(), column!()),
             };
-
-        },
+        }
         Err(err) => eprintln!("{} : {}", err, line!()),
     }
 }
@@ -91,41 +84,62 @@ fn parse_arguments() -> clap::ArgMatches<'static> {
         .version("0.1.0")
         .author("Myles Offord - moffor@essex.ac.uk")
         .about(ABOUT_TEXT)
-        .arg(Arg::with_name("input")
-            .help("Sets the input file to use.")
-            .required(true)
-            .index(1))
-        .arg(Arg::with_name("config")
-            .short("c")
-            .long("config")
-            .value_name("FILE")
-            .help("Sets a custom config file")
-            .takes_value(true))
-        .arg(Arg::with_name("output")
-            .short("o")
-            .long("output")
-            .value_name("FILE")
-            .help("Sets an optional output file.")
-            .takes_value(true))
-        .arg(Arg::with_name("output-format")
-            .long("output-format")
-            .value_name("FILE_TYPE")
-            .help("Sets the output format. Can be either json or html Default to JSON.")
-            .takes_value(true)
-            .possible_values(&["json", "html"]))
-        .arg(Arg::with_name("locators")
-            .short("l")
-            .long("include-locators")
-            .help(format!("{} {} {}",
-                          "If set the summary report includes",
-                          "the index of the value(s) & or",
-                          "variable(s) for any failed checks.").as_str()))
-        .arg(Arg::with_name("disable-progress")
-            .short("p")
-            .long("disable-progress")
-            .help(format!("{} {}",
-                          "If set, disables the progress bar.",
-                          "Useful if running inside scripts").as_str()))
+        .arg(
+            Arg::with_name("input")
+                .help("Sets the input file to use.")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .value_name("FILE")
+                .help("Sets a custom config file")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("output")
+                .short("o")
+                .long("output")
+                .value_name("FILE")
+                .help("Sets an optional output file.")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("output-format")
+                .long("output-format")
+                .value_name("FILE_TYPE")
+                .help("Sets the output format. Can be either json or html Default to JSON.")
+                .takes_value(true)
+                .possible_values(&["json", "html"]),
+        )
+        .arg(
+            Arg::with_name("locators")
+                .short("l")
+                .long("include-locators")
+                .help(
+                    format!(
+                        "{} {} {}",
+                        "If set the summary report includes",
+                        "the index of the value(s) & or",
+                        "variable(s) for any failed checks."
+                    )
+                    .as_str(),
+                ),
+        )
+        .arg(
+            Arg::with_name("disable-progress")
+                .short("p")
+                .long("disable-progress")
+                .help(
+                    format!(
+                        "{} {}",
+                        "If set, disables the progress bar.", "Useful if running inside scripts"
+                    )
+                    .as_str(),
+                ),
+        )
         .get_matches()
 }
 
@@ -146,7 +160,7 @@ fn parse_config(config_file: &str) -> Result<Config, String> {
                 Ok(()) => Ok(config),
                 Err(err) => Err(format!("Invalid config: {}", err)),
             }
-        },
+        }
         Err(err) => Err(format!("Failed to parse toml: {}", err)),
     }
 }
@@ -167,4 +181,3 @@ fn write_to_file(path: &str, contents: &str) -> io::Result<()> {
 
     Ok(())
 }
-

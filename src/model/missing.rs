@@ -1,4 +1,3 @@
-
 #![allow(non_camel_case_types)]
 
 use std::fmt::{Display, Formatter, Result};
@@ -26,4 +25,3 @@ impl Display for Missing {
         write!(f, "{}", s)
     }
 }
-

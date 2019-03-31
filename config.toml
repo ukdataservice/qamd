@@ -1,11 +1,11 @@
 
 # Variable Configuration
 
-[spellcheck]
-setting = [
-  "/usr/share/dict/words"
-]
-desc = "Word file use for spell check."
+# [spellcheck]
+# setting = [
+#   "/usr/share/dict/words"
+# ]
+# desc = "Word file use for spell check."
 
 [variable_config.odd_characters]
 setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]

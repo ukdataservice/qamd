@@ -1,4 +1,3 @@
-
 use config::Config;
 use model::value::Value;
 use model::variable::Variable;
@@ -6,10 +5,10 @@ use report::Report;
 
 use check::Check;
 
-use std::io;
+use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Debug;
-use std::collections::HashMap;
+use std::io;
 
 use pbr::ProgressBar;
 
@@ -35,4 +34,3 @@ impl Debug for Context {
             .finish()
     }
 }
-
