@@ -1,11 +1,26 @@
 extern crate bindgen;
 extern crate pkg_config;
+#[macro_use]
+extern crate cfg_if;
 
 use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-const LIBS: [&'static str; 3] = ["static=ReadStat", "dylib=iconv", "dylib=z"];
+cfg_if! {
+    if #[cfg(target_os = "linux")] {
+        const LIBS: [&'static str; 2] = [
+            "static=ReadStat",
+            "dylib=z",
+        ];
+    } else {
+        const LIBS: [&'static str; 3] = [
+            "static=ReadStat",
+            "dylib=iconv",
+            "dylib=z",
+        ];
+    }
+}
 
 const LIB_SEARCH_PATHS: [&'static str; 1] = ["/usr/lib"];
 

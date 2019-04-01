@@ -18,4 +18,5 @@ libz-sys = "1.0.25"
 [build-dependencies]
 bindgen = "0.26.3"
 pkg-config = "0.3.11"
+cfg-if = "0.1.7"
 
