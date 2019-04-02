@@ -1,19 +1,28 @@
 extern crate bindgen;
 extern crate pkg_config;
+#[macro_use]
+extern crate cfg_if;
 
-use std::path::PathBuf;
 use std::env;
+use std::path::PathBuf;
 use std::process::Command;
 
-const LIBS: [&'static str; 3]= [
-    "static=ReadStat",
-    "dylib=iconv",
-    "dylib=z",
-];
+cfg_if! {
+    if #[cfg(target_os = "linux")] {
+        const LIBS: [&'static str; 2] = [
+            "static=ReadStat",
+            "dylib=z",
+        ];
+    } else {
+        const LIBS: [&'static str; 3] = [
+            "static=ReadStat",
+            "dylib=iconv",
+            "dylib=z",
+        ];
+    }
+}
 
-const LIB_SEARCH_PATHS: [&'static str; 1] = [
-    "/usr/lib",
-];
+const LIB_SEARCH_PATHS: [&'static str; 1] = ["/usr/lib"];
 
 const READSTAT_URL: &'static str = "https://github.com/WizardMac/ReadStat.git";
 const READSTAT_DIR: &'static str = "ReadStat/";
@@ -39,14 +48,18 @@ fn main() {
         })
         .for_each(|lib| println!("cargo:rustc-link-lib={}", lib));
 
-    LIB_SEARCH_PATHS.iter()
+    LIB_SEARCH_PATHS
+        .iter()
         .for_each(|lib| println!("cargo:rustc-link-search={}", lib));
 
     let out_path = PathBuf::from(&get!("OUT_DIR"));
     log_var!(out_path);
     let mut readstat_search_path = out_path.join(&READSTAT_DIR);
     readstat_search_path.push("src");
-    println!("cargo:rustc-link-search={}", &readstat_search_path.display());
+    println!(
+        "cargo:rustc-link-search={}",
+        &readstat_search_path.display()
+    );
 
     get_readstat();
 
@@ -63,16 +76,14 @@ fn get_readstat() {
     // Clone repo
     if !&clone_dir.exists() {
         run("git", |command| {
-            command.current_dir(&out_path)
+            command
+                .current_dir(&out_path)
                 .arg("clone")
                 .arg(&READSTAT_URL)
         });
     }
 
-    run("cp", |command| {
-        command.arg("Makefile")
-            .arg(&out_path)
-    });
+    run("cp", |command| command.arg("Makefile").arg(&out_path));
 }
 
 /// Use bindgen to generate the rust code required to interact with the C code.
@@ -94,7 +105,8 @@ fn generate_bindings() {
         log!("Bindings generated bindings.");
         log!("Attempting to write to file {:?}", &bindings_file);
 
-        bindings.write_to_file(&bindings_file)
+        bindings
+            .write_to_file(&bindings_file)
             .expect("Couldn't write bindings!");
 
         log!("Successfully written bindings to {:?}", &bindings_file);
@@ -110,14 +122,15 @@ fn make_readstat(out_path: &PathBuf) {
             command.current_dir(&out_path).arg("windows")
         });
     } else {
-        run("make", |command| {
-            command.current_dir(&out_path)
-        });
+        run("make", |command| command.current_dir(&out_path));
     }
 }
 
 /// Build and run a Command and log the result.
-fn run<F>(name: &str, mut configure: F) where F: FnMut(&mut Command) -> &mut Command {
+fn run<F>(name: &str, mut configure: F)
+where
+    F: FnMut(&mut Command) -> &mut Command,
+{
     let mut command = Command::new(name);
     let configured = configure(&mut command);
 
@@ -127,4 +140,3 @@ fn run<F>(name: &str, mut configure: F) where F: FnMut(&mut Command) -> &mut Com
     }
     log!("Command {:?} finished sucessfully.", configured);
 }
-

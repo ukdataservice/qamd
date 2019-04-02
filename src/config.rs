@@ -1,6 +1,6 @@
+use std::fs::File;
 use std::io;
 use std::io::prelude::*;
-use std::fs::File;
 
 pub trait Valid {
     fn validate(&self) -> Result<(), &'static str>;
@@ -46,14 +46,16 @@ impl Config {
 
     pub fn get_dictonary(&self) -> Result<Vec<String>, String> {
         if let Some(ref paths) = self.spellcheck {
-            let mut result: Vec<String> = vec!();
+            let mut result: Vec<String> = vec![];
 
             for path in paths.setting.iter() {
                 match Config::read_file(&path) {
-                    Ok(contents) => result.extend(contents.split("\n")
-                                                  .map(|s| {
-                                                      s.trim().to_string()
-                                                  }).collect::<Vec<String>>()),
+                    Ok(contents) => result.extend(
+                        contents
+                            .split("\n")
+                            .map(|s| s.trim().to_string())
+                            .collect::<Vec<String>>(),
+                    ),
                     Err(e) => return Err(e.to_string()),
                 }
             }
@@ -114,30 +116,38 @@ impl Valid for VariableConfig {
     fn validate(&self) -> Result<(), &'static str> {
         match self.primary_variable {
             None => (),
-            Some(ref primary_variable) => if primary_variable.setting.len() < 1 {
-                return Err("primary_variable cannot be an empty string");
-            },
+            Some(ref primary_variable) => {
+                if primary_variable.setting.len() < 1 {
+                    return Err("primary_variable cannot be an empty string");
+                }
+            }
         }
 
         match self.variables_with_unique_values {
             None => (),
-            Some(ref threshold) => if !(threshold.setting > 0 && threshold.setting <= 100) {
-                return Err("threshold out of bounds");
-            },
+            Some(ref threshold) => {
+                if !(threshold.setting > 0 && threshold.setting <= 100) {
+                    return Err("threshold out of bounds");
+                }
+            }
         }
 
         match self.odd_characters {
             None => (),
-            Some(ref odd_characters) => if odd_characters.setting.len() < 1 {
-                return Err("variable_config.odd_characters cannot be empty");
-            },
+            Some(ref odd_characters) => {
+                if odd_characters.setting.len() < 1 {
+                    return Err("variable_config.odd_characters cannot be empty");
+                }
+            }
         }
 
         match self.label_max_length {
             None => (),
-            Some(ref label_max_length) => if label_max_length.setting < 0 {
-                return Err("variable_config.label_max_length cannot be negative");
-            },
+            Some(ref label_max_length) => {
+                if label_max_length.setting < 0 {
+                    return Err("variable_config.label_max_length cannot be negative");
+                }
+            }
         }
 
         Ok(())
@@ -169,23 +179,29 @@ impl Valid for ValueConfig {
     fn validate(&self) -> Result<(), &'static str> {
         match self.odd_characters {
             None => (),
-            Some(ref odd_characters) => if odd_characters.setting.len() < 1 {
-                return Err("value_config.odd_characters cannot be empty");
-            },
+            Some(ref odd_characters) => {
+                if odd_characters.setting.len() < 1 {
+                    return Err("value_config.odd_characters cannot be empty");
+                }
+            }
         }
 
         match self.label_max_length {
             None => (),
-            Some(ref label_max_length) => if label_max_length.setting < 0 {
-                return Err("value_config.label_max_length cannot be negative");
-            },
+            Some(ref label_max_length) => {
+                if label_max_length.setting < 0 {
+                    return Err("value_config.label_max_length cannot be negative");
+                }
+            }
         }
 
         match self.system_missing_value_threshold {
             None => (),
-            Some(ref threshold) => if !(threshold.setting > 0 && threshold.setting <= 100) {
-                return Err("threshold out of bounds");
-            },
+            Some(ref threshold) => {
+                if !(threshold.setting > 0 && threshold.setting <= 100) {
+                    return Err("threshold out of bounds");
+                }
+            }
         }
 
         Ok(())

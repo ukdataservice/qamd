@@ -1,4 +1,3 @@
-
 macro_rules! include_check(($summary:expr, $check_name:expr, $desc:expr) =>
                            (if $summary.get_mut(&$check_name).is_none() {
                                $summary.insert($check_name,
@@ -24,4 +23,3 @@ macro_rules! include_locators(($config:expr,
             }
         }
     }));
-

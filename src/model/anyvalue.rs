@@ -1,14 +1,13 @@
-
 use std::borrow::Cow;
 
 use std::collections::hash_map::DefaultHasher;
 
-use std::cmp::{ PartialEq, Eq };
-use std::fmt::{ Display, Formatter, Result };
-use std::hash::{ Hash, Hasher };
+use std::cmp::{Eq, PartialEq};
+use std::fmt::{Display, Formatter, Result};
+use std::hash::{Hash, Hasher};
 
-use std::ffi::CStr;
 use readstat::bindings::*;
+use std::ffi::CStr;
 
 /// AnyValue enum allows us to store each colum with different data type.
 #[derive(Serialize, Debug, Clone)]
@@ -18,7 +17,7 @@ pub enum AnyValue {
     Int16(Box<i16>),
     Int32(Box<i32>),
     Float(Box<f32>),
-    Double(Box<f64>)
+    Double(Box<f64>),
 }
 
 impl Display for AnyValue {
@@ -38,10 +37,8 @@ impl Display for AnyValue {
             &Int8(ref value) => write!(f, "{}", *value),
             &Int16(ref value) => write!(f, "{}", *value),
             &Int32(ref value) => write!(f, "{}", *value),
-            &Float(ref value) =>
-                write!(f, "{}", format_float(&format!("{:?}", *value))),
-            &Double(ref value) =>
-                write!(f, "{}", format_float(&format!("{:?}", *value)))
+            &Float(ref value) => write!(f, "{}", format_float(&format!("{:?}", *value))),
+            &Double(ref value) => write!(f, "{}", format_float(&format!("{:?}", *value))),
         }
     }
 }
@@ -53,20 +50,13 @@ impl From<readstat_value_t> for AnyValue {
 
         unsafe {
             match readstat_value_type(value) {
-                READSTAT_TYPE_STRING =>
-                    Str(Box::new(ptr_to_str!(readstat_string_value(value)))),
-                READSTAT_TYPE_INT8 =>
-                    Int8(Box::new(readstat_int8_value(value) as i8)),
-                READSTAT_TYPE_INT16 =>
-                    Int16(Box::new(readstat_int16_value(value))),
-                READSTAT_TYPE_INT32 =>
-                    Int32(Box::new(readstat_int32_value(value))),
-                READSTAT_TYPE_FLOAT =>
-                    Float(Box::new(readstat_float_value(value))),
-                READSTAT_TYPE_DOUBLE =>
-                    Double(Box::new(readstat_double_value(value))),
-                READSTAT_TYPE_STRING_REF =>
-                    Str(Box::new("REF TYPE".to_string())),
+                READSTAT_TYPE_STRING => Str(Box::new(ptr_to_str!(readstat_string_value(value)))),
+                READSTAT_TYPE_INT8 => Int8(Box::new(readstat_int8_value(value) as i8)),
+                READSTAT_TYPE_INT16 => Int16(Box::new(readstat_int16_value(value))),
+                READSTAT_TYPE_INT32 => Int32(Box::new(readstat_int32_value(value))),
+                READSTAT_TYPE_FLOAT => Float(Box::new(readstat_float_value(value))),
+                READSTAT_TYPE_DOUBLE => Double(Box::new(readstat_double_value(value))),
+                READSTAT_TYPE_STRING_REF => Str(Box::new("REF TYPE".to_string())),
             }
         }
     }
@@ -106,4 +96,3 @@ mod tests {
     // use super::*;
 
 }
-

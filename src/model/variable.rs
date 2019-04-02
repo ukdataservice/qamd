@@ -1,4 +1,3 @@
-
 use readstat::bindings::*;
 
 use std::ffi::CStr;
@@ -61,4 +60,3 @@ impl<'a> From<&'a str> for Variable {
         }
     }
 }
-

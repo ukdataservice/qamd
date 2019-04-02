@@ -1,4 +1,3 @@
-
 use check::CheckName;
 
 use std::collections::HashMap;
@@ -89,4 +88,3 @@ impl Locator {
         }
     }
 }
-
