@@ -1,5 +1,6 @@
 extern crate clap;
 extern crate qamd;
+extern crate reqwest;
 extern crate serde;
 extern crate serde_json;
 extern crate toml;
@@ -9,11 +10,10 @@ use qamd::html::to_html;
 use qamd::readstat::read::read;
 
 use std::fs::{self, File};
-use std::io;
 use std::io::prelude::*;
-use std::io::BufWriter;
+use std::io::{self, BufWriter};
 
-use clap::{App, Arg, AppSettings, SubCommand, ArgMatches};
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 static DEFAULT_CONFIG: &'static str = include_str!("../../config.toml");
 static ABOUT_TEXT: &'static str = concat!(
@@ -28,7 +28,7 @@ static ABOUT_TEXT: &'static str = concat!(
 );
 static RUN_ABOUT_TEXT: &'static str = concat!(
     "Run QAMyData on a target file.",
-    " To show usage use, qamd help run",
+    " To show usage use, qamd help run. "
 );
 static INIT_ABOUT_TEXT: &'static str = concat!(
     "Scaffold a new QAMyData project with including",
@@ -47,9 +47,9 @@ fn main() {
     let matches = parse_arguments();
 
     match matches.subcommand() {
-        ("init", Some(_))           => init(),
-        ("run",  Some(run_matches)) => run(run_matches),
-        _                           => {},
+        ("init", Some(_)) => init(),
+        ("run", Some(run_matches)) => run(run_matches),
+        _ => {}
     }
 }
 
@@ -130,7 +130,7 @@ fn init() {
         " directory or directory doesn't exist."
     ));
 
-    let dirs: [&'static str; 3] = ["config", "dictonaries", "data"];
+    let dirs: [&'static str; 4] = ["config", "dictionaries", "data", "data/test"];
 
     for dir in dirs.iter() {
         match fs::create_dir(base_path.join(dir)) {
@@ -147,6 +147,41 @@ fn init() {
         DEFAULT_CONFIG,
     )
     .expect("Failed to write config/default.toml");
+
+    let github = "https://github.com/ukdataservice/qamd/blob/master/".to_string();
+    let test_data_dir = base_path.join("data").join("test");
+
+    let words = "https://raw.githubusercontent.com/dwyl/english-words/master/words.txt";
+    let mtcars_stata = format!("{}{}", &github, "test/mtcars.dta?raw=true");
+    let mtcars_spss  = format!("{}{}", &github, "test/mtcars.sav?raw=true");
+    let mtcars_sas   = format!("{}{}", &github, "test/mtcars.sas?raw=true");
+    let mtcars_csv   = format!("{}{}", &github, "test/mtcars.csv?raw=true");
+
+    get_file(words, base_path.join("dictionaries").join("en.txt"));
+    get_file(&mtcars_stata, test_data_dir.join("mtcars.dta"));
+    get_file(&mtcars_spss,  test_data_dir.join("mtcars.sav"));
+    get_file(&mtcars_sas,   test_data_dir.join("mtcars.sas7bdat"));
+    get_file(&mtcars_csv,   test_data_dir.join("mtcars.csv"));
+}
+
+fn get_file(uri: &str, file: std::path::PathBuf) {
+    match reqwest::get(uri) {
+        Ok(mut res) => {
+            let mut buf: Vec<u8> = vec![];
+            res.copy_to(&mut buf)
+                .expect("Failed to write response body to buffer.");
+
+            fs::write(&file, buf)
+                    .expect(&format!("Failed to write {}",
+                                     &file.to_str().unwrap()));
+        },
+        Err(_) => println!(
+            concat!("Warning: Couldn't get {}",
+                    " You can find it here: {}"),
+            &file.to_str().unwrap(),
+            uri
+        ),
+    }
 }
 
 fn run(matches: &ArgMatches) {

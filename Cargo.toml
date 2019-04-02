@@ -14,6 +14,8 @@ horrorshow = "0.6.4"
 csv = "1.0.1"
 regex = "1.0.4"
 libz-sys = "1.0.25"
+crossbeam-utils = "0.6.5" # for reqwest, 6.3 fails to build crossbeam-channel 3.7
+reqwest = "0.9.13"
 
 [build-dependencies]
 bindgen = "0.26.3"
