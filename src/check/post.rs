@@ -294,15 +294,18 @@ fn spellcheck(context: &mut Context) {
                     }
                 }
 
-                //status.pass = 0;
-                //report.metadata.variable_count - status.fail;
                 status.pass =
                     total_checked(&context.frequency_table) - status.fail;
             }
         },
-        Err(e) => {
-            // panic!("An Error occurred: {}", e);
-            println!("Warning: Spell check dictonary file {:#?} could not be found. Skipping spell check.", e);
+        Err(_e) => {
+            if let Some(ref paths) = config.spellcheck {
+                paths.setting.iter()
+                    .for_each(|dictonary_path|
+                        println!("Warning: Spell check dictonary file {:#?} could not be found. Skipping spell check.", dictonary_path));
+            } else {
+
+            }
             return;
         },
     }
