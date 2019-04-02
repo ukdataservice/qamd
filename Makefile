@@ -21,5 +21,5 @@ windows : clean $(OBJECTS)
 	$(CC) $(CCFLAGS) -c $< -o $@
 
 clean :
-	-rm ReadStat/src/*.o ReadStat/src/sas/*.o ReadStat/src/spss/*.o ReadStat/src/stata/*.o $(STATIC_LIB) -f 2> /dev/null
+	-rm $(OBJECTS) $(STATIC_LIB) -f 2> /dev/null
 
