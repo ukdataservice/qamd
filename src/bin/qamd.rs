@@ -143,7 +143,7 @@ fn init() {
     }
 
     fs::write(
-        base_path.join("config").join("deafult.toml"),
+        base_path.join("config").join("default.toml"),
         DEFAULT_CONFIG,
     )
     .expect("Failed to write config/default.toml");
