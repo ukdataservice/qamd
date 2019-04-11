@@ -89,7 +89,7 @@ fn parse_arguments() -> clap::ArgMatches<'static> {
                     Arg::with_name("output-format")
                         .long("output-format")
                         .value_name("FILE_TYPE")
-                        .help("Sets the output format. Can be either json or html Default to JSON.")
+                        .help("Sets the output format. Can be either JSON or HTML. If ommited, defaults to HTML.")
                         .takes_value(true)
                         .possible_values(&["json", "html"]),
                 )
@@ -194,7 +194,7 @@ fn run(matches: &ArgMatches) {
 
     let file_path = matches.value_of("input").unwrap();
     let output_path = matches.value_of("output");
-    let output_format = matches.value_of("output-format").unwrap_or("json");
+    let output_format = matches.value_of("output-format").unwrap_or("html");
 
     let include_locators = match matches.occurrences_of("locators") {
         0 => false,
