@@ -55,7 +55,7 @@ fn main() {
 
 fn parse_arguments() -> clap::ArgMatches<'static> {
     App::new("QA My Data")
-        .version("0.1.0")
+        .version(env!("CARGO_PKG_VERSION"))
         .author("Myles Offord - moffor@essex.ac.uk")
         .about(ABOUT_TEXT)
         .setting(AppSettings::SubcommandRequired)
