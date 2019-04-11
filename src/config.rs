@@ -27,8 +27,8 @@ pub struct Config {
 
     pub spellcheck: Option<Setting<Vec<String>>>,
 
-    pub variable_config: VariableConfig,
-    pub value_config: ValueConfig,
+    pub variable_config: Option<VariableConfig>,
+    pub value_config: Option<ValueConfig>,
 }
 
 impl Config {
@@ -39,8 +39,8 @@ impl Config {
 
             spellcheck: None,
 
-            variable_config: VariableConfig::new(),
-            value_config: ValueConfig::new(),
+            variable_config: Some(VariableConfig::new()),
+            value_config: Some(ValueConfig::new()),
         }
     }
 
@@ -78,8 +78,13 @@ impl Config {
 
 impl Valid for Config {
     fn validate(&self) -> Result<(), &'static str> {
-        self.variable_config.validate()?;
-        self.value_config.validate()?;
+        if let Some(ref var_conf) = self.variable_config {
+            var_conf.validate()?;
+        }
+
+        if let Some(ref val_conf) = self.value_config {
+            val_conf.validate()?;
+        }
 
         Ok(())
     }

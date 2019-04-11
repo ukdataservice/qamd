@@ -251,7 +251,7 @@ fn parse_config(config_file: &str) -> Result<Config, String> {
                 Err(err) => Err(format!("Invalid config: {}", err)),
             }
         }
-        Err(err) => Err(format!("Failed to parse toml: {}", err)),
+        Err(err) => Err(format!("Failed to parse config: {}", err)),
     }
 }
 
@@ -271,3 +271,4 @@ fn write_to_file(path: &str, contents: &str) -> io::Result<()> {
 
     Ok(())
 }
+
