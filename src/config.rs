@@ -22,7 +22,7 @@ pub struct Setting<T> {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
-    pub include_locators: Option<bool>,
+    pub metadata_only: Option<bool>,
     pub progress: Option<bool>,
 
     pub spellcheck: Option<Setting<Vec<String>>>,
@@ -34,7 +34,7 @@ pub struct Config {
 impl Config {
     pub fn new() -> Config {
         Config {
-            include_locators: None,
+            metadata_only: None,
             progress: None,
 
             spellcheck: None,

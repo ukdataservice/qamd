@@ -94,17 +94,16 @@ fn parse_arguments() -> clap::ArgMatches<'static> {
                         .possible_values(&["json", "html"]),
                 )
                 .arg(
-                    Arg::with_name("locators")
-                        .short("l")
-                        .long("include-locators")
+                    Arg::with_name("metadata-only")
+                        .short("m")
+                        .long("metadata-only")
                         .help(
-                            format!(
-                                "{} {} {}",
-                                "If set the summary report includes",
-                                "the index of the value(s) & or",
-                                "variable(s) for any failed checks."
+                            concat!(
+                                "If set the output will only inlcude metadata",
+                                " from the file and the number of passes and",
+                                " failures for each check. Data for locating",
+                                " each failure will be ommited."
                             )
-                            .as_str(),
                         ),
                 )
                 .arg(
@@ -196,7 +195,7 @@ fn run(matches: &ArgMatches) {
     let output_path = matches.value_of("output");
     let output_format = matches.value_of("output-format").unwrap_or("html");
 
-    let include_locators = match matches.occurrences_of("locators") {
+    let metadata_only = match matches.occurrences_of("metadata-only") {
         0 => false,
         _ => true,
     };
@@ -208,7 +207,7 @@ fn run(matches: &ArgMatches) {
 
     match parse_config(&config_file) {
         Ok(ref mut config) => {
-            config.include_locators = override_config(config.include_locators, include_locators);
+            config.metadata_only = override_config(config.metadata_only, metadata_only);
             config.progress = override_config(config.progress, progress);
 
             match read(&file_path, &config) {
