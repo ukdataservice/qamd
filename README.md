@@ -1,7 +1,6 @@
 # QAMyData
 
 [![Build Status](https://travis-ci.org/ukdataservice/qamd.svg?branch=master)](https://travis-ci.org/ukdataservice/qamd)
-[![Build Status](https://travis-ci.org/ukdataservice/qamd.svg?branch=develop)](https://travis-ci.org/ukdataservice/qamd)
 
 QAMyData offers a free easy-to-use tool that automatically detects some of
 the most common problems in survey and other numeric data and creates a
