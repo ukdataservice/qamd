@@ -1,7 +1,7 @@
 use config::Config;
 use model::missing::Missing;
 use model::value::Value;
-use report::{ Locator, Report, Status };
+use report::{Locator, Report, Status};
 
 use check::ValueCheckFn;
 
@@ -15,31 +15,26 @@ pub fn register() -> Vec<ValueCheckFn> {
 // Value checks
 
 /// Check for defined missing values that do not have a label
-fn value_defined_missing_no_label(value: &Value,
-                                  config: &Config,
-                                  report: &mut Report) {
-    if let Some(ref setting) = config.value_config.defined_missing_no_label {
-        use check::CheckName::ValueDefinedMissingNoLabel;
-        include_check!(report.summary,
-                       ValueDefinedMissingNoLabel,
-                       &setting.desc);
+fn value_defined_missing_no_label(value: &Value, config: &Config, report: &mut Report) {
+    if let Some(ref value_config) = config.value_config {
+        if let Some(ref setting) = value_config.defined_missing_no_label {
+            use check::CheckName::ValueDefinedMissingNoLabel;
+            include_check!(report.summary, ValueDefinedMissingNoLabel, &setting.desc);
 
-        if let Some(ref mut status) = report.summary
-                                      .get_mut(&ValueDefinedMissingNoLabel) {
-            if setting.setting &&
-                value.missing == Missing::DEFINED_MISSING &&
-                    value.label == "" {
-                status.fail += 1;
+            if let Some(ref mut status) = report.summary.get_mut(&ValueDefinedMissingNoLabel) {
+                if setting.setting && value.missing == Missing::DEFINED_MISSING && value.label == "" {
+                    status.fail += 1;
 
-                include_locators!(
-                    config,
-                    status,
-                    value.variable.name,
-                    value.variable.index,
-                    value.row
-                );
-            } else {
-                status.pass += 1;
+                    include_locators!(
+                        config,
+                        status,
+                        value.variable.name,
+                        value.variable.index,
+                        value.row
+                    );
+                } else {
+                    status.pass += 1;
+                }
             }
         }
     }
@@ -76,26 +71,28 @@ mod tests {
         use check::CheckName::ValueDefinedMissingNoLabel;
         let (mut value, mut config, mut report) = setup();
 
-        config.value_config.defined_missing_no_label = Some(Setting {
-            setting: true,
-            desc: "description from config".to_string(),
-        });
+        if let Some(ref mut value_config) = config.value_config {
+            value_config.defined_missing_no_label = Some(Setting {
+                setting: true,
+                desc: "description from config".to_string(),
+            });
+        }
 
-        assert!(report.summary.get_mut(&ValueDefinedMissingNoLabel).is_none());
-
+        assert!(report
+            .summary
+            .get_mut(&ValueDefinedMissingNoLabel)
+            .is_none());
 
         value.missing = Missing::DEFINED_MISSING;
         value.label = "".to_string();
 
         value_defined_missing_no_label(&value, &config, &mut report);
-        assert_setting!(report.summary.get_mut(&ValueDefinedMissingNoLabel),
-                        0, 1);
+        assert_setting!(report.summary.get_mut(&ValueDefinedMissingNoLabel), 0, 1);
 
         value.missing = Missing::NOT_MISSING;
 
         value_defined_missing_no_label(&value, &config, &mut report);
-        assert_setting!(report.summary.get_mut(&ValueDefinedMissingNoLabel),
-                        1, 1);
+        assert_setting!(report.summary.get_mut(&ValueDefinedMissingNoLabel), 1, 1);
     }
 
 }

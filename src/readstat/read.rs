@@ -1,88 +1,76 @@
-
-use report::Report;
-use config::Config;
 use check::Check;
+use config::Config;
+use report::Report;
 
 use readstat::bindings::*;
-use readstat::handler::*;
 use readstat::context::Context;
+use readstat::handler::*;
 
 use readstat::csv::read;
 
 use std::collections::HashMap;
 
-use std::os::raw::{ c_void, c_char };
-use std::ffi::{ CString, CStr };
+use std::ffi::{CStr, CString};
 use std::io;
+use std::os::raw::{c_char, c_void};
 use std::path::Path;
 
 use pbr::ProgressBar;
 
 /// Fuzzy reader, determines file type by the extention
 pub fn read(path: &str, config: &Config) -> io::Result<Report> {
-    return match (path.ends_with(".csv"),
-                  path.ends_with(".dta"),
-                  path.ends_with(".sav"),
-                  path.ends_with(".por"),
-                  path.ends_with(".sas7bdat")) {
+    return match (
+        path.ends_with(".csv"),
+        path.ends_with(".dta"),
+        path.ends_with(".sav"),
+        path.ends_with(".por"),
+        path.ends_with(".sas7bdat"),
+    ) {
         (true, _, _, _, _) => read_csv(path, config),
         (_, true, _, _, _) => read_dta(path, config),
         (_, _, true, _, _) => read_sav(path, config),
         (_, _, _, true, _) => read_por(path, config),
         (_, _, _, _, true) => read_sas7bdat(path, config),
-        _ => Err(io::Error::new(io::ErrorKind::Other,
-                                format!("Failed to determine file type of: {}",
-                                    path))),
+        _ => Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!("Failed to determine file type of: {}", path),
+        )),
     };
 }
 
 pub fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error> {
-    return unsafe {
-        read::read_csv(path, config)
-    };
+    return unsafe { read::read_csv(path, config) };
 }
 
 /// Read Stata
 pub fn read_dta(path: &str, config: &Config) -> Result<Report, io::Error> {
-    return unsafe {
-        _read(path, config, readstat_parse_dta)
-    };
+    return unsafe { _read(path, config, readstat_parse_dta) };
 }
 
 /// Read SPSS
 pub fn read_sav(path: &str, config: &Config) -> Result<Report, io::Error> {
-    return unsafe {
-        _read(path, config, readstat_parse_sav)
-    };
+    return unsafe { _read(path, config, readstat_parse_sav) };
 }
 
 /// Read SPSS (older format)
 pub fn read_por(path: &str, config: &Config) -> Result<Report, io::Error> {
-    return unsafe {
-        _read(path, config, readstat_parse_por)
-    };
+    return unsafe { _read(path, config, readstat_parse_por) };
 }
 
 /// Read SAS
-pub fn read_sas7bdat(path: &str, config: &Config)
-    -> Result<Report, io::Error> {
-
-    return unsafe {
-        _read(path, config, readstat_parse_sas7bdat)
-    };
+pub fn read_sas7bdat(path: &str, config: &Config) -> Result<Report, io::Error> {
+    return unsafe { _read(path, config, readstat_parse_sas7bdat) };
 }
 
 /// Parser function type signature
-type ParseFn =
-    unsafe extern "C" fn(parser: *mut readstat_parser_t,
-                         path: *const c_char,
-                         user_ctx: *mut c_void) -> readstat_error_t;
+type ParseFn = unsafe extern "C" fn(
+    parser: *mut readstat_parser_t,
+    path: *const c_char,
+    user_ctx: *mut c_void,
+) -> readstat_error_t;
 
 /// Read the file using a given ParseFn
-unsafe fn _read(path: &str,
-                config: &Config,
-                file_parser: ParseFn) -> Result<Report, io::Error> {
-
+unsafe fn _read(path: &str, config: &Config, file_parser: ParseFn) -> Result<Report, io::Error> {
     let context: *mut Context = Box::into_raw(Box::new(Context {
         config: (*config).clone(),
         report: Report::new(),
@@ -90,7 +78,7 @@ unsafe fn _read(path: &str,
         pb: None,
         frequency_table: HashMap::new(),
         value_labels: HashMap::new(),
-        variables: vec!(),
+        variables: vec![],
     }));
 
     // init the progress bar here
@@ -103,12 +91,10 @@ unsafe fn _read(path: &str,
         }
     }
 
-    if let Some(file_name) =  Path::new(&path).file_name() {
-        (*context).report.metadata.file_name =
-            ok!(file_name.to_str()).to_string();
+    if let Some(file_name) = Path::new(&path).file_name() {
+        (*context).report.metadata.file_name = ok!(file_name.to_str()).to_string();
     } else {
-        return Err(io::Error::new(io::ErrorKind::Other,
-                                  "Unable to open file"));
+        return Err(io::Error::new(io::ErrorKind::Other, "Unable to open file"));
     }
 
     // init parser & set handlers
@@ -145,8 +131,10 @@ unsafe fn _read(path: &str,
 /// Create an error object from a readstat error
 fn handle_error(error: readstat_error_t) -> io::Error {
     unsafe {
-        io::Error::new(io::ErrorKind::Other,
-                       ptr_to_str!(readstat_error_message(error)))
+        io::Error::new(
+            io::ErrorKind::Other,
+            ptr_to_str!(readstat_error_message(error)),
+        )
     }
 }
 

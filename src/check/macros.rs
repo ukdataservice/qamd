@@ -1,4 +1,3 @@
-
 macro_rules! include_check(($summary:expr, $check_name:expr, $desc:expr) =>
                            (if $summary.get_mut(&$check_name).is_none() {
                                $summary.insert($check_name,
@@ -10,8 +9,8 @@ macro_rules! include_locators(($config:expr,
                                $variable_name:expr,
                                $variable_index:expr,
                                $value_index:expr) =>
-    (if let Some(include_locators) = $config.include_locators {
-        if include_locators {
+    (if let Some(metadata_only) = $config.metadata_only {
+        if !metadata_only {
             let locator = Locator::new($variable_name.clone(),
                                        $variable_index,
                                        $value_index,
@@ -25,4 +24,3 @@ macro_rules! include_locators(($config:expr,
             }
         }
     }));
-

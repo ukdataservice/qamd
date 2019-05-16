@@ -1,6 +1,4 @@
-use std::io;
-use std::io::prelude::*;
-use std::fs::File;
+use std::path::Path;
 
 pub trait Valid {
     fn validate(&self) -> Result<(), &'static str>;
@@ -22,64 +20,56 @@ pub struct Setting<T> {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
-    pub include_locators: Option<bool>,
+    pub metadata_only: Option<bool>,
     pub progress: Option<bool>,
 
     pub spellcheck: Option<Setting<Vec<String>>>,
     pub bad_filename: Option<Setting<String>>,
 
-    pub variable_config: VariableConfig,
-    pub value_config: ValueConfig,
+    pub variable_config: Option<VariableConfig>,
+    pub value_config: Option<ValueConfig>,
 }
 
 impl Config {
     pub fn new() -> Config {
         Config {
-            include_locators: None,
+            metadata_only: None,
             progress: None,
 
             spellcheck: None,
             bad_filename: None,
 
-            variable_config: VariableConfig::new(),
-            value_config: ValueConfig::new(),
+            variable_config: Some(VariableConfig::new()),
+            value_config: Some(ValueConfig::new()),
         }
     }
 
-    pub fn get_dictonary(&self) -> Result<Vec<String>, String> {
-        if let Some(ref paths) = self.spellcheck {
-            let mut result: Vec<String> = vec!();
+    pub fn get_dictionaries(&self) -> Vec<String> {
+        let mut result: Vec<String> = vec![];
 
-            for path in paths.setting.iter() {
-                match Config::read_file(&path) {
-                    Ok(contents) => result.extend(contents.split("\n")
-                                                  .map(|s| {
-                                                      s.trim().to_string()
-                                                  }).collect::<Vec<String>>()),
-                    Err(e) => return Err(e.to_string()),
+        if let Some(ref paths) = self.spellcheck {
+            for spath in paths.setting.iter() {
+                let path = Path::new(spath);
+
+                if path.is_file() {
+                    result.push(path.to_str().expect("Failed to convert path to str.").to_string());
                 }
             }
-
-            return Ok(result);
         }
 
-        Err("No file specified.".to_string())
-    }
-
-    fn read_file(path: &str) -> io::Result<String> {
-        let mut f = File::open(path)?;
-
-        let mut buffer = String::new();
-        f.read_to_string(&mut buffer)?;
-
-        Ok(buffer)
+        return result;
     }
 }
 
 impl Valid for Config {
     fn validate(&self) -> Result<(), &'static str> {
-        self.variable_config.validate()?;
-        self.value_config.validate()?;
+        if let Some(ref var_conf) = self.variable_config {
+            var_conf.validate()?;
+        }
+
+        if let Some(ref val_conf) = self.value_config {
+            val_conf.validate()?;
+        }
 
         Ok(())
     }
@@ -116,30 +106,38 @@ impl Valid for VariableConfig {
     fn validate(&self) -> Result<(), &'static str> {
         match self.primary_variable {
             None => (),
-            Some(ref primary_variable) => if primary_variable.setting.len() < 1 {
-                return Err("primary_variable cannot be an empty string");
-            },
+            Some(ref primary_variable) => {
+                if primary_variable.setting.len() < 1 {
+                    return Err("primary_variable cannot be an empty string");
+                }
+            }
         }
 
         match self.variables_with_unique_values {
             None => (),
-            Some(ref threshold) => if !(threshold.setting > 0 && threshold.setting <= 100) {
-                return Err("threshold out of bounds");
-            },
+            Some(ref threshold) => {
+                if !(threshold.setting > 0 && threshold.setting <= 100) {
+                    return Err("threshold out of bounds");
+                }
+            }
         }
 
         match self.odd_characters {
             None => (),
-            Some(ref odd_characters) => if odd_characters.setting.len() < 1 {
-                return Err("variable_config.odd_characters cannot be empty");
-            },
+            Some(ref odd_characters) => {
+                if odd_characters.setting.len() < 1 {
+                    return Err("variable_config.odd_characters cannot be empty");
+                }
+            }
         }
 
         match self.label_max_length {
             None => (),
-            Some(ref label_max_length) => if label_max_length.setting < 0 {
-                return Err("variable_config.label_max_length cannot be negative");
-            },
+            Some(ref label_max_length) => {
+                if label_max_length.setting < 0 {
+                    return Err("variable_config.label_max_length cannot be negative");
+                }
+            }
         }
 
         Ok(())
@@ -171,23 +169,29 @@ impl Valid for ValueConfig {
     fn validate(&self) -> Result<(), &'static str> {
         match self.odd_characters {
             None => (),
-            Some(ref odd_characters) => if odd_characters.setting.len() < 1 {
-                return Err("value_config.odd_characters cannot be empty");
-            },
+            Some(ref odd_characters) => {
+                if odd_characters.setting.len() < 1 {
+                    return Err("value_config.odd_characters cannot be empty");
+                }
+            }
         }
 
         match self.label_max_length {
             None => (),
-            Some(ref label_max_length) => if label_max_length.setting < 0 {
-                return Err("value_config.label_max_length cannot be negative");
-            },
+            Some(ref label_max_length) => {
+                if label_max_length.setting < 0 {
+                    return Err("value_config.label_max_length cannot be negative");
+                }
+            }
         }
 
         match self.system_missing_value_threshold {
             None => (),
-            Some(ref threshold) => if !(threshold.setting > 0 && threshold.setting <= 100) {
-                return Err("threshold out of bounds");
-            },
+            Some(ref threshold) => {
+                if !(threshold.setting > 0 && threshold.setting <= 100) {
+                    return Err("threshold out of bounds");
+                }
+            }
         }
 
         Ok(())

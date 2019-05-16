@@ -17,18 +17,17 @@ extern crate horrorshow;
 extern crate serde_derive;
 extern crate serde;
 
-extern crate pbr;
 extern crate csv as csv_crate;
+extern crate pbr;
 extern crate regex;
 
 #[macro_use]
 pub mod macros;
 
 pub mod config;
-pub mod model;
-pub mod report;
-pub mod readstat;
 pub mod html;
+pub mod model;
+pub mod readstat;
+pub mod report;
 
 mod check;
-

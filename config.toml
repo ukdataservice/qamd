@@ -1,27 +1,78 @@
-# Variable Configuration
+## Basic File Checks
 
-[spellcheck]
-setting = [
-  "/usr/share/dict/words"
-]
-desc = "Word file use for spell check."
-
+# Checking whether the file name contains illegal and/or odd characters
 [bad_filename]
 setting = '^([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$'
 desc = "Filenames must match a given regular expression to be considered valid."
 
-[variable_config.odd_characters]
-setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]
-desc = "Variable names and labels cannot contain certain 'odd' characters."
 
+## Metadata Issues
+
+# Checking whether variables don't have labels
 [variable_config.missing_variable_labels]
 setting = true
 desc = "Variables should have a label."
 
+
+# SPSS only - Checking whether user defined values don't have labels
+[value_config.defined_missing_no_label]
+setting = true
+desc = "Values defined as missing must have a label (only applicable to SPSS data files)."
+
+
+## Data Integrity Issues
+
+# Number of cases and variables
+
+
+# Checking whether variable names or labels contain 'odd' characters
+[variable_config.odd_characters]
+setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]
+desc = "Variable names and labels cannot contain certain 'odd' characters."
+
+
+# Checking whether value labels contain 'odd' characters
+[value_config.odd_characters]
+setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]
+desc = "Variable and value labels should not contain certain 'odd' characters."
+
+
+# Checking spelling and truncation
+[spellcheck]
+setting = [
+  "/usr/words",
+  "C:\\path\\to\\dictionary\\file.txt"
+]
+desc = "Word file(s) use for spell check."
+
+
+# Checking whether length of variable labels exceeds 79 characters
 [variable_config.label_max_length]
 setting = 79
 desc = "Variable labels cannot exceed a maximum length."
 
+
+# Checking whether length of value labels exceeds 39 characters
+[value_config.label_max_length]
+setting = 39
+desc = "Value labels cannot exceed a maximum length."
+
+
+# Checking the proportion of undefined missing ('sysmis')
+[value_config.system_missing_value_threshold]
+setting = 25
+desc = "Variables that have missing values over the defined threshold."
+
+
+## Disclosure Control
+
+# Checking whether any variable contains unique values
+[variable_config.variables_with_unique_values]
+setting = 1
+desc = "Detects outliers (if a variable contains unique values)."
+
+
+# Checking whether data contains specific date formats
 [variable_config.date_format]
 setting = [
             # stata date
@@ -55,42 +106,21 @@ setting = [
 ]
 desc = "Flags date formats that are too specific and could potentially be disclosive."
 
-[variable_config.primary_variable]
-setting = "id"
-desc = "Groups the variables."
 
-[variable_config.variables_with_unique_values]
-setting = 1
-desc = "Detects values as outliers if they are unique."
-
-## Value Configuration
-
-[value_config.odd_characters]
-setting = ["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]
-desc = "Variable and value labels should not contain certain 'odd' characters."
-
-[value_config.label_max_length]
-setting = 39
-desc = "Value labels cannot exceed a maximum length."
-
-[value_config.system_missing_value_threshold]
-setting = 25
-desc = "Variables with large quantities of values missing."
-
-[value_config.defined_missing_no_label]
-setting = true
-desc = "Values defined as missing must have a label. This only affects SPSS files."
-
-[value_config.regex_patterns]
-setting = [
-  # Suffers from Leaning toothpick syndrome methinks.
-  # YAML should be a better option.
+# Checking for specific patterns by using RegEx (as this step is resource intensive it has been commented out from the initial config file, please see the User Guide for more information about RegEx and how to run this step)
+#[value_config.regex_patterns]
+#setting = [
   # Simple Email address Regex
   # "^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,4})+)$"
   # UK post code regex
   # "([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z]))))\\s?[0-9][A-Za-z]{2})",
   # Email addresses as per RFC 2822
   # "((([a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\"(([\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]|[\\x21\\x23-\\x5B\\x5D-\\x7E])|(\\[\\x01-\\x09\\x0B\\x0C\\x0E-\\x7F]))*\"))@(([a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\\[(([\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]|[\\x21-\\x5A\\x5E-\\x7E])|(\\[\\x01-\\x09\\x0B\\x0C\\x0E-\\x7F]))*\\])))"
-]
-desc = "Values matching a regex pattern fail the check."
+#]
+#desc = "Values matching a regex pattern fail the check."
 
+
+
+#[variable_config.primary_variable]
+#setting = "id"
+#desc = "Groups the variables."

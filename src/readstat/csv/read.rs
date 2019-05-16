@@ -1,25 +1,24 @@
-
-use readstat::bindings::*;
-use pbr::ProgressBar;
 use csv_crate::Reader;
+use pbr::ProgressBar;
+use readstat::bindings::*;
 
+use std::collections::HashMap;
+use std::ffi::CStr;
 use std::fs;
 use std::fs::File;
 use std::io;
-use std::io::BufReader;
 use std::io::prelude::*;
-use std::time;
-use std::collections::HashMap;
+use std::io::BufReader;
 use std::path::Path;
-use std::ffi::CStr;
+use std::time;
 
 use check::Check;
 use config::Config;
-use readstat::context::Context;
-use model::missing::Missing;
 use model::anyvalue::AnyValue;
+use model::missing::Missing;
 use model::value::Value;
 use model::variable::Variable;
+use readstat::context::Context;
 use report::Report;
 
 pub unsafe fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error> {
@@ -30,7 +29,7 @@ pub unsafe fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error>
         pb: None,
         frequency_table: HashMap::new(),
         value_labels: HashMap::new(),
-        variables: vec!(),
+        variables: vec![],
     }));
 
     // init the progress bar here
@@ -43,12 +42,10 @@ pub unsafe fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error>
         }
     }
 
-    if let Some(file_name) =  Path::new(&path).file_name() {
-        (*context).report.metadata.file_name =
-            ok!(file_name.to_str()).to_string();
+    if let Some(file_name) = Path::new(&path).file_name() {
+        (*context).report.metadata.file_name = ok!(file_name.to_str()).to_string();
     } else {
-        return Err(io::Error::new(io::ErrorKind::Other,
-                                  "Unable to open file"));
+        return Err(io::Error::new(io::ErrorKind::Other, "Unable to open file"));
     }
 
     // parse, loop & checks, build context
@@ -56,7 +53,7 @@ pub unsafe fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error>
         Ok(contents) => {
             set_metadata(path, context);
             parse_csv(contents, context)
-        },
+        }
         Err(_err) => readstat_error_t::READSTAT_ERROR_OPEN,
     };
 
@@ -65,8 +62,10 @@ pub unsafe fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error>
     }
 
     if error != readstat_error_t::READSTAT_OK {
-        Err(io::Error::new(io::ErrorKind::Other,
-                           ptr_to_str!(readstat_error_message(error))))
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            ptr_to_str!(readstat_error_message(error)),
+        ))
     } else {
         // post checks
         for check in &(*context).checks.post {
@@ -77,8 +76,7 @@ pub unsafe fn read_csv(path: &str, config: &Config) -> Result<Report, io::Error>
     }
 }
 
-unsafe fn parse_csv(contents: String,
-                    context: *mut Context) -> readstat_error_t {
+unsafe fn parse_csv(contents: String, context: *mut Context) -> readstat_error_t {
     let mut rdr = Reader::from_reader(contents.as_bytes());
 
     match rdr.headers() {
@@ -93,13 +91,11 @@ unsafe fn parse_csv(contents: String,
                 };
 
                 for check in &(*context).checks.variable {
-                    check(&var,
-                          &(*context).config,
-                          &mut (*context).report);
+                    check(&var, &(*context).config, &mut (*context).report);
                 }
                 (*context).variables.push(var);
             }
-        },
+        }
         Err(_) => return readstat_error_t::READSTAT_ERROR_PARSE,
     }
 
@@ -110,13 +106,11 @@ unsafe fn parse_csv(contents: String,
             let var = (*context)
                 .variables
                 .iter()
-                .find(|ref v| {
-                    v.index == column_index as i32
-                })
+                .find(|ref v| v.index == column_index as i32)
                 .unwrap();
 
             let missing: Missing = match field.is_empty() {
-                true  => Missing::SYSTEM_MISSING,
+                true => Missing::SYSTEM_MISSING,
                 false => Missing::NOT_MISSING,
             };
 
@@ -129,9 +123,7 @@ unsafe fn parse_csv(contents: String,
             };
 
             // build the frequency table as we collect the values
-            if let Some(ref mut value_occurence_map) = (*context)
-                    .frequency_table
-                    .get_mut(&var) {
+            if let Some(ref mut value_occurence_map) = (*context).frequency_table.get_mut(&var) {
                 if let Some(occurrence) = value_occurence_map.get_mut(&value) {
                     (*occurrence) += 1; // already exists
                 } else {
@@ -151,9 +143,7 @@ unsafe fn parse_csv(contents: String,
             }
 
             for check in (*context).checks.value.iter() {
-                check(&value,
-                      &(*context).config,
-                      &mut (*context).report);
+                check(&value, &(*context).config, &mut (*context).report);
             }
         }
     }
@@ -171,7 +161,7 @@ unsafe fn set_metadata(path: &str, context: *mut Context) {
     match rdr.headers() {
         Ok(headers) => {
             (*context).report.metadata.variable_count = headers.iter().count() as i32;
-        },
+        }
         Err(_) => (),
     }
 
@@ -203,4 +193,3 @@ fn get_file_contents(path: &str) -> io::Result<String> {
 //         *first = *second as i8;
 //     }
 // }
-
