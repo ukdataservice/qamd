@@ -123,7 +123,7 @@ mod test {
 
         let mut config = Config::new();
 
-        if let Some(variable_config) = config.variable_config {
+        if let Some(ref mut variable_config) = config.variable_config {
             variable_config.missing_variable_labels = Some(Setting {
                 setting: true,
                 desc: String::from("variables with no labels"),

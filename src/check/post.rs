@@ -1,4 +1,4 @@
-use check::{contains, only_contains, PostCheckFn};
+use check::{contains, only_contains, read_file, PostCheckFn};
 use model::missing::Missing;
 use model::value::Value;
 use model::variable::Variable;
@@ -247,46 +247,39 @@ fn spellcheck(context: &mut Context) {
         None => "",
     };
 
-    match config.get_dictonary() {
-        Ok(words) => {
-            use check::CheckName::Spellcheck;
-            include_check!(report.summary, Spellcheck, &setting_desc);
+    let dictonaries_paths = config.get_dictionaries();
 
-            if let Some(ref mut status) = report.summary.get_mut(&Spellcheck) {
-                for variable in context.variables.iter() {
-                    let variable_text = format!("{} {}", variable.name, variable.label);
-                    if only_contains(&variable_text, &words) {
-                        include_locators!(config, status, variable.name, variable.index, -1);
-                        status.fail += 1;
-                    }
+    let words: Vec<String> = dictonaries_paths.iter()
+        .map(|path| read_file(path))
+        .filter_map(|result| result.ok())
+        .collect();
 
-                    for (value, _occ) in context.frequency_table.get(&variable).unwrap() {
-                        let value_text = format!("{} {}", value.value, value.label);
-                        if !only_contains(&value_text, &words) {
-                            include_locators!(
-                                config,
-                                status,
-                                value.variable.name,
-                                value.variable.index,
-                                value.row
-                            );
-                            status.fail += 1;
-                        }
-                    }
+    use check::CheckName::Spellcheck;
+    include_check!(report.summary, Spellcheck, &setting_desc);
+
+    if let Some(ref mut status) = report.summary.get_mut(&Spellcheck) {
+        for variable in context.variables.iter() {
+            if only_contains(&variable.label, &words) {
+                include_locators!(config, status, variable.name, variable.index, -1);
+                status.fail += 1;
+            }
+
+            for (value, _occ) in context.frequency_table.get(&variable).unwrap() {
+                if !only_contains(&value.label, &words) {
+                    include_locators!(
+                        config,
+                        status,
+                        value.variable.name,
+                        value.variable.index,
+                        value.row
+                    );
+                    status.fail += 1;
                 }
-
-                status.pass =
-                    total_checked(&context.frequency_table) - status.fail;
             }
-        },
-        Err(e) => {
-            if let Some(ref paths) = config.spellcheck {
-                paths.setting.iter()
-                    .for_each(|dictonary_path|
-                        eprintln!("Warning: Spell check dictonary file {:#?} could not be found. Skipping spell check.", dictonary_path));
-            }
-            return;
         }
+
+        status.pass =
+            total_checked(&context.frequency_table) - status.fail;
     }
 }
 
@@ -319,7 +312,7 @@ mod tests {
             qux.label = String::from("this is fine");
 
             let mut bar = Value::from("bar#");
-            bar.label = String::from("this is far too long to pass the test");
+            bar.label = String::from("this is far too long to pss the test");
 
             temp.insert(bar, 3);
             temp.insert(Value::from("!baz"), 3);
@@ -363,7 +356,7 @@ mod tests {
         let mut context = setup();
         assert!(context.report.metadata.case_count.is_none());
 
-        if let Some(variable_config) = context.config.variable_config {
+        if let Some(ref mut variable_config) = context.config.variable_config {
             variable_config.primary_variable = Some(Setting {
                 setting: String::from("first"),
                 desc: String::from("primary variable"),
@@ -396,7 +389,7 @@ mod tests {
             .get(&SystemMissingOverThreshold)
             .is_none());
 
-        if let Some(value_config) = context.config.value_config {
+        if let Some(ref mut value_config) = context.config.value_config {
             value_config.system_missing_value_threshold = Some(Setting {
                 setting: 25,
                 desc: String::from("sysmiss values over a threshold"),
@@ -423,7 +416,7 @@ mod tests {
             .get(&VariablesWithUniqueValues)
             .is_none());
 
-        if let Some(variable_config) = context.config.variable_config {
+        if let Some(ref mut variable_config) = context.config.variable_config {
             variable_config.variables_with_unique_values = Some(Setting {
                 setting: 2,
                 desc: String::from("outliers as defined by the threshold"),
@@ -442,7 +435,7 @@ mod tests {
 
         assert!(context.report.summary.get(&ValueLabelMaxLength).is_none());
 
-        if let Some(value_config) = context.config.value_config {
+        if let Some(ref mut value_config) = context.config.value_config {
             value_config.label_max_length = Some(Setting {
                 setting: 20,
                 desc: String::from("value labels cannot be too long"),
@@ -461,7 +454,7 @@ mod tests {
 
         assert!(context.report.summary.get(&ValueOddCharacters).is_none());
 
-        if let Some(value_config) = context.config.value_config {
+        if let Some(ref mut value_config) = context.config.value_config {
             value_config.odd_characters = Some(Setting {
                 setting: vec!["#", "@", "!"]
                     .iter()
@@ -483,7 +476,7 @@ mod tests {
 
         assert!(context.report.summary.get(&ValueRegexPatterns).is_none());
 
-        if let Some(value_config) = context.config.value_config {
+        if let Some(ref mut value_config) = context.config.value_config {
             value_config.regex_patterns = Some(Setting {
                 setting: vec![r"^qux".to_string()],
                 desc: "description from config".to_string(),
@@ -502,12 +495,17 @@ mod tests {
 
         assert!(context.report.summary.get(&Spellcheck).is_none());
 
+        // first,                                           second
+        // qux [this is fine] (3),                          g@regs (2)
+        // bar# [this is far too long to pss the test] (4), "" (8)
+        // baz! (3)
+
         context.config.spellcheck = Some(Setting {
             setting: vec!["test/words.txt".to_string()],
             desc: "spellcheck: description from config".to_string(),
         });
 
         spellcheck(&mut context);
-        assert_setting!(context.report.summary.get(&Spellcheck), 1, 6);
+        assert_setting!(context.report.summary.get(&Spellcheck), 2, 5);
     }
 }

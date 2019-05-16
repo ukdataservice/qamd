@@ -24,8 +24,8 @@ macro_rules! debug {
 macro_rules! assert_setting {
     ($setting:expr, $pass:expr, $fail:expr) => {
         if let Some(ref status) = $setting {
-            assert_eq!(status.pass, $pass);
-            assert_eq!(status.fail, $fail);
+            assert_eq!(status.pass, $pass, "status.pass ({}) was not equal to the expected of {}", status.pass, $pass);
+            assert_eq!(status.fail, $fail, "status.fail ({}) was not equal to the expect of {}", status.fail, $fail);
         } else {
             assert!(false, " is None and should be Some(Setting)");
         }

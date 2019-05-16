@@ -5,6 +5,9 @@ use readstat::context::Context;
 use report::Report;
 
 use std::fmt;
+use std::fs::File;
+use std::io;
+use std::io::prelude::*;
 
 type CheckFn<T> = fn(value: &T, config: &Config, report: &mut Report);
 
@@ -77,6 +80,15 @@ pub fn only_contains(string: &str, patterns: &Vec<String>) -> bool {
         .split(" ")
         .map(|w| patterns.contains(&w.to_string()))
         .fold(true, |a, b| a && b)
+}
+
+fn read_file(path: &str) -> io::Result<String> {
+    let mut f = File::open(path)?;
+
+    let mut buffer = String::new();
+    f.read_to_string(&mut buffer)?;
+
+    Ok(buffer)
 }
 
 fn to_sentence(s: &str) -> String {
