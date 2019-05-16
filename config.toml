@@ -40,7 +40,7 @@ desc = "Variable and value labels should not contain certain 'odd' characters."
 # Checking spelling and truncation
 [spellcheck]
 setting = [
-  "/usr/words",
+  "/usr/share/dict/words",
   "C:\\path\\to\\dictionary\\file.txt"
 ]
 desc = "Word file(s) use for spell check."
