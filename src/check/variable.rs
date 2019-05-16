@@ -22,32 +22,15 @@ fn date_format(variable: &Variable, config: &Config, report: &mut Report) {
     // attempts to treat data as-if it were just Stata.
     // https://www.stata.com/help.cgi?datetime_display_formats
 
-    if let Some(ref setting) = config.variable_config.date_format {
-        use check::CheckName::DateFormat;
-        include_check!(report.summary, DateFormat, &setting.desc);
+    if let Some(ref variable_config) = config.variable_config {
+        if let Some(ref setting) = variable_config.date_format {
+            use check::CheckName::DateFormat;
+            include_check!(report.summary, DateFormat, &setting.desc);
 
-        let date_time_specifiers = &setting.setting;
+            let date_time_specifiers = &setting.setting;
 
-        if let Some(ref mut status) = report.summary.get_mut(&DateFormat) {
-            if contains(&variable.value_format, &date_time_specifiers) {
-                status.fail += 1;
-
-                include_locators!(config, status, variable.name, variable.index, -1);
-            } else {
-                status.pass += 1;
-            }
-        }
-    }
-}
-
-fn missing_variable_labels(variable: &Variable, config: &Config, report: &mut Report) {
-    if let Some(ref setting) = config.variable_config.missing_variable_labels {
-        use check::CheckName::MissingVariableLabels;
-        include_check!(report.summary, MissingVariableLabels, &setting.desc);
-
-        if setting.setting {
-            if let Some(ref mut status) = report.summary.get_mut(&MissingVariableLabels) {
-                if variable.label.is_empty() {
+            if let Some(ref mut status) = report.summary.get_mut(&DateFormat) {
+                if contains(&variable.value_format, &date_time_specifiers) {
                     status.fail += 1;
 
                     include_locators!(config, status, variable.name, variable.index, -1);
@@ -59,45 +42,70 @@ fn missing_variable_labels(variable: &Variable, config: &Config, report: &mut Re
     }
 }
 
+fn missing_variable_labels(variable: &Variable, config: &Config, report: &mut Report) {
+    if let Some(ref variable_config) = config.variable_config {
+        if let Some(ref setting) = variable_config.missing_variable_labels {
+            use check::CheckName::MissingVariableLabels;
+            include_check!(report.summary, MissingVariableLabels, &setting.desc);
+
+            if setting.setting {
+                if let Some(ref mut status) = report.summary.get_mut(&MissingVariableLabels) {
+                    if variable.label.is_empty() {
+                        status.fail += 1;
+
+                        include_locators!(config, status, variable.name, variable.index, -1);
+                    } else {
+                        status.pass += 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
 fn variable_label_max_length(variable: &Variable, config: &Config, report: &mut Report) {
-    if let Some(ref setting) = config.variable_config.label_max_length {
-        use check::CheckName::VariableLabelMaxLength;
-        include_check!(
-            report.summary,
-            VariableLabelMaxLength,
-            format!("{} ({} characters)", setting.desc, &setting.setting).as_str()
-        );
+    if let Some(ref variable_config) = config.variable_config {
+        if let Some(ref setting) = variable_config.label_max_length {
+            use check::CheckName::VariableLabelMaxLength;
+            include_check!(
+                report.summary,
+                VariableLabelMaxLength,
+                format!("{} ({} characters)", setting.desc, &setting.setting).as_str()
+            );
 
-        if let Some(ref mut status) = report.summary.get_mut(&VariableLabelMaxLength) {
-            if variable.label.len() > setting.setting as usize {
-                status.fail += 1;
+            if let Some(ref mut status) = report.summary.get_mut(&VariableLabelMaxLength) {
+                if variable.label.len() > setting.setting as usize {
+                    status.fail += 1;
 
-                include_locators!(config, status, variable.name, variable.index, -1);
-            } else {
-                status.pass += 1;
+                    include_locators!(config, status, variable.name, variable.index, -1);
+                } else {
+                    status.pass += 1;
+                }
             }
         }
     }
 }
 
 fn variable_odd_characters(variable: &Variable, config: &Config, report: &mut Report) {
-    if let Some(ref setting) = config.variable_config.odd_characters {
-        use check::CheckName::VariableOddCharacters;
-        include_check!(
-            report.summary,
-            VariableOddCharacters,
-            format!("{} {:?}", setting.desc, setting.setting).as_str()
-        );
+    if let Some(ref variable_config) = config.variable_config {
+        if let Some(ref setting) = variable_config.odd_characters {
+            use check::CheckName::VariableOddCharacters;
+            include_check!(
+                report.summary,
+                VariableOddCharacters,
+                format!("{} {:?}", setting.desc, setting.setting).as_str()
+            );
 
-        if let Some(ref mut status) = report.summary.get_mut(&VariableOddCharacters) {
-            if contains(&variable.name, &setting.setting)
-                || contains(&variable.label, &setting.setting)
-            {
-                status.fail += 1;
+            if let Some(ref mut status) = report.summary.get_mut(&VariableOddCharacters) {
+                if contains(&variable.name, &setting.setting)
+                    || contains(&variable.label, &setting.setting)
+                {
+                    status.fail += 1;
 
-                include_locators!(config, status, variable.name, variable.index, -1);
-            } else {
-                status.pass += 1;
+                    include_locators!(config, status, variable.name, variable.index, -1);
+                } else {
+                    status.pass += 1;
+                }
             }
         }
     }
@@ -114,31 +122,34 @@ mod test {
         let variable = Variable::from("foo");
 
         let mut config = Config::new();
-        config.variable_config.missing_variable_labels = Some(Setting {
-            setting: true,
-            desc: String::from("variables with no labels"),
-        });
 
-        config.variable_config.date_format = Some(Setting {
-            setting: vec!["SDATE", "TIME", "JJJ"]
-                .iter()
-                .map(|s| s.to_string())
-                .collect::<Vec<String>>(),
-            desc: String::from("date format"),
-        });
+        if let Some(ref mut variable_config) = config.variable_config {
+            variable_config.missing_variable_labels = Some(Setting {
+                setting: true,
+                desc: String::from("variables with no labels"),
+            });
 
-        config.variable_config.label_max_length = Some(Setting {
-            setting: 15,
-            desc: String::from("label max length"),
-        });
+            variable_config.date_format = Some(Setting {
+                setting: vec!["SDATE", "TIME", "JJJ"]
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<String>>(),
+                desc: String::from("date format"),
+            });
 
-        config.variable_config.odd_characters = Some(Setting {
-            setting: vec!["#", "@"]
-                .iter()
-                .map(|s| s.to_string())
-                .collect::<Vec<String>>(),
-            desc: String::from("variable odd characters"),
-        });
+            variable_config.label_max_length = Some(Setting {
+                setting: 15,
+                desc: String::from("label max length"),
+            });
+
+            variable_config.odd_characters = Some(Setting {
+                setting: vec!["#", "@"]
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<String>>(),
+                desc: String::from("variable odd characters"),
+            });
+        }
 
         (variable, config, Report::new())
     }
