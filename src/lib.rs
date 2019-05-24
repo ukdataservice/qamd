@@ -25,7 +25,6 @@ extern crate regex;
 pub mod macros;
 
 pub mod config;
-pub mod html;
 pub mod model;
 pub mod readstat;
 pub mod report;

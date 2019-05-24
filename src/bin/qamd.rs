@@ -6,7 +6,7 @@ extern crate serde_json;
 extern crate toml;
 
 use qamd::config::{Config, Valid};
-use qamd::html::to_html;
+use qamd::report::html::IntoHtml;
 use qamd::readstat::read::read;
 
 use std::fs::{self, File};
@@ -171,7 +171,7 @@ fn get_file(uri: &str, file: std::path::PathBuf) {
                 .expect("Failed to write response body to buffer.");
 
             fs::write(&file, buf).expect(&format!("Failed to write {}", &file.to_str().unwrap()));
-        }
+        },
         Err(_) => println!(
             concat!("Warning: Couldn't get {}", " You can find it here: {}"),
             &file.to_str().unwrap(),
@@ -211,7 +211,7 @@ fn run(matches: &ArgMatches) {
                 Ok(report) => {
                     let serialised = match output_format {
                         "json" => serde_json::to_string(&report).unwrap(),
-                        "html" => to_html(&report),
+                        "html" => report.to_html(),
                         _ => "".to_string(),
                     };
 

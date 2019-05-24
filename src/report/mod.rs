@@ -3,6 +3,8 @@ use check::CheckName;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
+pub mod html;
+
 #[derive(Serialize, Debug, Clone)]
 pub struct Report {
     pub metadata: Metadata,
