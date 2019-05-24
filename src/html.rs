@@ -1,4 +1,3 @@
-// use horrorshow::prelude::*;
 use horrorshow::helper::doctype;
 
 use horrorshow::{Render, RenderBox};
@@ -48,6 +47,8 @@ $(function() {
 
                 body {
                     div(class="container") {
+                        : logo();
+
                         div(id="title", class="row") {
                             h1(id="file-name") : &report.metadata.file_name;
                         }
@@ -192,6 +193,69 @@ fn value_if_positive(value: i32, default: &'static str) -> Box<Render> {
             td : default;
         } else {
             td : value;
+        }
+    }
+}
+
+fn logo() -> Box<RenderBox + 'static> {
+    box_html! {
+        div(id="logo", class="row") {
+            svg(xmlns="http://www.w3.org/2000/svg" ,
+                    xmlns:xlink="http://www.w3.org/1999/xlink",
+                    xmlns:krita="http://krita.org/namespaces/svg/krita",
+                    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd",
+                    width="180pt",
+                    height="42pt",
+                    viewBox="-20 32 180 47") {
+
+                    g(id="group0",
+                      transform="translate(-27.26796875, 33.71999999)",
+                      fill="none") {
+                        text(id="shape0",
+                             transform="translate(41.7640625,28.50000001)",
+                             fill="#000000",
+                             font-family="DejaVu Sans",
+                             font-size="16",
+                             font-size-adjust="0.473684") {
+                            tspan(x="0") : "QAMyData"
+                        }
+
+                        g(id="group1",
+                          transform="matrix(1 0 0 1.1666666672 0 0)",
+                          fill="none") {
+                            path(id="shape0",
+                                 transform="matrix(0.52986604692 0 0 0.46108506123 0 0)",
+                                 fill="#90d345",
+                                 fill-rule="evenodd",
+                                 stroke="#000000",
+                                 stroke-opacity="0",
+                                 stroke-width="4.5",
+                                 stroke-linecap="square",
+                                 stroke-linejoin="bevel",
+                                 d="M34.1585 0L0 21.7714L0 58.5575L34.5339 78.0767L67.9417 58.1821L67.5663 18.7684Z");
+                            path(id="shape1",
+                                 transform="matrix(0.52986604692 0 0 0.46108506123 7.6943435757 11.769224091)",
+                                 fill="none",
+                                 stroke="#ffffff",
+                                 stroke-width="9.75",
+                                 stroke-linecap="square",
+                                 stroke-linejoin="bevel",
+                                 d="M0 11.4243L13.8789 26.2758L40.2825 0");
+                        }
+
+                        path(id="shape1",
+                             transform="translate(39.59995, 1.2000000101)",
+                             fill="#a6a6a6",
+                             fill-rule="evenodd",
+                             stroke="#999999",
+                             stroke-width="1.2",
+                             stroke-linecap="square",
+                             stroke-linejoin="miter",
+                             stroke-miterlimit="2",
+                             d="M0.0001 39.6L0 0");
+                    }
+
+                }
         }
     }
 }
