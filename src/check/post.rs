@@ -213,7 +213,8 @@ fn regex_patterns(context: &mut Context) {
                         for pattern in &setting.setting {
                             let re = Regex::new(&pattern).unwrap();
 
-                            if re.is_match(&format!("{}", value.value)) || re.is_match(&value.label) {
+                            if re.is_match(&format!("{}", value.value)) || re.is_match(&value.label)
+                            {
                                 status.fail += 1;
 
                                 include_locators!(
@@ -249,7 +250,8 @@ fn spellcheck(context: &mut Context) {
 
     let dictonaries_paths = config.get_dictionaries();
 
-    let words: Vec<String> = dictonaries_paths.iter()
+    let words: Vec<String> = dictonaries_paths
+        .iter()
         .map(|path| read_file(path))
         .filter_map(|result| result.ok())
         .collect();
@@ -278,8 +280,7 @@ fn spellcheck(context: &mut Context) {
             }
         }
 
-        status.pass =
-            total_checked(&context.frequency_table) - status.fail;
+        status.pass = total_checked(&context.frequency_table) - status.fail;
     }
 }
 

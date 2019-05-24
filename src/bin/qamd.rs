@@ -152,15 +152,15 @@ fn init() {
 
     let words = "https://raw.githubusercontent.com/dwyl/english-words/master/words.txt";
     let mtcars_stata = format!("{}{}", &github, "test/mtcars.dta?raw=true");
-    let mtcars_spss  = format!("{}{}", &github, "test/mtcars.sav?raw=true");
-    let mtcars_sas   = format!("{}{}", &github, "test/mtcars.sas?raw=true");
-    let mtcars_csv   = format!("{}{}", &github, "test/mtcars.csv?raw=true");
+    let mtcars_spss = format!("{}{}", &github, "test/mtcars.sav?raw=true");
+    let mtcars_sas = format!("{}{}", &github, "test/mtcars.sas?raw=true");
+    let mtcars_csv = format!("{}{}", &github, "test/mtcars.csv?raw=true");
 
     get_file(words, base_path.join("dictionaries").join("en.txt"));
     get_file(&mtcars_stata, test_data_dir.join("mtcars.dta"));
-    get_file(&mtcars_spss,  test_data_dir.join("mtcars.sav"));
-    get_file(&mtcars_sas,   test_data_dir.join("mtcars.sas7bdat"));
-    get_file(&mtcars_csv,   test_data_dir.join("mtcars.csv"));
+    get_file(&mtcars_spss, test_data_dir.join("mtcars.sav"));
+    get_file(&mtcars_sas, test_data_dir.join("mtcars.sas7bdat"));
+    get_file(&mtcars_csv, test_data_dir.join("mtcars.csv"));
 }
 
 fn get_file(uri: &str, file: std::path::PathBuf) {
@@ -170,13 +170,10 @@ fn get_file(uri: &str, file: std::path::PathBuf) {
             res.copy_to(&mut buf)
                 .expect("Failed to write response body to buffer.");
 
-            fs::write(&file, buf)
-                    .expect(&format!("Failed to write {}",
-                                     &file.to_str().unwrap()));
-        },
+            fs::write(&file, buf).expect(&format!("Failed to write {}", &file.to_str().unwrap()));
+        }
         Err(_) => println!(
-            concat!("Warning: Couldn't get {}",
-                    " You can find it here: {}"),
+            concat!("Warning: Couldn't get {}", " You can find it here: {}"),
             &file.to_str().unwrap(),
             uri
         ),
@@ -271,4 +268,3 @@ fn write_to_file(path: &str, contents: &str) -> io::Result<()> {
 
     Ok(())
 }
-

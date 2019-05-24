@@ -22,7 +22,8 @@ fn value_defined_missing_no_label(value: &Value, config: &Config, report: &mut R
             include_check!(report.summary, ValueDefinedMissingNoLabel, &setting.desc);
 
             if let Some(ref mut status) = report.summary.get_mut(&ValueDefinedMissingNoLabel) {
-                if setting.setting && value.missing == Missing::DEFINED_MISSING && value.label == "" {
+                if setting.setting && value.missing == Missing::DEFINED_MISSING && value.label == ""
+                {
                     status.fail += 1;
 
                     include_locators!(

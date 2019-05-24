@@ -50,7 +50,11 @@ impl Config {
                 let path = Path::new(spath);
 
                 if path.is_file() {
-                    result.push(path.to_str().expect("Failed to convert path to str.").to_string());
+                    result.push(
+                        path.to_str()
+                            .expect("Failed to convert path to str.")
+                            .to_string(),
+                    );
                 }
             }
         }
