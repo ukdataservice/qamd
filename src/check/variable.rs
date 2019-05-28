@@ -5,7 +5,7 @@ use report::{Locator, Report, Status};
 
 use std::collections::HashSet;
 
-// Register the checks
+/// Register the checks
 pub fn register() -> Vec<VariableCheckFn> {
     vec![
         date_format,

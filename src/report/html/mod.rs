@@ -3,7 +3,7 @@ use horrorshow::helper::doctype;
 
 use horrorshow::{Render, RenderBox};
 
-use report::{Locator, Report};
+use report::{Report, Metadata, Locator};
 
 use std::collections::HashSet;
 
@@ -57,57 +57,7 @@ impl IntoHtml for Report {
                         div(class="container") {
                             : logo();
 
-                            div(id="title", class="row") {
-                                h1(id="file-name") : &self.metadata.file_name;
-                            }
-
-                            div(class="row metadata") {
-                                strong : format!("Raw Case Count: {}",
-                                          self.metadata.raw_case_count);
-                            }
-
-                            div(class="row metadata") {
-                                @ if let Some(case_count) = self.metadata.case_count {
-                                    strong : format!("Aggregated Case Count: {}",
-                                              case_count);
-                                }
-                            }
-
-                            div(class="row metadata") {
-                                strong : format!("Total Variables: {}",
-                                          self.metadata.variable_count);
-                            }
-
-                            div(class="row metadata") {
-                                strong : format!("Created At: {}",
-                                          self.metadata.creation_time);
-                            }
-
-                            div(class="row metadata") {
-                                strong : format!("Last modified at: {}",
-                                                 self.metadata.modified_time);
-                            }
-
-                            div(class="row metadata") {
-                                strong : format!("File Label: {}",
-                                          &self.metadata.file_label);
-                            }
-
-                            div(class="row metadata") {
-                                strong : format!("File Format Version: {}",
-                                          self.metadata.file_format_version);
-                            }
-
-                            div(class="row metadata") {
-                                @ if let Some(ref file_encoding) = &self.metadata.file_encoding {
-                                    strong : format!("File Encoding: {}", file_encoding);
-                                }
-                            }
-
-                            div(class="row metadata") {
-                                strong : format!("Compression type: {}",
-                                          &self.metadata.compression);
-                            }
+                            : metadata(&self.metadata);
 
                             br;
 
@@ -151,17 +101,6 @@ impl IntoHtml for Report {
                             }
                         }
 
-                        /*
-                        script(src="https://code.jquery.com/jquery-3.3.1.slim.min.js",
-                               integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",
-                               crossorigin="anonymous") {}
-                        script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js",
-                               integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49",
-                               crossorigin="anonymous") {}
-                        script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js",
-                               integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T",
-                               crossorigin="anonymous") {}
-                               */
                         script(type="text/javascript") {
                             : Raw(JQUERY);
                         }
@@ -271,6 +210,83 @@ fn logo() -> Box<RenderBox + 'static> {
 
                 }
         }
+    }
+}
+
+fn metadata<'a>(metadata: &'a Metadata) -> Box<RenderBox + 'a> {
+    box_html! {
+        div(id="title", class="row") {
+            h1(id="file-name") : &metadata.file_name;
+        }
+
+        div(class="row metadata") {
+            strong : format!("Raw Case Count: {}",
+                      metadata.raw_case_count);
+        }
+
+        div(class="row metadata") {
+            @ if let Some(case_count) = metadata.case_count {
+                strong : format!("Aggregated Case Count: {}",
+                          case_count);
+            }
+        }
+
+        div(class="row metadata") {
+            strong : format!("Total Variables: {}",
+                      metadata.variable_count);
+        }
+
+        div(class="row metadata") {
+            strong : format!("Created At: {}",
+                      metadata.creation_time);
+        }
+
+        div(class="row metadata") {
+            strong : format!("Last modified at: {}",
+                             metadata.modified_time);
+        }
+
+        div(class="row metadata") {
+            strong : format!("File Label: {}",
+                      &metadata.file_label);
+        }
+
+        div(class="row metadata") {
+            strong : format!("File Format Version: {}",
+                      metadata.file_format_version);
+        }
+
+        div(class="row metadata") {
+            @ if let Some(ref file_encoding) = &metadata.file_encoding {
+                strong : format!("File Encoding: {}", file_encoding);
+            }
+        }
+
+        div(class="row metadata") {
+            strong : format!("Compression type: {}",
+                      &metadata.compression);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use report::Metadata;
+
+    #[test]
+    fn test_metadata() {
+        let mut mdata = Metadata::new();
+        mdata.file_name = "test".to_string();
+
+        let rendered = html! {
+            :  metadata(&mdata);
+        };
+
+        let actual = r#"<div id="title" class="row"><h1 id="file-name">test</h1></div><div class="row metadata"><strong>Raw Case Count: 0</strong></div><div class="row metadata"></div><div class="row metadata"><strong>Total Variables: 0</strong></div><div class="row metadata"><strong>Created At: 0</strong></div><div class="row metadata"><strong>Last modified at: 0</strong></div><div class="row metadata"><strong>File Label: </strong></div><div class="row metadata"><strong>File Format Version: 0</strong></div><div class="row metadata"></div><div class="row metadata"><strong>Compression type: </strong></div>"#;
+
+        assert_eq!(format!("{}", rendered), actual.to_string());
     }
 }
 
