@@ -9,6 +9,7 @@ use std::collections::HashSet;
 
 static JQUERY: &'static str = include_str!("jquery-3.3.1.slim.min.js");
 static BOOTSTRAP: &'static str = include_str!("bootstrap.min.css");
+static JAVASCRIPT: &'static str = include_str!("custom.js");
 
 pub trait IntoHtml {
     fn to_html(&self) -> String;
@@ -16,30 +17,6 @@ pub trait IntoHtml {
 
 impl IntoHtml for Report {
     fn to_html(&self) -> String {
-        let javascript = r#"
-    'use strict';
-
-    $(function() {
-
-      $('tr.table-danger').click(function(obj) {
-        var name = obj.currentTarget.children[0].innerText
-
-        $('h2#selected-check').first().removeClass('d-none');
-        $('h2#selected-check')[0].innerText = name;
-
-        var selector = 'table#' + name.toLowerCase().replace(/ /g, '_');
-
-        // hide all the tables
-        $('table.table.table-striped').each(function(index, elem) {
-          $('table#' + elem.id).addClass('d-none');
-        });
-
-        // show the selected table
-        $(selector).first().removeClass('d-none');
-      });
-    });
-    "#;
-
         format!(
             "{}",
             html! {
@@ -105,7 +82,7 @@ impl IntoHtml for Report {
                             : Raw(JQUERY);
                         }
                         script(type="text/javascript") {
-                             : javascript;
+                             : Raw(JAVASCRIPT);
                         }
                     }
                 }
@@ -167,7 +144,7 @@ fn logo() -> Box<RenderBox + 'static> {
                         text(id="shape0",
                              transform="translate(41.7640625,28.50000001)",
                              fill="#000000",
-                             font-family="DejaVu Sans",
+                             font-family="sans-serif",
                              font-size="16",
                              font-size-adjust="0.473684") {
                             tspan(x="0") : "QAMyData"
