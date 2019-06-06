@@ -3,6 +3,7 @@ use check::CheckName;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::IntoIterator;
+use std::cmp::Ordering;
 
 pub mod html;
 
@@ -78,6 +79,22 @@ pub struct Status {
     pub locator: Option<HashSet<Locator>>,
 }
 
+impl<'a> IntoIterator for &'a Status {
+    type Item = &'a Locator;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let mut lst = vec![];
+        if let Some(locators) = &self.locator {
+            lst = locators.iter().collect::<Vec<Self::Item>>();
+            lst.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            lst.into_iter()
+        } else {
+            lst.into_iter()
+        }
+    }
+}
+
 impl Status {
     pub fn new(desc: &str) -> Status {
         Status {
@@ -89,12 +106,31 @@ impl Status {
     }
 }
 
-#[derive(Serialize, Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Serialize, Debug, Clone, Hash)]
 pub struct Locator {
     pub variable_name: String,
     pub variable_index: i32,
     pub value_index: i32,
 }
+
+impl Ord for Locator {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.variable_index.cmp(&other.variable_index)
+    }
+}
+
+impl PartialOrd for Locator {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(&other))
+    }
+}
+
+impl PartialEq for Locator {
+    fn eq(&self, other: &Self) -> bool {
+        self.variable_index == other.variable_index
+    }
+}
+impl Eq for Locator {}
 
 impl Locator {
     pub fn new(variable_name: String, variable_index: i32, value_index: i32) -> Locator {

@@ -3,9 +3,7 @@ use horrorshow::helper::doctype;
 
 use horrorshow::{Render, RenderBox};
 
-use report::{Report, Metadata, Locator};
-
-use std::collections::HashSet;
+use report::{Report, Metadata, Status};
 
 static JQUERY: &'static str = include_str!("jquery-3.3.1.slim.min.js");
 static BOOTSTRAP: &'static str = include_str!("bootstrap.min.css");
@@ -70,10 +68,10 @@ impl IntoHtml for Report {
                                 h2(id="selected-check", class="d-none") : "hidden";
                             }
 
-                            @ for (name, status) in self.summary.iter() {
-                                @ if let Some(ref locators) = status.locator {
+                            @ for (name, status) in self.into_iter() {
+                                @ if status.locator.is_some() {
                                     : locators_table(format!("{}", name),
-                                                     locators.clone());
+                                                     status.clone());
                                 }
                             }
                         }
@@ -91,7 +89,7 @@ impl IntoHtml for Report {
     }
 }
 
-fn locators_table<'a>(name: String, locators: HashSet<Locator>) -> Box<RenderBox> {
+fn locators_table<'a>(name: String, status: Status) -> Box<RenderBox> {
     box_html! {
         div(class="row") {
             table(id=name.to_lowercase().replace(" ", "_"),
@@ -102,7 +100,7 @@ fn locators_table<'a>(name: String, locators: HashSet<Locator>) -> Box<RenderBox
                     th(scope="col") : "Row Index";
                 }
 
-                @ for (i, pair) in locators.iter().take(1000).enumerate() {
+                @ for (i, pair) in status.into_iter().take(1000).enumerate() {
                     tr(class="locator") {
                         td(scope="row") : i + 1;
                         td : format!("{} ({})",
