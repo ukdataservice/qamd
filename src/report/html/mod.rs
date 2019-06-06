@@ -105,9 +105,9 @@ fn locators_table<'a>(name: String, status: Status) -> Box<RenderBox> {
                         td(scope="row") : i + 1;
                         td : format!("{} ({})",
                                      pair.variable_name,
-                                     pair.variable_index);
+                                     pair.variable_index + 1);
 
-                        : value_if_positive(pair.value_index, "-");
+                        : value_if_positive(pair.value_index + 1, "-");
                     }
                 }
             }
@@ -117,7 +117,7 @@ fn locators_table<'a>(name: String, status: Status) -> Box<RenderBox> {
 
 fn value_if_positive(value: i32, default: &'static str) -> Box<Render> {
     box_html! {
-        @ if value < 0 {
+        @ if value <= 0 {
             td : default;
         } else {
             td : value;
