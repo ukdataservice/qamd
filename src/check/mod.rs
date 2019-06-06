@@ -15,7 +15,7 @@ pub type VariableCheckFn = CheckFn<Variable>;
 pub type ValueCheckFn = CheckFn<Value>;
 pub type PostCheckFn = fn(context: &mut Context);
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, PartialOrd, Ord, PartialEq, Eq, Hash, Serialize)]
 pub enum CheckName {
     DateFormat,
     MissingVariableLabels,

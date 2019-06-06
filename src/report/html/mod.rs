@@ -46,7 +46,7 @@ impl IntoHtml for Report {
                                         th(scope="col") : "Description";
                                     }
 
-                                    @ for (name, status) in self.summary.iter() {
+                                    @ for (name, status) in self.into_iter() {
                                         @ if status.fail > 0 {
                                             tr(class="table-danger") {
                                                 td(scope="row") : format!("{}", name);

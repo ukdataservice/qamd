@@ -2,6 +2,7 @@ use check::CheckName;
 
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::iter::IntoIterator;
 
 pub mod html;
 
@@ -17,6 +18,20 @@ impl Report {
             metadata: Metadata::new(),
             summary: HashMap::new(),
         }
+    }
+}
+
+impl<'a> IntoIterator for &'a Report {
+    type Item = (&'a CheckName, &'a Status);
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let mut lst = vec![];
+        for t in self.summary.iter() {
+            lst.push(t);
+        }
+        lst.sort_by(|a, b| a.0.partial_cmp(b.0).unwrap());
+        lst.into_iter()
     }
 }
 
