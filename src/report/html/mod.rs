@@ -5,8 +5,9 @@ use horrorshow::{Render, RenderBox};
 
 use report::{Report, Metadata, Status};
 
-static JQUERY: &'static str = include_str!("jquery-3.3.1.slim.min.js");
-static BOOTSTRAP: &'static str = include_str!("bootstrap.min.css");
+static JQUERY: &'static str = include_str!("../../../node_modules/jquery/jquery.min.js");
+static BOOTSTRAP_CSS: &'static str = include_str!("../../../node_modules/bootstrap/dist/css/bootstrap.min.css");
+static ANIMATE_CSS: &'static str = include_str!("../../../node_modules/animate.css/animate.min.css");
 static JAVASCRIPT: &'static str = include_str!("custom.js");
 
 pub trait IntoHtml {
@@ -24,7 +25,10 @@ impl IntoHtml for Report {
                         title : &self.metadata.file_name;
                         meta(charset="UTF-8");
                         style(type="text/css") {
-                            : Raw(BOOTSTRAP);
+                            : Raw(BOOTSTRAP_CSS);
+                        }
+                        style(type="text/css") {
+                            : Raw(ANIMATE_CSS);
                         }
                     }
 
@@ -96,8 +100,8 @@ fn locators_table<'a>(name: String, status: Status) -> Box<RenderBox> {
                   class="table table-striped table-bordered d-none") {
                 tr {
                     th(scope="col") : "# (limited to 1000)";
-                    th(scope="col") : "Variable (Index)";
-                    th(scope="col") : "Row Index";
+                    th(scope="col") : "Variable (Column Number)";
+                    th(scope="col") : "Row number";
                 }
 
                 @ for (i, pair) in status.into_iter().take(1000).enumerate() {

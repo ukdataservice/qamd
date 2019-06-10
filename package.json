@@ -1,0 +1,14 @@
+{
+  "name": "qamd",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:ukdataservice/qamd.git",
+  "author": "Myles <moffor@essex.ac.uk>",
+  "license": "CC-BY-NC-4.0",
+  "dependencies": {
+    "animate.css": "^3.7.2",
+    "bootstrap": "^4.3.1",
+    "jquery": "1.9.1",
+    "popper.js": "^1.14.7"
+  }
+}
