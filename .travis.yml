@@ -12,3 +12,8 @@ matrix:
     - rust: nightly
   fast_finish: true
 
+cache:
+  yarn: true
+  directories:
+    - node_modules
+
