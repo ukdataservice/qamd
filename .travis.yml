@@ -1,3 +1,7 @@
+before_install:
+  - npm install -g yarn
+  - yarn install
+
 language: rust
 rust:
   - stable
