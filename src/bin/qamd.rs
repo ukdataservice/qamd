@@ -15,7 +15,7 @@ use std::io::{self, BufWriter};
 
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
-static DEFAULT_CONFIG: &'static str = include_str!("../../config.toml");
+static DEFAULT_CONFIG: &'static str = include_str!("../../default.toml");
 static ABOUT_TEXT: &'static str = concat!(
     "QAMyData offers a free easy-to-use",
     " tool that automatically detects some",
