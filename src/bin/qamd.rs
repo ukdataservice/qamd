@@ -223,7 +223,7 @@ fn run(matches: &ArgMatches) {
                         }
                     };
                 }
-                Err(err) => eprintln!("{} : {}:{}:{}", err, file!(), line!(), column!()),
+                Err(err) => eprintln!("{} : Check the file exists at the given path.", err),
             };
         }
         Err(err) => eprintln!("{} : {}", err, line!()),

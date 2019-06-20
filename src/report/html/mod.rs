@@ -100,17 +100,14 @@ fn locators_table<'a>(name: String, status: Status) -> Box<RenderBox> {
                   class="table table-striped table-bordered d-none") {
                 tr {
                     th(scope="col") : "# (limited to 1000)";
-                    th(scope="col") : "Variable (Column Number)";
+                    th(scope="col") : "Variable";
                     th(scope="col") : "Row number";
                 }
 
                 @ for (i, pair) in status.into_iter().take(1000).enumerate() {
                     tr(class="locator") {
                         td(scope="row") : i + 1;
-                        td : format!("{} ({})",
-                                     pair.variable_name,
-                                     pair.variable_index + 1);
-
+                        td : format!("{}", pair.variable_name);
                         : value_if_positive(pair.value_index + 1, "-");
                     }
                 }
