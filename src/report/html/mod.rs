@@ -1,13 +1,15 @@
-use horrorshow::prelude::*;
 use horrorshow::helper::doctype;
+use horrorshow::prelude::*;
 
 use horrorshow::{Render, RenderBox};
 
-use report::{Report, Metadata, Status};
+use report::{Metadata, Report, Status};
 
 static JQUERY: &'static str = include_str!("../../../node_modules/jquery/jquery.min.js");
-static BOOTSTRAP_CSS: &'static str = include_str!("../../../node_modules/bootstrap/dist/css/bootstrap.min.css");
-static ANIMATE_CSS: &'static str = include_str!("../../../node_modules/animate.css/animate.min.css");
+static BOOTSTRAP_CSS: &'static str =
+    include_str!("../../../node_modules/bootstrap/dist/css/bootstrap.min.css");
+static ANIMATE_CSS: &'static str =
+    include_str!("../../../node_modules/animate.css/animate.min.css");
 static JAVASCRIPT: &'static str = include_str!("custom.js");
 
 pub trait IntoHtml {
@@ -265,4 +267,3 @@ mod tests {
         assert_eq!(format!("{}", rendered), actual.to_string());
     }
 }
-

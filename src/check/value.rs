@@ -95,5 +95,4 @@ mod tests {
         value_defined_missing_no_label(&value, &config, &mut report);
         assert_setting!(report.summary.get_mut(&ValueDefinedMissingNoLabel), 1, 1);
     }
-
 }

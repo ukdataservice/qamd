@@ -63,10 +63,18 @@ impl From<readstat_value_t> for AnyValue {
 }
 
 impl<'a> From<&'a str> for AnyValue {
-    fn from(s: &'a str) -> AnyValue {
+    fn from(s: &'a str) -> Self {
         use self::AnyValue::Str;
 
         Str(Box::new(Cow::Borrowed(s).into_owned()))
+    }
+}
+
+impl From<i32> for AnyValue {
+    fn from(i: i32) -> Self {
+        use self::AnyValue::Int32;
+
+        Int32(Box::new(Cow::Borrowed(&i).into_owned()))
     }
 }
 

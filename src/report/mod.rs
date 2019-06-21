@@ -1,9 +1,9 @@
 use check::CheckName;
 
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::IntoIterator;
-use std::cmp::Ordering;
 
 pub mod html;
 

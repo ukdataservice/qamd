@@ -119,8 +119,10 @@ desc = "Flags date formats that are too specific and could potentially be disclo
 #]
 #desc = "Values matching a regex pattern fail the check."
 
+[variable_config.primary_variable]
+setting = "Caseno"
+desc = "Groups the variables."
 
-
-#[variable_config.primary_variable]
-#setting = "id"
-#desc = "Groups the variables."
+[value_config.duplicate_values]
+setting = ["Caseno"]
+desc = "Report duplicate value"

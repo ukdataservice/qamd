@@ -153,6 +153,7 @@ pub struct ValueConfig {
     pub label_max_length: Option<Setting<i32>>,
     pub defined_missing_no_label: Option<Setting<bool>>,
     pub regex_patterns: Option<Setting<Vec<String>>>,
+    pub duplicate_values: Option<Setting<Vec<String>>>,
 }
 
 impl ValueConfig {
@@ -163,6 +164,7 @@ impl ValueConfig {
             defined_missing_no_label: None,
             label_max_length: None,
             regex_patterns: None,
+            duplicate_values: None,
         }
     }
 }
@@ -192,6 +194,15 @@ impl Valid for ValueConfig {
             Some(ref threshold) => {
                 if !(threshold.setting > 0 && threshold.setting <= 100) {
                     return Err("threshold out of bounds");
+                }
+            }
+        }
+
+        match self.duplicate_values {
+            None => (),
+            Some(ref variables) => {
+                if variables.setting.len() < 1 {
+                    return Err("value_config.duplicate_values cannot be empty");
                 }
             }
         }

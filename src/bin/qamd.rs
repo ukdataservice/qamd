@@ -6,8 +6,8 @@ extern crate serde_json;
 extern crate toml;
 
 use qamd::config::{Config, Valid};
-use qamd::report::html::IntoHtml;
 use qamd::readstat::read::read;
+use qamd::report::html::IntoHtml;
 
 use std::fs::{self, File};
 use std::io::prelude::*;
@@ -171,7 +171,7 @@ fn get_file(uri: &str, file: std::path::PathBuf) {
                 .expect("Failed to write response body to buffer.");
 
             fs::write(&file, buf).expect(&format!("Failed to write {}", &file.to_str().unwrap()));
-        },
+        }
         Err(_) => println!(
             concat!("Warning: Couldn't get {}", " You can find it here: {}"),
             &file.to_str().unwrap(),
@@ -180,6 +180,7 @@ fn get_file(uri: &str, file: std::path::PathBuf) {
     }
 }
 
+/// Run Subcommand
 fn run(matches: &ArgMatches) {
     let config_file = match matches.value_of("config") {
         Some(config_path) => {

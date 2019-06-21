@@ -14,6 +14,7 @@ use regex::Regex;
 pub fn register() -> Vec<PostCheckFn> {
     vec![
         primary_variable,
+        duplicate_values,
         system_missing_over_threshold,
         variables_with_unique_values,
         value_label_max_length,
@@ -45,6 +46,41 @@ fn primary_variable(context: &mut Context) {
     }
 }
 
+/// Notify if a variable has duplicate values, and where they are
+fn duplicate_values(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
+    if let Some(ref value_config) = config.value_config {
+        if let Some(ref setting) = value_config.duplicate_values {
+            use check::CheckName::DuplicateValues;
+            include_check!(
+                report.summary,
+                DuplicateValues,
+                format!("{} (On variables {:?})", setting.desc, setting.setting).as_str()
+            );
+
+            if let Some(ref mut status) = report.summary.get_mut(&DuplicateValues) {
+                let case_count = &report.metadata.raw_case_count;
+
+                context
+                    .frequency_table
+                    .iter()
+                    .filter(move |(variable, _)| setting.setting.contains(&variable.name))
+                    .for_each(|(variable, map)| {
+                        let count = map.values().filter(|occ| **occ == 1).count() as i32;
+                        if count != *case_count {
+                            status.fail += 1;
+
+                            include_locators!(config, status, variable.name, variable.index, -1);
+                        }
+                    });
+
+                status.pass = setting.setting.len() as i32 - status.fail;
+            }
+        }
+    }
+}
+
 /// Report variables with a number of system missing values over a
 /// specified threhold.
 fn system_missing_over_threshold(context: &mut Context) {
@@ -71,7 +107,11 @@ fn system_missing_over_threshold(context: &mut Context) {
                         sum
                     });
 
-                    assert_eq!(report.metadata.raw_case_count, sum);
+                    assert_eq!(
+                        report.metadata.raw_case_count, sum,
+                        "case_count {} does not align with sum {} for variable {}",
+                        report.metadata.raw_case_count, sum, variable.name
+                    );
 
                     // compare with config threhold
                     // and increment pass/fail
@@ -296,6 +336,7 @@ mod tests {
 
     use check::Check;
     use config::{Config, Setting};
+    use model::anyvalue::AnyValue;
     use model::value::Value;
     use model::variable::Variable;
     use report::Report;
@@ -331,6 +372,50 @@ mod tests {
             temp.insert(missing_value, 8);
 
             freq_table.insert(Variable::from("second"), temp);
+        }
+
+        {
+            let mut temp: HashMap<Value, i32> = HashMap::new();
+            let variable = Variable::from("badid");
+
+            for i in 1i32..=10 {
+                if i == 4 {
+                    continue;
+                }
+                let quant = if i == 1 { 2 } else { 1 };
+
+                temp.insert(
+                    Value {
+                        variable: variable.clone(),
+                        row: i,
+                        value: AnyValue::from(i),
+                        label: String::new(),
+                        missing: Missing::NOT_MISSING,
+                    },
+                    quant,
+                );
+            }
+
+            freq_table.insert(variable, temp);
+        }
+
+        {
+            let mut temp: HashMap<Value, i32> = HashMap::new();
+            let variable = Variable::from("id");
+            for i in 1i32..=10 {
+                temp.insert(
+                    Value {
+                        variable: variable.clone(),
+                        row: i,
+                        value: AnyValue::from(i),
+                        label: String::new(),
+                        missing: Missing::NOT_MISSING,
+                    },
+                    1,
+                );
+            }
+
+            freq_table.insert(variable, temp);
         }
 
         let mut report = Report::new();
@@ -376,6 +461,25 @@ mod tests {
                 )
             );
         }
+    }
+
+    #[test]
+    fn test_duplicate_values() {
+        let mut context = setup();
+
+        use check::CheckName::DuplicateValues;
+
+        assert!(context.report.summary.get_mut(&DuplicateValues).is_none());
+
+        if let Some(ref mut value_config) = context.config.value_config {
+            value_config.duplicate_values = Some(Setting {
+                setting: vec!["id", "badid"].iter().map(|s| s.to_string()).collect(),
+                desc: "description from config".to_string(),
+            });
+        }
+
+        duplicate_values(&mut context);
+        assert_setting!(context.report.summary.get(&DuplicateValues), 1, 1);
     }
 
     #[test]
@@ -425,7 +529,7 @@ mod tests {
         }
 
         variables_with_unique_values(&mut context);
-        assert_setting!(context.report.summary.get(&VariablesWithUniqueValues), 1, 1);
+        assert_setting!(context.report.summary.get(&VariablesWithUniqueValues), 1, 3);
     }
 
     #[test]
@@ -496,17 +600,12 @@ mod tests {
 
         assert!(context.report.summary.get(&Spellcheck).is_none());
 
-        // first,                                           second
-        // qux [this is fine] (3),                          g@regs (2)
-        // bar# [this is far too long to pss the test] (4), "" (8)
-        // baz! (3)
-
         context.config.spellcheck = Some(Setting {
             setting: vec!["test/words.txt".to_string()],
             desc: "spellcheck: description from config".to_string(),
         });
 
         spellcheck(&mut context);
-        assert_setting!(context.report.summary.get(&Spellcheck), 2, 5);
+        assert_setting!(context.report.summary.get(&Spellcheck), 23, 5);
     }
 }

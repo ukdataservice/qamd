@@ -25,6 +25,7 @@ pub enum CheckName {
     ValueDefinedMissingNoLabel,
 
     SystemMissingOverThreshold,
+    DuplicateValues,
     VariablesWithUniqueValues,
     ValueLabelMaxLength,
     ValueOddCharacters,
