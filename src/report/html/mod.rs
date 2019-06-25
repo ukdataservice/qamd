@@ -75,7 +75,7 @@ impl IntoHtml for Report {
                             }
 
                             @ for (name, status) in self.into_iter() {
-                                @ if status.locator.is_some() {
+                                @ if status.locators.is_some() {
                                     : locators_table(format!("{}", name),
                                                      status.clone());
                                 }
@@ -104,13 +104,20 @@ fn locators_table<'a>(name: String, status: Status) -> Box<RenderBox> {
                     th(scope="col") : "# (limited to 1000)";
                     th(scope="col") : "Variable";
                     th(scope="col") : "Row number";
+                    th(scope="col") : "Reason";
                 }
 
-                @ for (i, pair) in status.into_iter().take(1000).enumerate() {
-                    tr(class="locator") {
-                        td(scope="row") : i + 1;
-                        td : format!("{}", pair.variable_name);
-                        : value_if_positive(pair.value_index + 1, "-");
+                @ if let Some(locators) = status.locators {
+                    @ for (i, locator) in locators.iter().take(1000).enumerate() {
+                        tr(class="locator") {
+                            td(scope="row") : i + 1;
+                            td : format!("{} ({})",
+                                         locator.variable_name,
+                                         locator.variable_index);
+
+                            : value_if_positive(locator.value_index, "-");
+                            td : value_if_present(&locator.reason, "-".to_string());
+                        }
                     }
                 }
             }
@@ -125,6 +132,13 @@ fn value_if_positive(value: i32, default: &'static str) -> Box<Render> {
         } else {
             td : value;
         }
+    }
+}
+
+fn value_if_present(value: &Option<String>, default: String) -> String {
+    match value {
+        Some(v) => return v.to_string(),
+        None => return default,
     }
 }
 

@@ -13,13 +13,14 @@ macro_rules! include_locators(($config:expr,
         if !metadata_only {
             let locator = Locator::new($variable_name.clone(),
                                        $variable_index,
-                                       $value_index);
-            if let Some(ref mut locators) = $status.locator {
+                                       $value_index,
+                                       None);
+            if let Some(ref mut locators) = $status.locators {
                 locators.insert(locator);
             } else {
                 let mut set = HashSet::new();
                 set.insert(locator);
-                $status.locator = Some(set);
+                $status.locators = Some(set);
             }
         }
     }));

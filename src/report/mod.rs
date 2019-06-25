@@ -76,7 +76,7 @@ pub struct Status {
     pub pass: i32,
     pub fail: i32,
     pub desc: String,
-    pub locator: Option<HashSet<Locator>>,
+    pub locators: Option<HashSet<Locator>>,
 }
 
 impl<'a> IntoIterator for &'a Status {
@@ -85,7 +85,7 @@ impl<'a> IntoIterator for &'a Status {
 
     fn into_iter(self) -> Self::IntoIter {
         let mut lst = vec![];
-        if let Some(locators) = &self.locator {
+        if let Some(locators) = &self.locators {
             lst = locators.iter().collect::<Vec<Self::Item>>();
             lst.sort_by(|a, b| a.partial_cmp(b).unwrap());
             lst.into_iter()
@@ -101,7 +101,7 @@ impl Status {
             pass: 0,
             fail: 0,
             desc: desc.to_string(),
-            locator: None,
+            locators: None,
         }
     }
 }
@@ -111,6 +111,7 @@ pub struct Locator {
     pub variable_name: String,
     pub variable_index: i32,
     pub value_index: i32,
+    pub reason: Option<String>,
 }
 
 impl Ord for Locator {
@@ -133,11 +134,15 @@ impl PartialEq for Locator {
 impl Eq for Locator {}
 
 impl Locator {
-    pub fn new(variable_name: String, variable_index: i32, value_index: i32) -> Locator {
+    pub fn new(variable_name: String,
+               variable_index: i32,
+               value_index: i32,
+               reason: Option<String>) -> Locator {
         Locator {
             variable_name: variable_name,
             variable_index: variable_index,
             value_index: value_index,
+            reason: reason,
         }
     }
 }

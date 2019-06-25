@@ -3,7 +3,7 @@ extern crate qamd;
 extern crate reqwest;
 extern crate serde;
 extern crate serde_json;
-extern crate toml;
+extern crate serde_yaml;
 
 use qamd::config::{Config, Valid};
 use qamd::readstat::read::read;
@@ -15,7 +15,7 @@ use std::io::{self, BufWriter};
 
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
-static DEFAULT_CONFIG: &'static str = include_str!("../../default.toml");
+static DEFAULT_CONFIG: &'static str = include_str!("../../default.yaml");
 static ABOUT_TEXT: &'static str = concat!(
     "QAMyData offers a free easy-to-use",
     " tool that automatically detects some",
@@ -36,7 +36,7 @@ static INIT_ABOUT_TEXT: &'static str = concat!(
     "This command will create the following directory tree:",
     "\n\t.",
     "\n\t├── config",
-    "\n\t│   └── default.toml",
+    "\n\t│   └── default.yaml",
     "\n\t├── data",
     "\n\t│   └── test_data",
     "\n\t└── dictionaries",
@@ -142,10 +142,10 @@ fn init() {
     }
 
     fs::write(
-        base_path.join("config").join("default.toml"),
+        base_path.join("config").join("default.yaml"),
         DEFAULT_CONFIG,
     )
-    .expect("Failed to write config/default.toml");
+    .expect("Failed to write config/default.yaml");
 
     let github = "https://github.com/ukdataservice/qamd/blob/master/".to_string();
     let test_data_dir = base_path.join("data").join("test");
@@ -241,7 +241,7 @@ fn read_file(path: &str) -> io::Result<String> {
 }
 
 fn parse_config(config_file: &str) -> Result<Config, String> {
-    match toml::from_str::<Config>(&config_file) {
+    match serde_yaml::from_str::<Config>(&config_file) {
         Ok(config) => {
             let valid = config.validate();
             match valid {

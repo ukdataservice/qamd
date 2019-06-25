@@ -21,6 +21,7 @@ pub fn register() -> Vec<PostCheckFn> {
         value_odd_characters,
         regex_patterns,
         spellcheck,
+        bad_filename,
     ]
 }
 
@@ -330,6 +331,36 @@ fn total_checked(frequency_table: &HashMap<Variable, HashMap<Value, i32>>) -> i3
         .fold(0, |total, (_var, val)| total + val.len() as i32 + 1)
 }
 
+fn bad_filename(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
+    if let Some(ref bad_filename) = config.bad_filename {
+        let pattern = &bad_filename.setting;
+        let file_name = &report.metadata.file_name;
+        let re = Regex::new(pattern).unwrap();
+
+        use check::CheckName::BadFileName;
+        let mut status = Status::new(&bad_filename.desc);
+        let mut locators: HashSet<Locator> = HashSet::new();
+
+        if !re.is_match(file_name) {
+            status.fail += 1;
+
+            locators.insert(Locator::new("".to_string(),
+                                         -1, -1,
+                                         Some(format!("file name: {} {} {}",
+                                                 file_name,
+                                                 "did not match the given pattern:",
+                                                 pattern))));
+            status.locators = Some(locators);
+        } else {
+            status.pass += 1;
+        }
+
+        report.summary.insert(BadFileName, status);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -607,5 +638,27 @@ mod tests {
 
         spellcheck(&mut context);
         assert_setting!(context.report.summary.get(&Spellcheck), 23, 5);
+    }
+
+    #[test]
+    fn test_bad_filename() {
+        let mut context = setup();
+
+        use check::CheckName::BadFileName;
+
+        assert!(context.report.summary.get(&BadFileName).is_none());
+
+        context.config.bad_filename = Some(Setting {
+            setting: "^([a-zA-Z0-9]+)\\.([a-zA-Z0-9]+)$".to_string(),
+            desc: "filename must match pattern".to_string(),
+        });
+
+        context.report.metadata.file_name = "goodfilename.dta".to_string();
+        bad_filename(&mut context);
+        assert_setting!(context.report.summary.get(&BadFileName), 1, 0);
+
+        context.report.metadata.file_name = "bad& filename.foo".to_string();
+        bad_filename(&mut context);
+        assert_setting!(context.report.summary.get(&BadFileName), 0, 1);
     }
 }
