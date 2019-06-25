@@ -1,53 +1,31 @@
 ---
-# metadata_only: ~
-# progress: ~
+#######################
+## Basic File Checks ##
+#######################
 
-spellcheck:
-  setting:
-    - '/usr/share/dict/words'
-    - 'C:\path\to\dictonary\file.txt'
-  desc: ""
+basic_file_checks:
+  bad_filename:
+    # Checking whether the file name contains illegal and/or odd characters
+    setting: "^([a-zA-Z0-9]+)\\.([a-zA-Z0-9]+)$"
+    desc: Filenames must match a given regular expression to be considered valid.
 
-## Basic File Checks
+##############
+## Metadata ##
+##############
 
-# Checking whether the file name contains illegal and/or odd characters
-bad_filename:
-  setting: '^([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$'
-  desc: ""
-
-variable_config:
-  odd_characters:
-    setting:
-      - "!"
-      - "#"
-      - "  "
-      - "@"
-      - ë
-      - ç
-      - ô
-      - ü
-    desc: ""
-
-  missing_variable_labels:
-    setting: true
-    desc: ""
-
-  label_max_length:
-    setting: 79
-    desc: ""
-
-  # date_format: ~
-
+metadata:
+  # Reported under metadata 'case_count'.
   primary_variable:
     setting: Caseno
-    desc: ""
+    desc: "Counts the unqiue occurences for the variable, useful if your dataset groups by household."
 
-  variables_with_unique_values:
-    setting: 1
-    desc: ""
+  # Checking whether variables don't have labels
+  missing_variable_labels:
+    setting: true
+    desc: Variables should have a label.
 
-value_config:
-  odd_characters:
+  # Check whether variable names or labels contain 'odd' characters
+  variable_odd_characters:
     setting:
       - "!"
       - "#"
@@ -57,32 +35,92 @@ value_config:
       - ç
       - ô
       - ü
-    desc: ""
+    desc: "Variable names and lables cannot contain certain 'odd' characters."
 
+  # Checking whether length of variable labels exceeds 79 characters
+  variable_label_max_length:
+    setting: 79
+    desc: Variable labels cannot exceed a maximum length.
+
+  # Checking whether value labels contain 'odd' characters
+  value_label_odd_characters:
+    setting:
+      - "!"
+      - "#"
+      - "  "
+      - "@"
+      - ë
+      - ç
+      - ô
+      - ü
+    desc: "Value labels cannot contain certain 'odd' characters"
+
+  # Checking whether length of value labels exceeds 39 characters
+  value_label_max_length:
+    setting: 39
+    desc: Value labels cannot exceet a maximum length
+
+  # Check spelling and truncation
+  spellcheck:
+    setting:
+      - /usr/share/dict/words
+      - "C:\\path\\to\\dictonary\\file.txt"
+    desc: Word file(s) used for spellchecking value and variable labels.
+
+  # SPSS only - Checking whether user defined values don't have labels
+  value_defined_missing_no_label:
+    setting: true
+    desc: Values defined as missing must have a label (only applicable to SPSS data files)
+
+####################
+## Data Integrity ##
+####################
+
+data_integrity:
+  # Checking whether string values contain 'odd' characters.
+  string_value_odd_characters:
+    setting:
+      - "!"
+      - "#"
+      - "  "
+      - "@"
+      - ë
+      - ç
+      - ô
+      - ü
+    desc: "String values cannot contain certain 'odd' characters."
+
+  # Checking the proportion of undefined missing ('sysmis')
   system_missing_value_threshold:
     setting: 25
-    desc: ""
+    desc: Percentage of missing variables that becomes unacceptable.
 
-  label_max_length:
-    setting: 39
-    desc: ""
+  # Checking whether any variable contains unique values
+  unique_values:
+    setting: 1
+    desc: Detects outliers (if a variable contains unique values)
 
-  defined_missing_no_label:
-    setting: true
-    desc: ""
+    # # Checking for specific patterns by using RegEx (as this step is resource
+    # # intensive it has been commented out from the initial config file, please
+    # # see the User Guide for more information about RegEx and how to run this step)
+    # regex_patterns:
+    #   setting:
+    #     - "^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,4})+)$"
+    #     - "([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z]))))\\s?[0-9][A-Za-z]{2})"
+    #     - "((([a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\"(([\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]|[\\x21\\x23-\\x5B\\x5D-\\x7E])|(\\[\\x01-\\x09\\x0B\\x0C\\x0E-\\x7F]))*\"))@(([a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\\[(([\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]|[\\x21-\\x5A\\x5E-\\x7E])|(\\[\\x01-\\x09\\x0B\\x0C\\x0E-\\x7F]))*\\])))"
+    #   desc: Values matching a regex pattern fail. Can be used to find post codes and telephone numbers.
 
-  # regex_patterns:
-  #   setting:
-  #     # Simple Email address Regex
-  #     - "^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,4})+)$"
-  #     # UK post code regex
-  #     - "([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z]))))\\s?[0-9][A-Za-z]{2})",
-  #     # Email addresses as per RFC 2822
-  #     - "((([a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\"(([\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]|[\\x21\\x23-\\x5B\\x5D-\\x7E])|(\\[\\x01-\\x09\\x0B\\x0C\\x0E-\\x7F]))*\"))@(([a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\\[(([\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]|[\\x21-\\x5A\\x5E-\\x7E])|(\\[\\x01-\\x09\\x0B\\x0C\\x0E-\\x7F]))*\\])))"
-  #   desc: ""
-
+  # Checking the variables listed that all values are unqiue. Useful for ID variables.
   duplicate_values:
     setting:
       - Caseno
-    desc: ""
+    desc: "For each variable specified will check for duplicate values. Useful for checking all ID's are unique."
+
+####################
+## Discloure Risk ##
+####################
+
+disclosure_risk:
+  # Checking whether data contains specific date formats
+  date_format: ~
 

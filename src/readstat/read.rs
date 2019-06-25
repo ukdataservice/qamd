@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_read_dta() {
-        let config = Config::new();
+        let config = Config::default();
 
         let report = ok!(read_dta("test/mtcars.dta", &config));
         assert_eq!(report.metadata.variable_count, 12);
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_read_sav() {
-        let config = Config::new();
+        let config = Config::default();
 
         let report = ok!(read_sav("test/mtcars.sav", &config));
         assert_eq!(report.metadata.variable_count, 12);
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn test_read_sas7bdat() {
-        let config = Config::new();
+        let config = Config::default();
 
         let report = ok!(read_sas7bdat("test/mtcars.sas7bdat", &config));
         assert_eq!(report.metadata.variable_count, 12);
@@ -173,7 +173,7 @@ mod tests {
 
     #[test]
     fn test_read_csv() {
-        let config = Config::new();
+        let config = Config::default();
 
         let report = ok!(read_csv("test/mtcars.csv", &config));
         assert_eq!(report.metadata.variable_count, 12);
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn reader_should_error_on_enoent() {
-        let config = Config::new();
+        let config = Config::default();
 
         let err = match read_dta("", &config) {
             Ok(_) => "this should never be run".to_string(),

@@ -2,7 +2,7 @@
 extern crate qamd;
 extern crate serde_yaml;
 
-use qamd::config::{Config, Setting, VariableConfig, ValueConfig, Valid};
+use qamd::config::*;
 
 fn main() -> Result<(), serde_yaml::Error>{
     let odd_chars = vec_of_strings(vec!["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]);
@@ -18,29 +18,40 @@ fn main() -> Result<(), serde_yaml::Error>{
             metadata_only: None,
             progress: None,
 
-            spellcheck: Some(setting(dicts, "")),
-            bad_filename: Some(setting(r#"^([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$"#.to_string(), "")),
 
-            variable_config: Some(VariableConfig {
-                primary_variable: Some(setting("Caseno".to_string(), "")),
-                variables_with_unique_values: Some(setting(1, "")),
+            basic_file_checks: BasicFileChecks {
+                bad_filename: Some(setting(
+                                      r#"^([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)$"#.to_string(),
+                                      "Filenames must match a given regular expression to be considered valid."
+                                   )),
+            },
+            metadata: Metadata {
+                primary_variable: Some(setting(
+                                          "Caseno".to_string(),
+                                          "Counts the unqiue occurences for the variable, useful if your dataset groups by household."
+                                       )),
 
-                odd_characters: Some(setting(odd_chars.clone(), "")),
-                missing_variable_labels: Some(setting(true, "")),
-                label_max_length: Some(setting(79, "")),
+                missing_variable_labels: Some(setting(
+                                                true,
+                                                "Variables should have a label."
+                                            )),
+                variable_odd_characters: Some(setting(odd_chars.clone(), "Variable names and lables cannot contain certain 'odd' characters.")),
+                variable_label_max_length: Some(setting(79, "Variable labels cannot exceed a maximum length.")),
 
-                date_format: None,
-            }),
-            value_config: Some(ValueConfig {
-                odd_characters: Some(setting(odd_chars, "")),
-                system_missing_value_threshold: Some(setting(25, "")),
+                value_label_odd_characters: Some(setting(odd_chars.clone(), "Value labels cannot contain certain 'odd' characters")),
+                value_label_max_length: Some(setting(39, "Value labels cannot exceet a maximum length")),
+                spellcheck: Some(setting(dicts, "Word file(s) used for spellchecking value and variable labels.")),
+                value_defined_missing_no_label: Some(setting(true, "Values defined as missing must have a label (only applicable to SPSS data files)")),
+            },
+            data_integrity: DataIntegrity {
+                string_value_odd_characters: Some(setting(odd_chars, "String values cannot contain certain 'odd' characters.")),
+                system_missing_value_threshold: Some(setting(25, "Percentage of missing variables that becomes unacceptable.")),
 
-                defined_missing_no_label: Some(setting(true, "")),
-                label_max_length: Some(setting(39, "")),
-
-                regex_patterns: Some(setting(regexps, "")),
-                duplicate_values: Some(setting(duplicate_values, "")),
-            }),
+                unique_values: Some(setting(1, "Detects outliers (if a variable contains unique values)")),
+                regex_patterns: Some(setting(regexps, "Values matching a regex pattern fail. Can be used to find post codes and telephone numbers.")),
+                duplicate_values: Some(setting(duplicate_values, "For each variable specified will check for duplicate values. Useful for checking all ID's are unique.")),
+            },
+            disclosure_risk: DisclosureRisk::default(),
     };
 
     if config.validate().is_ok() {
