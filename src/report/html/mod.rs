@@ -107,17 +107,13 @@ fn locators_table<'a>(name: String, status: Status) -> Box<RenderBox> {
                     th(scope="col") : "Reason";
                 }
 
-                @ if let Some(locators) = status.locators {
-                    @ for (i, locator) in locators.iter().take(1000).enumerate() {
-                        tr(class="locator") {
-                            td(scope="row") : i + 1;
-                            td : format!("{} ({})",
-                                         locator.variable_name,
-                                         locator.variable_index);
+                @ for (i, pair) in status.into_iter().take(1000).enumerate() {
+                    tr(class="locator") {
+                        td(scope="row") : i + 1;
+                        td : format!("{}", pair.variable_name);
 
-                            : value_if_positive(locator.value_index, "-");
-                            td : value_if_present(&locator.reason, "-".to_string());
-                        }
+                        : value_if_positive(pair.value_index, "-");
+                        td : value_if_present(&pair.reason, "-".to_string());
                     }
                 }
             }
