@@ -21,14 +21,46 @@ pub fn register() -> Vec<PostCheckFn> {
         value_label_max_length,
         spellcheck,
 
-        // DataIntegrity
+        // Data Integrity
+        duplicate_values,
+
         string_value_odd_characters,
         system_missing_over_threshold,
 
-        unique_values,
+        //  Disclosure Risk
         regex_patterns,
-        duplicate_values,
+        unique_values,
     ]
+}
+
+fn bad_filename(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
+    if let Some(ref bad_filename) = config.basic_file_checks.bad_filename {
+        let pattern = &bad_filename.setting;
+        let file_name = &report.metadata.file_name;
+        let re = Regex::new(pattern).unwrap();
+
+        use check::CheckName::BadFileName;
+        let mut status = Status::new(&bad_filename.desc);
+        let mut locators: HashSet<Locator> = HashSet::new();
+
+        if !re.is_match(file_name) {
+            status.fail += 1;
+
+            locators.insert(Locator::new("".to_string(),
+                                         -1, -1,
+                                         Some(format!("file name: {} {} {}",
+                                                 file_name,
+                                                 "did not match the given pattern:",
+                                                 pattern))));
+            status.locators = Some(locators);
+        } else {
+            status.pass += 1;
+        }
+
+        report.summary.insert(BadFileName, status);
+    }
 }
 
 /// Count the number of cases using the provided primary variable_count
@@ -47,152 +79,6 @@ fn primary_variable(context: &mut Context) {
         {
             // report count of distinct cases for this variable
             report.metadata.case_count = Some(map.keys().len() as i32);
-        }
-    }
-}
-
-/// Notify if a variable has duplicate values, and where they are
-fn duplicate_values(context: &mut Context) {
-    let (config, report) = (&context.config, &mut context.report);
-
-    if let Some(ref setting) = config.data_integrity.duplicate_values {
-        use check::CheckName::DuplicateValues;
-        include_check!(
-            report.summary,
-            DuplicateValues,
-            format!("{} (On variables {:?})", setting.desc, setting.setting).as_str()
-        );
-
-        if let Some(ref mut status) = report.summary.get_mut(&DuplicateValues) {
-            let case_count = &report.metadata.raw_case_count;
-
-            context
-                .frequency_table
-                .iter()
-                .filter(move |(variable, _)| setting.setting.contains(&variable.name))
-                .for_each(|(variable, map)| {
-                    let count = map.values().filter(|occ| **occ == 1).count() as i32;
-                    if count != *case_count {
-                        status.fail += 1;
-
-                        include_locators!(config, status, variable.name, variable.index, -1);
-                    }
-                });
-
-            status.pass = setting.setting.len() as i32 - status.fail;
-        }
-    }
-}
-
-/// Report variables with a number of system missing values over a
-/// specified threhold.
-fn system_missing_over_threshold(context: &mut Context) {
-    let (config, report) = (&context.config, &mut context.report);
-
-    if let Some(ref setting) = config.data_integrity.system_missing_value_threshold {
-        use check::CheckName::SystemMissingOverThreshold;
-        include_check!(
-            report.summary,
-            SystemMissingOverThreshold,
-            format!("{} (Threshold: {}%)", setting.desc, setting.setting).as_str()
-        );
-
-        if let Some(ref mut status) = report.summary.get_mut(&SystemMissingOverThreshold) {
-            // map between variable and % missing
-
-            // pull count of sysmiss values from Context.frequency_table
-            // sum to percentage of sysmiss (delivered as NaN)
-
-            for (variable, map) in &context.frequency_table {
-                let sum = map.iter().fold(0, |mut sum, (_, occ)| {
-                    sum += occ;
-                    sum
-                });
-
-                assert_eq!(
-                    report.metadata.raw_case_count, sum,
-                    "case_count {} does not align with sum {} for variable {}",
-                    report.metadata.raw_case_count, sum, variable.name
-                );
-
-                // compare with config threhold
-                // and increment pass/fail
-                if let Some((_, count)) = map
-                    .iter()
-                    .find(|(value, _)| value.missing == Missing::SYSTEM_MISSING)
-                {
-                    let sys_miss = (*count as f32 / sum as f32) * 100.0;
-                    if sys_miss > setting.setting as f32 {
-                        status.fail += 1;
-
-                        include_locators!(config, status, variable.name, variable.index, -1);
-                    }
-                }
-            }
-
-            status.pass = report.metadata.variable_count - status.fail;
-        }
-    }
-}
-
-/// Count the number of variables with one or more unique values
-fn unique_values(context: &mut Context) {
-    let (config, report) = (&context.config, &mut context.report);
-
-    if let Some(ref setting) = config.data_integrity.unique_values {
-        use check::CheckName::VariablesWithUniqueValues;
-        include_check!(
-            report.summary,
-            VariablesWithUniqueValues,
-            &setting.desc
-        );
-
-        if let Some(ref mut status) = report.summary.get_mut(&VariablesWithUniqueValues) {
-            for (variable, map) in context.frequency_table.iter() {
-                if let Some(_) = map.iter().find(|(_value, occ)| *occ <= &setting.setting) {
-                    status.fail += 1;
-
-                    include_locators!(config, status, variable.name, variable.index, -1);
-                } else {
-                    status.pass += 1
-                }
-            }
-        }
-    }
-}
-
-/// Check for values over a specified max length
-fn value_label_max_length(context: &mut Context) {
-    let (config, report) = (&context.config, &mut context.report);
-
-    if let Some(ref setting) = config.metadata.value_label_max_length {
-        use check::CheckName::ValueLabelMaxLength;
-        include_check!(
-            report.summary,
-            ValueLabelMaxLength,
-            format!("{} ({} characters)", setting.desc, &setting.setting).as_str()
-        );
-
-        if let Some(ref mut status) = report.summary.get_mut(&ValueLabelMaxLength) {
-            for variable in (*context).variables.iter() {
-                if let Some(values) = (*context).frequency_table.get(&variable) {
-                    for (value, _occ) in values.iter() {
-                        if value.label.len() > setting.setting as usize {
-                            status.fail += 1;
-
-                            include_locators!(
-                                config,
-                                status,
-                                value.variable.name,
-                                value.variable.index,
-                                -1
-                            );
-                        }
-                    }
-                }
-            }
-
-            status.pass = report.metadata.variable_count - status.fail;
         }
     }
 }
@@ -236,28 +122,23 @@ fn value_label_odd_characters(context: &mut Context) {
     }
 }
 
-fn string_value_odd_characters(context: &mut Context) {
+/// Check for values over a specified max length
+fn value_label_max_length(context: &mut Context) {
     let (config, report) = (&context.config, &mut context.report);
 
-    if let Some(ref setting) = config.data_integrity.string_value_odd_characters {
-        use check::CheckName::StringValueOddCharacters;
+    if let Some(ref setting) = config.metadata.value_label_max_length {
+        use check::CheckName::ValueLabelMaxLength;
         include_check!(
             report.summary,
-            StringValueOddCharacters,
-            format!("{} {:?}", setting.desc, &setting.setting).as_str()
+            ValueLabelMaxLength,
+            format!("{} ({} characters)", setting.desc, &setting.setting).as_str()
         );
 
-        if let Some(ref mut status) = report.summary.get_mut(&StringValueOddCharacters) {
+        if let Some(ref mut status) = report.summary.get_mut(&ValueLabelMaxLength) {
             for variable in (*context).variables.iter() {
                 if let Some(values) = (*context).frequency_table.get(&variable) {
-                    for (value, _occ) in values.iter().filter(|(v, _)| {
-                        match v.value {
-                            AnyValue::Str(_) => true,
-                            _ => false,
-                        }
-                    }) {
-                        if contains(&format!("{}", &value.value), &setting.setting)
-                        {
+                    for (value, _occ) in values.iter() {
+                        if value.label.len() > setting.setting as usize {
                             status.fail += 1;
 
                             include_locators!(
@@ -265,44 +146,8 @@ fn string_value_odd_characters(context: &mut Context) {
                                 status,
                                 value.variable.name,
                                 value.variable.index,
-                                value.row
+                                -1
                             );
-                        } else {
-                            status.pass += 1;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/// Flags values that match a regex pattern
-fn regex_patterns(context: &mut Context) {
-    let (config, report) = (&context.config, &mut context.report);
-
-    if let Some(ref setting) = config.data_integrity.regex_patterns {
-        use check::CheckName::ValueRegexPatterns;
-        include_check!(report.summary, ValueRegexPatterns, &setting.desc);
-
-        if let Some(ref mut status) = report.summary.get_mut(&ValueRegexPatterns) {
-            for variable in context.variables.iter() {
-                for (value, _occ) in context.frequency_table.get(&variable).unwrap() {
-                    for pattern in &setting.setting {
-                        let re = Regex::new(&pattern).unwrap();
-
-                        if re.is_match(&format!("{}", value.value)) || re.is_match(&value.label)
-                        {
-                            status.fail += 1;
-
-                            include_locators!(
-                                config,
-                                status,
-                                value.variable.name,
-                                value.variable.index,
-                                value.row
-                            );
-                            break;
                         }
                     }
                 }
@@ -378,35 +223,194 @@ fn spellcheck(context: &mut Context) {
     }
 }
 
-fn bad_filename(context: &mut Context) {
+/// Notify if a variable has duplicate values, and where they are
+fn duplicate_values(context: &mut Context) {
     let (config, report) = (&context.config, &mut context.report);
 
-    if let Some(ref bad_filename) = config.basic_file_checks.bad_filename {
-        let pattern = &bad_filename.setting;
-        let file_name = &report.metadata.file_name;
-        let re = Regex::new(pattern).unwrap();
+    if let Some(ref setting) = config.data_integrity.duplicate_values {
+        use check::CheckName::DuplicateValues;
+        include_check!(
+            report.summary,
+            DuplicateValues,
+            format!("{} (On variables {:?})", setting.desc, setting.setting).as_str()
+        );
 
-        use check::CheckName::BadFileName;
-        let mut status = Status::new(&bad_filename.desc);
-        let mut locators: HashSet<Locator> = HashSet::new();
+        if let Some(ref mut status) = report.summary.get_mut(&DuplicateValues) {
+            let case_count = &report.metadata.raw_case_count;
 
-        if !re.is_match(file_name) {
-            status.fail += 1;
+            context
+                .frequency_table
+                .iter()
+                .filter(move |(variable, _)| setting.setting.contains(&variable.name))
+                .for_each(|(variable, map)| {
+                    let count = map.values().filter(|occ| **occ == 1).count() as i32;
+                    if count != *case_count {
+                        status.fail += 1;
 
-            locators.insert(Locator::new("".to_string(),
-                                         -1, -1,
-                                         Some(format!("file name: {} {} {}",
-                                                 file_name,
-                                                 "did not match the given pattern:",
-                                                 pattern))));
-            status.locators = Some(locators);
-        } else {
-            status.pass += 1;
+                        include_locators!(config, status, variable.name, variable.index, -1);
+                    }
+                });
+
+            status.pass = setting.setting.len() as i32 - status.fail;
         }
-
-        report.summary.insert(BadFileName, status);
     }
 }
+
+fn string_value_odd_characters(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
+    if let Some(ref setting) = config.data_integrity.string_value_odd_characters {
+        use check::CheckName::StringValueOddCharacters;
+        include_check!(
+            report.summary,
+            StringValueOddCharacters,
+            format!("{} {:?}", setting.desc, &setting.setting).as_str()
+        );
+
+        if let Some(ref mut status) = report.summary.get_mut(&StringValueOddCharacters) {
+            for variable in (*context).variables.iter() {
+                if let Some(values) = (*context).frequency_table.get(&variable) {
+                    for (value, _occ) in values.iter().filter(|(v, _)| {
+                        match v.value {
+                            AnyValue::Str(_) => true,
+                            _ => false,
+                        }
+                    }) {
+                        if contains(&format!("{}", &value.value), &setting.setting)
+                        {
+                            status.fail += 1;
+
+                            include_locators!(
+                                config,
+                                status,
+                                value.variable.name,
+                                value.variable.index,
+                                value.row
+                            );
+                        } else {
+                            status.pass += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/// Report variables with a number of system missing values over a
+/// specified threhold.
+fn system_missing_over_threshold(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
+    if let Some(ref setting) = config.data_integrity.system_missing_value_threshold {
+        use check::CheckName::SystemMissingOverThreshold;
+        include_check!(
+            report.summary,
+            SystemMissingOverThreshold,
+            format!("{} (Threshold: {}%)", setting.desc, setting.setting).as_str()
+        );
+
+        if let Some(ref mut status) = report.summary.get_mut(&SystemMissingOverThreshold) {
+            // map between variable and % missing
+
+            // pull count of sysmiss values from Context.frequency_table
+            // sum to percentage of sysmiss (delivered as NaN)
+
+            for (variable, map) in &context.frequency_table {
+                let sum = map.iter().fold(0, |mut sum, (_, occ)| {
+                    sum += occ;
+                    sum
+                });
+
+                assert_eq!(
+                    report.metadata.raw_case_count, sum,
+                    "case_count {} does not align with sum {} for variable {}",
+                    report.metadata.raw_case_count, sum, variable.name
+                );
+
+                // compare with config threhold
+                // and increment pass/fail
+                if let Some((_, count)) = map
+                    .iter()
+                    .find(|(value, _)| value.missing == Missing::SYSTEM_MISSING)
+                {
+                    let sys_miss = (*count as f32 / sum as f32) * 100.0;
+                    if sys_miss > setting.setting as f32 {
+                        status.fail += 1;
+
+                        include_locators!(config, status, variable.name, variable.index, -1);
+                    }
+                }
+            }
+
+            status.pass = report.metadata.variable_count - status.fail;
+        }
+    }
+}
+
+/// Flags values that match a regex pattern
+fn regex_patterns(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
+    if let Some(ref setting) = config.disclosure_risk.regex_patterns {
+        use check::CheckName::ValueRegexPatterns;
+        include_check!(report.summary, ValueRegexPatterns, &setting.desc);
+
+        if let Some(ref mut status) = report.summary.get_mut(&ValueRegexPatterns) {
+            for variable in context.variables.iter() {
+                for (value, _occ) in context.frequency_table.get(&variable).unwrap() {
+                    for pattern in &setting.setting {
+                        let re = Regex::new(&pattern).unwrap();
+
+                        if re.is_match(&format!("{}", value.value)) || re.is_match(&value.label)
+                        {
+                            status.fail += 1;
+
+                            include_locators!(
+                                config,
+                                status,
+                                value.variable.name,
+                                value.variable.index,
+                                value.row
+                            );
+                            break;
+                        }
+                    }
+                }
+            }
+
+            status.pass = report.metadata.variable_count - status.fail;
+        }
+    }
+}
+
+/// Count the number of variables with one or more unique values
+fn unique_values(context: &mut Context) {
+    let (config, report) = (&context.config, &mut context.report);
+
+    if let Some(ref setting) = config.disclosure_risk.unique_values {
+        use check::CheckName::VariablesWithUniqueValues;
+        include_check!(
+            report.summary,
+            VariablesWithUniqueValues,
+            &setting.desc
+        );
+
+        if let Some(ref mut status) = report.summary.get_mut(&VariablesWithUniqueValues) {
+            for (variable, map) in context.frequency_table.iter() {
+                if let Some(_) = map.iter().find(|(_value, occ)| *occ <= &setting.setting) {
+                    status.fail += 1;
+
+                    include_locators!(config, status, variable.name, variable.index, -1);
+                } else {
+                    status.pass += 1
+                }
+            }
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -593,7 +597,7 @@ mod tests {
             .get(&VariablesWithUniqueValues)
             .is_none());
 
-        context.config.data_integrity.unique_values = Some(Setting {
+        context.config.disclosure_risk.unique_values = Some(Setting {
             setting: 2,
             desc: String::from("outliers as defined by the threshold"),
         });
@@ -664,7 +668,7 @@ mod tests {
 
         assert!(context.report.summary.get(&ValueRegexPatterns).is_none());
 
-        context.config.data_integrity.regex_patterns = Some(Setting {
+        context.config.disclosure_risk.regex_patterns = Some(Setting {
             setting: vec![r"^qux".to_string()],
             desc: "description from config".to_string(),
         });

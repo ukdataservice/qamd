@@ -7,7 +7,7 @@ basic_file_checks:
   bad_filename:
     # Checking whether the file name contains illegal and/or odd characters
     setting: "^([a-zA-Z0-9]+)\\.([a-zA-Z0-9]+)$"
-    desc: Filenames must match a given regular expression to be considered valid.
+    desc: File names must match a given regular expression to be considered valid.
 
 ##############
 ## Metadata ##
@@ -17,7 +17,7 @@ metadata:
   # Reported under metadata 'case_count'.
   primary_variable:
     setting: Caseno
-    desc: "Counts the unqiue occurences for the variable, useful if your dataset groups by household."
+    desc: "Counts the unique occurrences for the variable, useful if your dataset groups by household."
 
   # Checking whether variables don't have labels
   missing_variable_labels:
@@ -35,7 +35,7 @@ metadata:
       - ç
       - ô
       - ü
-    desc: "Variable names and lables cannot contain certain 'odd' characters."
+    desc: "Variable names and labels cannot contain certain 'odd' characters."
 
   # Checking whether length of variable labels exceeds 79 characters
   variable_label_max_length:
@@ -58,14 +58,14 @@ metadata:
   # Checking whether length of value labels exceeds 39 characters
   value_label_max_length:
     setting: 39
-    desc: Value labels cannot exceet a maximum length
+    desc: Value labels cannot exceed a maximum length
 
   # Check spelling and truncation
   spellcheck:
     setting:
       - /usr/share/dict/words
       - "C:\\path\\to\\dictonary\\file.txt"
-    desc: Word file(s) used for spellchecking value and variable labels.
+    desc: Word file(s) used for spell checking value and variable labels.
 
   # SPSS only - Checking whether user defined values don't have labels
   value_defined_missing_no_label:
@@ -95,32 +95,34 @@ data_integrity:
     setting: 25
     desc: Percentage of missing variables that becomes unacceptable.
 
+  # Checking the variables listed that all values are unique. Useful for ID variables.
+  duplicate_values:
+    setting:
+      - Caseno
+    desc: "For each variable specified will check for duplicate values. Useful for checking all IDs are unique."
+
+#####################
+## Disclosure Risk ##
+#####################
+
+disclosure_risk:
+  # # Checking whether data contains specific date formats
+  # date_format:
+  #   setting:
+  #   desc: Highlights date formats that are too specific and could potentially be disclosure.
+
+  # # Checking for specific patterns by using RegEx (as this step is resource
+  # # intensive it has been commented out from the initial configuration file, please
+  # # see the User Guide for more information about RegEx and how to run this step)
+  # regex_patterns:
+  #   setting:
+  #     - "^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,4})+)$"
+  #     - "([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z]))))\\s?[0-9][A-Za-z]{2})"
+  #     - "((([a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\"(([\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]|[\\x21\\x23-\\x5B\\x5D-\\x7E])|(\\[\\x01-\\x09\\x0B\\x0C\\x0E-\\x7F]))*\"))@(([a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\\[(([\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]|[\\x21-\\x5A\\x5E-\\x7E])|(\\[\\x01-\\x09\\x0B\\x0C\\x0E-\\x7F]))*\\])))"
+  #   desc: Values matching a regex pattern fail. Can be used to find post codes and telephone numbers.
+
   # Checking whether any variable contains unique values
   unique_values:
     setting: 1
     desc: Detects outliers (if a variable contains unique values)
-
-    # # Checking for specific patterns by using RegEx (as this step is resource
-    # # intensive it has been commented out from the initial config file, please
-    # # see the User Guide for more information about RegEx and how to run this step)
-    # regex_patterns:
-    #   setting:
-    #     - "^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,4})+)$"
-    #     - "([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([A-Za-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z]))))\\s?[0-9][A-Za-z]{2})"
-    #     - "((([a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\"(([\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]|[\\x21\\x23-\\x5B\\x5D-\\x7E])|(\\[\\x01-\\x09\\x0B\\x0C\\x0E-\\x7F]))*\"))@(([a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*)|(\\[(([\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]|[\\x21-\\x5A\\x5E-\\x7E])|(\\[\\x01-\\x09\\x0B\\x0C\\x0E-\\x7F]))*\\])))"
-    #   desc: Values matching a regex pattern fail. Can be used to find post codes and telephone numbers.
-
-  # Checking the variables listed that all values are unqiue. Useful for ID variables.
-  duplicate_values:
-    setting:
-      - Caseno
-    desc: "For each variable specified will check for duplicate values. Useful for checking all ID's are unique."
-
-####################
-## Discloure Risk ##
-####################
-
-disclosure_risk:
-  # Checking whether data contains specific date formats
-  date_format: ~
 

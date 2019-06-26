@@ -17,22 +17,31 @@ pub type PostCheckFn = fn(context: &mut Context);
 
 #[derive(Debug, Clone, PartialOrd, Ord, PartialEq, Eq, Hash, Serialize)]
 pub enum CheckName {
-    DateFormat,
-    MissingVariableLabels,
-    VariableLabelMaxLength,
-    VariableOddCharacters,
+    // Basic File Checks
+    BadFileName,
 
+    // Metadata
+    MissingVariableLabels,
+    VariableOddCharacters,
+    VariableLabelMaxLength,
+
+    ValueLabelOddCharacters,
+    ValueLabelMaxLength,
+
+    Spellcheck,
     ValueDefinedMissingNoLabel,
 
-    SystemMissingOverThreshold,
+    // Data Integrity
     DuplicateValues,
-    VariablesWithUniqueValues,
-    ValueLabelMaxLength,
-    ValueLabelOddCharacters,
+
     StringValueOddCharacters,
+    SystemMissingOverThreshold,
+    // TODO: ValueSpellcheck,
+
+    // Disclosure Risk
+    DateFormat,
     ValueRegexPatterns,
-    Spellcheck,
-    BadFileName,
+    VariablesWithUniqueValues,
 }
 
 impl fmt::Display for CheckName {

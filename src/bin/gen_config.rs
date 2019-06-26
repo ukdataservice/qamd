@@ -44,14 +44,17 @@ fn main() -> Result<(), serde_yaml::Error>{
                 value_defined_missing_no_label: Some(setting(true, "Values defined as missing must have a label (only applicable to SPSS data files)")),
             },
             data_integrity: DataIntegrity {
+                duplicate_values: Some(setting(duplicate_values, "For each variable specified will check for duplicate values. Useful for checking all ID's are unique.")),
+
                 string_value_odd_characters: Some(setting(odd_chars, "String values cannot contain certain 'odd' characters.")),
                 system_missing_value_threshold: Some(setting(25, "Percentage of missing variables that becomes unacceptable.")),
-
-                unique_values: Some(setting(1, "Detects outliers (if a variable contains unique values)")),
-                regex_patterns: Some(setting(regexps, "Values matching a regex pattern fail. Can be used to find post codes and telephone numbers.")),
-                duplicate_values: Some(setting(duplicate_values, "For each variable specified will check for duplicate values. Useful for checking all ID's are unique.")),
             },
-            disclosure_risk: DisclosureRisk::default(),
+            disclosure_risk: DisclosureRisk {
+                date_format: None,
+
+                regex_patterns: Some(setting(regexps, "Values matching a regex pattern fail. Can be used to find post codes and telephone numbers.")),
+                unique_values: Some(setting(1, "Detects outliers (if a variable contains unique values)")),
+            }
     };
 
     if config.validate().is_ok() {

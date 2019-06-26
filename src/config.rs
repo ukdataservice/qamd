@@ -92,6 +92,7 @@ pub struct Metadata {
 
     pub value_label_odd_characters: Option<Setting<Vec<String>>>,
     pub value_label_max_length: Option<Setting<i32>>,
+
     pub spellcheck: Option<Setting<Vec<String>>>,
     pub value_defined_missing_no_label: Option<Setting<bool>>, // SPSS only. E.g. -9 is Defined missing but has no label
 }
@@ -149,16 +150,23 @@ impl Valid for Metadata {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct DataIntegrity {
+    pub duplicate_values: Option<Setting<Vec<String>>>,
+
     pub string_value_odd_characters: Option<Setting<Vec<String>>>,
     pub system_missing_value_threshold: Option<Setting<i32>>,
-
-    pub unique_values: Option<Setting<i32>>,
-    pub regex_patterns: Option<Setting<Vec<String>>>,
-    pub duplicate_values: Option<Setting<Vec<String>>>,
 }
 
 impl Valid for DataIntegrity {
     fn validate(&self) -> Result<(), &'static str> {
+        match self.duplicate_values {
+            None => (),
+            Some(ref variables) => {
+                if variables.setting.len() < 1 {
+                    return Err("data_integrity.duplicate_values cannot be empty");
+                }
+            }
+        }
+
         match self.string_value_odd_characters {
             None => (),
             Some(ref odd_characters) => {
@@ -177,15 +185,20 @@ impl Valid for DataIntegrity {
             }
         }
 
-        match self.unique_values {
-            None => (),
-            Some(ref threshold) => {
-                if !(threshold.setting > 0 && threshold.setting <= 100) {
-                    return Err("threshold out of bounds");
-                }
-            }
-        }
+        Ok(())
+    }
+}
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct DisclosureRisk {
+    pub date_format: Option<Setting<Vec<String>>>,
+
+    pub regex_patterns: Option<Setting<Vec<String>>>,
+    pub unique_values: Option<Setting<i32>>,
+}
+
+impl Valid for DisclosureRisk {
+    fn validate(&self) -> Result<(), &'static str> {
         match self.regex_patterns {
             None => (),
             Some(ref patterns) => {
@@ -195,26 +208,15 @@ impl Valid for DataIntegrity {
             },
         }
 
-        match self.duplicate_values {
+        match self.unique_values {
             None => (),
-            Some(ref variables) => {
-                if variables.setting.len() < 1 {
-                    return Err("data_integrity.duplicate_values cannot be empty");
+            Some(ref threshold) => {
+                if !(threshold.setting > 0 && threshold.setting <= 100) {
+                    return Err("threshold out of bounds");
                 }
             }
         }
 
-        Ok(())
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct DisclosureRisk {
-    pub date_format: Option<Setting<Vec<String>>>,
-}
-
-impl Valid for DisclosureRisk {
-    fn validate(&self) -> Result<(), &'static str> {
         Ok(())
     }
 }
