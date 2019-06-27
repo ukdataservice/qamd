@@ -4,8 +4,8 @@
 #######################
 
 basic_file_checks:
+  # Checking whether the file name contains illegal and/or odd characters
   bad_filename:
-    # Checking whether the file name contains illegal and/or odd characters
     setting: "^([a-zA-Z0-9]+)\\.([a-zA-Z0-9]+)$"
     desc: File names must match a given regular expression to be considered valid.
 
