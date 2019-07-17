@@ -1,3 +1,4 @@
+extern crate base64;
 extern crate clap;
 extern crate qamd;
 extern crate reqwest;
@@ -75,6 +76,16 @@ fn parse_arguments() -> clap::ArgMatches<'static> {
                         .long("config")
                         .value_name("FILE")
                         .help("Sets a custom config file")
+                        .conflicts_with("encoded-config")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("encoded-config")
+                        .short("e")
+                        .long("encoded-config")
+                        .value_name("ENCODED_CONFIG")
+                        .help("Provide a configuration file as a base64 encoded string. If you don't know why you would need this, you need the --config option.")
+                        .conflicts_with("config")
                         .takes_value(true),
                 )
                 .arg(
@@ -185,8 +196,14 @@ fn run(matches: &ArgMatches) {
     let config_file = match matches.value_of("config") {
         Some(config_path) => {
             read_file(config_path).expect(&format!("Failed to read file {}", config_path))
-        }
-        None => String::from(DEFAULT_CONFIG),
+        },
+        None => match matches.value_of("base64") {
+            Some(encoded) => {
+                let decoded = base64::decode(encoded).expect("failed to decode config");
+                std::str::from_utf8(decoded.as_slice()).expect("failed to decode utf8").to_string()
+            },
+            None => String::from(DEFAULT_CONFIG),
+        },
     };
 
     let file_path = matches.value_of("input").unwrap();
