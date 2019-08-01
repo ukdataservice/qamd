@@ -2,6 +2,7 @@
 name = "qamd"
 version = "0.2.0"
 authors = ["Myles Offord <moffor@essex.ac.uk>"]
+license = "MIT"
 
 [dependencies]
 base64 = "0.10.1"

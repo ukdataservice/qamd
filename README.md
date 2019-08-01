@@ -20,17 +20,13 @@ who participated in this project.
 
 ## License
 
-See LICENCE.md for the full license.
+QAMyData is licensed under the MIT license Copyright (c) 2019 University of Essex (except where otherwise noted)
 
-<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">
-  <img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a>
-  <br />
-  This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License
-</a>.
+See the file `LICENCE` for the full license.
 
 ## Acknowledgments
 
-* WizardMac for the amazing [ReadStat] C library
+* WizardMac / Evan Miller for the amazing [ReadStat] C library
 
 [Git]: https://git-scm.com/
 [Rust]: https://rust-lang.org/
