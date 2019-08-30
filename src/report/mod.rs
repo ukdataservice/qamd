@@ -6,6 +6,8 @@ use std::collections::HashSet;
 use std::iter::IntoIterator;
 use std::slice::Iter;
 
+use model::variable::VariableType;
+
 pub mod html;
 
 #[derive(Serialize, Debug, Clone)]
@@ -44,6 +46,7 @@ pub struct Metadata {
     pub raw_case_count: i32,
     pub case_count: Option<i32>,
     pub variable_count: i32,
+    pub data_type_occurences: HashMap<VariableType, i32>,
 
     pub creation_time: i64,
     pub modified_time: i64,
@@ -59,14 +62,19 @@ impl Metadata {
     pub fn new() -> Metadata {
         Metadata {
             file_name: "".into(),
+
             raw_case_count: 0,
             case_count: None,
             variable_count: 0,
+            data_type_occurences: HashMap::new(),
+
             creation_time: 0,
             modified_time: 0,
+
             file_label: "".into(),
             file_format_version: 0,
             file_encoding: None,
+
             compression: "".into(),
         }
     }

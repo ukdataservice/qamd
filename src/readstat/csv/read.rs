@@ -17,7 +17,7 @@ use config::Config;
 use model::anyvalue::AnyValue;
 use model::missing::Missing;
 use model::value::Value;
-use model::variable::Variable;
+use model::variable::{Variable, VariableType};
 use readstat::context::Context;
 use report::Report;
 
@@ -86,6 +86,7 @@ unsafe fn parse_csv(contents: String, context: *mut Context) -> readstat_error_t
                     index: column_index as i32,
                     name: variable.to_string(),
                     label: String::new(),
+                    type_: VariableType::Text,
                     value_format: String::new(),
                     value_labels: String::new(),
                 };

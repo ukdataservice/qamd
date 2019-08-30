@@ -231,6 +231,11 @@ fn metadata<'a>(metadata: &'a Metadata) -> Box<RenderBox + 'a> {
         }
 
         div(class="row metadata") {
+            strong : format!("Data Type Occurences: {:#?}",
+                             metadata.data_type_occurences);
+        }
+
+        div(class="row metadata") {
             strong : format!("Created At: {}",
                       metadata.creation_time);
         }
