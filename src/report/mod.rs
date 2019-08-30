@@ -4,6 +4,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::IntoIterator;
+use std::slice::Iter;
 
 pub mod html;
 
@@ -71,12 +72,43 @@ impl Metadata {
     }
 }
 
+#[derive(Serialize, Debug, Clone, PartialEq)]
+pub enum Category {
+    BasicFile,
+    Metadata,
+    DataIntegrity,
+    DisclosureRisk,
+}
+
+impl Category {
+    fn variants() -> Iter<'static, Category> {
+        use self::Category::*;
+        static VARIANTS: &'static [Category] =
+            &[BasicFile, Metadata, DataIntegrity, DisclosureRisk];
+        VARIANTS.iter()
+    }
+}
+
+impl std::fmt::Display for Category {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        use self::Category::*;
+
+        match self {
+            BasicFile => write!(f, "Basic File Checks"),
+            Metadata => write!(f, "Metadata Checks"),
+            DataIntegrity => write!(f, "Data Integrity Checks"),
+            DisclosureRisk => write!(f, "Disclosure Risk Checks"),
+        }
+    }
+}
+
 #[derive(Serialize, Debug, Clone)]
 pub struct Status {
     pub pass: i32,
     pub fail: i32,
     pub desc: String,
     pub locators: Option<HashSet<Locator>>,
+    pub category: Category,
 }
 
 impl<'a> IntoIterator for &'a Status {
@@ -96,12 +128,13 @@ impl<'a> IntoIterator for &'a Status {
 }
 
 impl Status {
-    pub fn new(desc: &str) -> Status {
+    pub fn new(desc: &str, category: Category) -> Status {
         Status {
             pass: 0,
             fail: 0,
             desc: desc.to_string(),
             locators: None,
+            category,
         }
     }
 }
@@ -134,10 +167,12 @@ impl PartialEq for Locator {
 impl Eq for Locator {}
 
 impl Locator {
-    pub fn new(variable_name: String,
-               variable_index: i32,
-               value_index: i32,
-               reason: Option<String>) -> Locator {
+    pub fn new(
+        variable_name: String,
+        variable_index: i32,
+        value_index: i32,
+        reason: Option<String>,
+    ) -> Locator {
         Locator {
             variable_name: variable_name,
             variable_index: variable_index,

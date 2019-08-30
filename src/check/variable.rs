@@ -1,7 +1,7 @@
 use check::{contains, VariableCheckFn};
 use config::Config;
 use model::variable::Variable;
-use report::{Locator, Report, Status};
+use report::{Category, Locator, Report, Status};
 
 use std::collections::HashSet;
 
@@ -24,7 +24,12 @@ fn date_format(variable: &Variable, config: &Config, report: &mut Report) {
 
     if let Some(ref setting) = config.disclosure_risk.date_format {
         use check::CheckName::DateFormat;
-        include_check!(report.summary, DateFormat, &setting.desc);
+        include_check!(
+            report.summary,
+            DateFormat,
+            &setting.desc,
+            Category::DataIntegrity
+        );
 
         let date_time_specifiers = &setting.setting;
 
@@ -43,7 +48,12 @@ fn date_format(variable: &Variable, config: &Config, report: &mut Report) {
 fn missing_variable_labels(variable: &Variable, config: &Config, report: &mut Report) {
     if let Some(ref setting) = config.metadata.missing_variable_labels {
         use check::CheckName::MissingVariableLabels;
-        include_check!(report.summary, MissingVariableLabels, &setting.desc);
+        include_check!(
+            report.summary,
+            MissingVariableLabels,
+            &setting.desc,
+            Category::Metadata
+        );
 
         if setting.setting {
             if let Some(ref mut status) = report.summary.get_mut(&MissingVariableLabels) {
@@ -61,23 +71,24 @@ fn missing_variable_labels(variable: &Variable, config: &Config, report: &mut Re
 
 fn variable_label_max_length(variable: &Variable, config: &Config, report: &mut Report) {
     if let Some(ref setting) = config.metadata.variable_label_max_length {
-            use check::CheckName::VariableLabelMaxLength;
-            include_check!(
-                report.summary,
-                VariableLabelMaxLength,
-                format!("{} ({} characters)", setting.desc, &setting.setting).as_str()
-            );
+        use check::CheckName::VariableLabelMaxLength;
+        include_check!(
+            report.summary,
+            VariableLabelMaxLength,
+            format!("{} ({} characters)", setting.desc, &setting.setting).as_str(),
+            Category::Metadata
+        );
 
-            if let Some(ref mut status) = report.summary.get_mut(&VariableLabelMaxLength) {
-                if variable.label.len() > setting.setting as usize {
-                    status.fail += 1;
+        if let Some(ref mut status) = report.summary.get_mut(&VariableLabelMaxLength) {
+            if variable.label.len() > setting.setting as usize {
+                status.fail += 1;
 
-                    include_locators!(config, status, variable.name, variable.index, -1);
-                } else {
-                    status.pass += 1;
-                }
+                include_locators!(config, status, variable.name, variable.index, -1);
+            } else {
+                status.pass += 1;
             }
         }
+    }
 }
 
 fn variable_odd_characters(variable: &Variable, config: &Config, report: &mut Report) {
@@ -86,7 +97,8 @@ fn variable_odd_characters(variable: &Variable, config: &Config, report: &mut Re
         include_check!(
             report.summary,
             VariableOddCharacters,
-            format!("{} {:?}", setting.desc, setting.setting).as_str()
+            format!("{} {:?}", setting.desc, setting.setting).as_str(),
+            Category::Metadata
         );
 
         if let Some(ref mut status) = report.summary.get_mut(&VariableOddCharacters) {

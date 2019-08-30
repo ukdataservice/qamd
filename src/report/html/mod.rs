@@ -3,7 +3,7 @@ use horrorshow::prelude::*;
 
 use horrorshow::{Render, RenderBox};
 
-use report::{Metadata, Report, Status};
+use report::{Category, Metadata, Report, Status};
 
 static JQUERY: &'static str = include_str!("../../../node_modules/jquery/jquery.min.js");
 static BOOTSTRAP_CSS: &'static str =
@@ -42,33 +42,39 @@ impl IntoHtml for Report {
 
                             br;
 
-                            div(id="report", class="row") {
-                                table(class="table table-bordered") {
-                                    tr {
-                                        th(scope="col") : "Name";
-                                        th(scope="col") : "Status";
-                                        th(scope="col") : "Description";
-                                    }
+                            @ for category in Category::variants() {
+                                div(id=format!("report-{:?}", category), class="row") {
+                                    h2 : format!("{}", category);
 
-                                    @ for (name, status) in self.into_iter() {
-                                        @ if status.fail > 0 {
-                                            tr(class="table-danger") {
-                                                td(scope="row") : format!("{}", name);
-                                                td : format!("failed ({})", status.fail);
-                                                td : &status.desc;
-                                            }
-                                        } else {
-                                            tr(class="table-success") {
-                                                td(scope="row") : format!("{}", name);
-                                                td : "passed";
-                                                td : &status.desc;
+                                    table(class="table table-bordered") {
+                                        tr {
+                                            th(scope="col") : "Name";
+                                            th(scope="col") : "Status";
+                                            th(scope="col") : "Description";
+                                        }
+
+                                        @ for (name, status) in self.into_iter()
+                                            .filter(|(_, status)| status.category == *category) {
+
+                                            @ if status.fail > 0 {
+                                                tr(class="table-danger") {
+                                                    td(scope="row") : format!("{}", name);
+                                                    td : format!("failed ({})", status.fail);
+                                                    td : &status.desc;
+                                                }
+                                            } else {
+                                                tr(class="table-success") {
+                                                    td(scope="row") : format!("{}", name);
+                                                    td : "passed";
+                                                    td : &status.desc;
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            br;
+                                br;
+                            }
 
                             div(class="row") {
                                 h2(id="selected-check", class="d-none") : "hidden";

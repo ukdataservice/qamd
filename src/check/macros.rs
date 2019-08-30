@@ -1,7 +1,7 @@
-macro_rules! include_check(($summary:expr, $check_name:expr, $desc:expr) =>
+macro_rules! include_check(($summary:expr, $check_name:expr, $desc:expr, $category:expr) =>
                            (if $summary.get_mut(&$check_name).is_none() {
                                $summary.insert($check_name,
-                                               Status::new($desc));
+                                               Status::new($desc, $category));
                            }));
 
 macro_rules! include_locators(($config:expr,

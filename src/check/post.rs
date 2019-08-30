@@ -1,8 +1,8 @@
 use check::{contains, only_contains, read_file, PostCheckFn};
-use model::missing::Missing;
 use model::anyvalue::AnyValue;
+use model::missing::Missing;
 use readstat::context::Context;
-use report::{Locator, Status};
+use report::{Category, Locator, Status};
 
 use std::collections::HashSet;
 
@@ -13,20 +13,15 @@ pub fn register() -> Vec<PostCheckFn> {
     vec![
         // Basic File Checks
         bad_filename,
-
         // Metadata
         primary_variable,
-
         value_label_odd_characters,
         value_label_max_length,
         spellcheck,
-
         // Data Integrity
         duplicate_values,
-
         string_value_odd_characters,
         system_missing_over_threshold,
-
         //  Disclosure Risk
         regex_patterns,
         unique_values,
@@ -42,18 +37,21 @@ fn bad_filename(context: &mut Context) {
         let re = Regex::new(pattern).unwrap();
 
         use check::CheckName::BadFileName;
-        let mut status = Status::new(&bad_filename.desc);
+        let mut status = Status::new(&bad_filename.desc, Category::BasicFile);
         let mut locators: HashSet<Locator> = HashSet::new();
 
         if !re.is_match(file_name) {
             status.fail += 1;
 
-            locators.insert(Locator::new("".to_string(),
-                                         -1, -1,
-                                         Some(format!("file name: {} {} {}",
-                                                 file_name,
-                                                 "did not match the given pattern:",
-                                                 pattern))));
+            locators.insert(Locator::new(
+                "".to_string(),
+                -1,
+                -1,
+                Some(format!(
+                    "file name: {} {} {}",
+                    file_name, "did not match the given pattern:", pattern
+                )),
+            ));
             status.locators = Some(locators);
         } else {
             status.pass += 1;
@@ -94,15 +92,15 @@ fn value_label_odd_characters(context: &mut Context) {
         include_check!(
             report.summary,
             ValueLabelOddCharacters,
-            format!("{} {:?}", setting.desc, &setting.setting).as_str()
+            format!("{} {:?}", setting.desc, &setting.setting).as_str(),
+            Category::Metadata
         );
 
         if let Some(ref mut status) = report.summary.get_mut(&ValueLabelOddCharacters) {
             for variable in (*context).variables.iter() {
                 if let Some(values) = (*context).frequency_table.get(&variable) {
                     for (value, occ) in values.iter() {
-                        if contains(&value.label, &setting.setting)
-                        {
+                        if contains(&value.label, &setting.setting) {
                             status.fail += occ;
 
                             include_locators!(
@@ -131,7 +129,8 @@ fn value_label_max_length(context: &mut Context) {
         include_check!(
             report.summary,
             ValueLabelMaxLength,
-            format!("{} ({} characters)", setting.desc, &setting.setting).as_str()
+            format!("{} ({} characters)", setting.desc, &setting.setting).as_str(),
+            Category::Metadata
         );
 
         if let Some(ref mut status) = report.summary.get_mut(&ValueLabelMaxLength) {
@@ -177,14 +176,20 @@ fn spellcheck(context: &mut Context) {
         .map(|path| read_file(path))
         .filter_map(|result| result.ok())
         .map(|s| {
-            s.split("\n").map(|x| x.to_string()).collect::<Vec<String>>()
+            s.split("\n")
+                .map(|x| x.to_string())
+                .collect::<Vec<String>>()
         })
         .flatten()
         .collect();
 
-
     use check::CheckName::Spellcheck;
-    include_check!(report.summary, Spellcheck, &setting_desc);
+    include_check!(
+        report.summary,
+        Spellcheck,
+        &setting_desc,
+        Category::Metadata
+    );
 
     if let Some(ref mut status) = report.summary.get_mut(&Spellcheck) {
         for variable in context.variables.iter() {
@@ -212,7 +217,7 @@ fn spellcheck(context: &mut Context) {
 
         {
             let total_values = &report.metadata.raw_case_count * &report.metadata.variable_count;
-            let total_counted =  status.pass + status.fail;
+            let total_counted = status.pass + status.fail;
             assert!(
                 total_counted == total_values,
                 "Total counted: {} is not equal to total values: {}",
@@ -232,7 +237,8 @@ fn duplicate_values(context: &mut Context) {
         include_check!(
             report.summary,
             DuplicateValues,
-            format!("{} (On variables {:?})", setting.desc, setting.setting).as_str()
+            format!("{} (On variables {:?})", setting.desc, setting.setting).as_str(),
+            Category::DataIntegrity
         );
 
         if let Some(ref mut status) = report.summary.get_mut(&DuplicateValues) {
@@ -264,20 +270,18 @@ fn string_value_odd_characters(context: &mut Context) {
         include_check!(
             report.summary,
             StringValueOddCharacters,
-            format!("{} {:?}", setting.desc, &setting.setting).as_str()
+            format!("{} {:?}", setting.desc, &setting.setting).as_str(),
+            Category::DataIntegrity
         );
 
         if let Some(ref mut status) = report.summary.get_mut(&StringValueOddCharacters) {
             for variable in (*context).variables.iter() {
                 if let Some(values) = (*context).frequency_table.get(&variable) {
-                    for (value, _occ) in values.iter().filter(|(v, _)| {
-                        match v.value {
-                            AnyValue::Str(_) => true,
-                            _ => false,
-                        }
+                    for (value, _occ) in values.iter().filter(|(v, _)| match v.value {
+                        AnyValue::Str(_) => true,
+                        _ => false,
                     }) {
-                        if contains(&format!("{}", &value.value), &setting.setting)
-                        {
+                        if contains(&format!("{}", &value.value), &setting.setting) {
                             status.fail += 1;
 
                             include_locators!(
@@ -297,7 +301,6 @@ fn string_value_odd_characters(context: &mut Context) {
     }
 }
 
-
 /// Report variables with a number of system missing values over a
 /// specified threhold.
 fn system_missing_over_threshold(context: &mut Context) {
@@ -308,7 +311,8 @@ fn system_missing_over_threshold(context: &mut Context) {
         include_check!(
             report.summary,
             SystemMissingOverThreshold,
-            format!("{} (Threshold: {}%)", setting.desc, setting.setting).as_str()
+            format!("{} (Threshold: {}%)", setting.desc, setting.setting).as_str(),
+            Category::DataIntegrity
         );
 
         if let Some(ref mut status) = report.summary.get_mut(&SystemMissingOverThreshold) {
@@ -355,7 +359,12 @@ fn regex_patterns(context: &mut Context) {
 
     if let Some(ref setting) = config.disclosure_risk.regex_patterns {
         use check::CheckName::ValueRegexPatterns;
-        include_check!(report.summary, ValueRegexPatterns, &setting.desc);
+        include_check!(
+            report.summary,
+            ValueRegexPatterns,
+            &setting.desc,
+            Category::DisclosureRisk
+        );
 
         if let Some(ref mut status) = report.summary.get_mut(&ValueRegexPatterns) {
             for variable in context.variables.iter() {
@@ -363,8 +372,7 @@ fn regex_patterns(context: &mut Context) {
                     for pattern in &setting.setting {
                         let re = Regex::new(&pattern).unwrap();
 
-                        if re.is_match(&format!("{}", value.value)) || re.is_match(&value.label)
-                        {
+                        if re.is_match(&format!("{}", value.value)) || re.is_match(&value.label) {
                             status.fail += 1;
 
                             include_locators!(
@@ -394,7 +402,8 @@ fn unique_values(context: &mut Context) {
         include_check!(
             report.summary,
             VariablesWithUniqueValues,
-            &setting.desc
+            &setting.desc,
+            Category::DisclosureRisk
         );
 
         if let Some(ref mut status) = report.summary.get_mut(&VariablesWithUniqueValues) {
@@ -410,7 +419,6 @@ fn unique_values(context: &mut Context) {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -513,7 +521,12 @@ mod tests {
                 post: vec![],
             },
             pb: None,
-            variables: vec![Variable::from("first"), Variable::from("second"), Variable::from("badid"), Variable::from("id")],
+            variables: vec![
+                Variable::from("first"),
+                Variable::from("second"),
+                Variable::from("badid"),
+                Variable::from("id"),
+            ],
             value_labels: HashMap::new(),
             frequency_table: freq_table,
         }
@@ -629,7 +642,11 @@ mod tests {
 
         use check::CheckName::ValueLabelOddCharacters;
 
-        assert!(context.report.summary.get(&ValueLabelOddCharacters).is_none());
+        assert!(context
+            .report
+            .summary
+            .get(&ValueLabelOddCharacters)
+            .is_none());
 
         context.config.metadata.value_label_odd_characters = Some(Setting {
             setting: vec!["#", "@", "!"]
@@ -649,7 +666,11 @@ mod tests {
 
         use check::CheckName::StringValueOddCharacters;
 
-        assert!(context.report.summary.get(&StringValueOddCharacters).is_none());
+        assert!(context
+            .report
+            .summary
+            .get(&StringValueOddCharacters)
+            .is_none());
 
         context.config.data_integrity.string_value_odd_characters = Some(Setting {
             setting: vec!["#", "@", "!"]

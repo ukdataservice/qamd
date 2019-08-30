@@ -205,7 +205,7 @@ impl Valid for DisclosureRisk {
                 if patterns.setting.len() < 1 {
                     return Err("data_integrity.regex_patterns cannot be empty");
                 }
-            },
+            }
         }
 
         match self.unique_values {
@@ -220,4 +220,3 @@ impl Valid for DisclosureRisk {
         Ok(())
     }
 }
-

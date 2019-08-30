@@ -1,7 +1,7 @@
 use config::Config;
 use model::missing::Missing;
 use model::value::Value;
-use report::{Locator, Report, Status};
+use report::{Category, Locator, Report, Status};
 
 use check::ValueCheckFn;
 
@@ -18,11 +18,15 @@ pub fn register() -> Vec<ValueCheckFn> {
 fn value_defined_missing_no_label(value: &Value, config: &Config, report: &mut Report) {
     if let Some(ref setting) = config.metadata.value_defined_missing_no_label {
         use check::CheckName::ValueDefinedMissingNoLabel;
-        include_check!(report.summary, ValueDefinedMissingNoLabel, &setting.desc);
+        include_check!(
+            report.summary,
+            ValueDefinedMissingNoLabel,
+            &setting.desc,
+            Category::Metadata
+        );
 
         if let Some(ref mut status) = report.summary.get_mut(&ValueDefinedMissingNoLabel) {
-            if setting.setting && value.missing == Missing::DEFINED_MISSING && value.label == ""
-            {
+            if setting.setting && value.missing == Missing::DEFINED_MISSING && value.label == "" {
                 status.fail += 1;
 
                 include_locators!(

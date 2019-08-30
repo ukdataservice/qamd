@@ -1,12 +1,14 @@
-
 extern crate qamd;
 extern crate serde_yaml;
 
 use qamd::config::*;
 
-fn main() -> Result<(), serde_yaml::Error>{
+fn main() -> Result<(), serde_yaml::Error> {
     let odd_chars = vec_of_strings(vec!["!", "#", "  ", "@", "ë", "ç", "ô", "ü"]);
-    let dicts = vec_of_strings(vec!["/usr/share/dict/words", "C:\\path\\to\\dictonary\\file.txt"]);
+    let dicts = vec_of_strings(vec![
+        "/usr/share/dict/words",
+        "C:\\path\\to\\dictonary\\file.txt",
+    ]);
     let duplicate_values = vec_of_strings(vec!["Caseno"]);
     let regexps = vec_of_strings(vec![
         "^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,4})+)$",
@@ -65,11 +67,8 @@ fn main() -> Result<(), serde_yaml::Error>{
     Ok(())
 }
 
-fn vec_of_strings<'a>(v: Vec<&'a str>) -> Vec<String>{
-    v
-        .iter()
-        .map(|s| s.to_string())
-        .collect::<Vec<String>>()
+fn vec_of_strings<'a>(v: Vec<&'a str>) -> Vec<String> {
+    v.iter().map(|s| s.to_string()).collect::<Vec<String>>()
 }
 
 fn setting<'a, T>(t: T, s: &'a str) -> Setting<T> {
@@ -78,4 +77,3 @@ fn setting<'a, T>(t: T, s: &'a str) -> Setting<T> {
         desc: s.to_string(),
     }
 }
-
