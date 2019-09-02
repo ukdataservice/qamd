@@ -49,7 +49,7 @@ impl IntoHtml for Report {
                                     table(class="table table-bordered") {
                                         tr {
                                             th(scope="col") : "Name";
-                                            th(scope="col") : "Status";
+                                            th(scope="col") : "Status (N)";
                                             th(scope="col") : "Description";
                                         }
 
@@ -110,7 +110,6 @@ fn locators_table<'a>(name: String, status: Status) -> Box<RenderBox> {
                     th(scope="col") : "# (limited to 1000)";
                     th(scope="col") : "Variable";
                     th(scope="col") : "Row number";
-                    th(scope="col") : "Reason";
                 }
 
                 @ for (i, pair) in status.into_iter().take(1000).enumerate() {
@@ -119,7 +118,6 @@ fn locators_table<'a>(name: String, status: Status) -> Box<RenderBox> {
                         td : format!("{}", pair.variable_name);
 
                         : value_if_positive(pair.value_index, "-");
-                        td : value_if_present(&pair.reason, "-".to_string());
                     }
                 }
             }
@@ -137,12 +135,12 @@ fn value_if_positive(value: i32, default: &'static str) -> Box<Render> {
     }
 }
 
-fn value_if_present(value: &Option<String>, default: String) -> String {
-    match value {
-        Some(v) => return v.to_string(),
-        None => return default,
-    }
-}
+// fn value_if_present(value: &Option<String>, default: String) -> String {
+//     match value {
+//         Some(v) => return v.to_string(),
+//         None => return default,
+//     }
+// }
 
 fn logo() -> Box<RenderBox + 'static> {
     box_html! {

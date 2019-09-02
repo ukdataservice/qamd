@@ -43,15 +43,7 @@ fn bad_filename(context: &mut Context) {
         if !re.is_match(file_name) {
             status.fail += 1;
 
-            locators.insert(Locator::new(
-                "".to_string(),
-                -1,
-                -1,
-                Some(format!(
-                    "file name: {} {} {}",
-                    file_name, "did not match the given pattern:", pattern
-                )),
-            ));
+            locators.insert(Locator::new("".to_string(), -1, -1));
             status.locators = Some(locators);
         } else {
             status.pass += 1;

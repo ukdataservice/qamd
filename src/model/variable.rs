@@ -14,27 +14,29 @@ pub struct Variable {
     pub value_labels: String,
 }
 
-#[derive(Serialize, Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Serialize, Clone, Hash, PartialEq, Eq)]
 pub enum VariableType {
     Text,
-    Integer,
-    Float,
-    Double,
+    Numeric,
+}
+
+impl std::fmt::Debug for VariableType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            VariableType::Text => write!(f, "String"),
+            VariableType::Numeric => write!(f, "Numeric"),
+        }
+    }
 }
 
 impl From<readstat_type_t> for VariableType {
     fn from(t: readstat_type_t) -> Self {
-        use self::VariableType::*;
-        use self::readstat_type_t::*;
+        use self::readstat_type_t::{READSTAT_TYPE_STRING, READSTAT_TYPE_STRING_REF};
 
         match t {
-            READSTAT_TYPE_STRING => Text,
-            READSTAT_TYPE_INT8 => Integer,
-            READSTAT_TYPE_INT16 => Integer,
-            READSTAT_TYPE_INT32 => Integer,
-            READSTAT_TYPE_FLOAT => Float,
-            READSTAT_TYPE_DOUBLE => Double,
-            READSTAT_TYPE_STRING_REF => Text,
+            READSTAT_TYPE_STRING => VariableType::Text,
+            READSTAT_TYPE_STRING_REF => VariableType::Text,
+            _ => VariableType::Numeric,
         }
     }
 }

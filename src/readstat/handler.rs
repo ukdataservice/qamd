@@ -67,6 +67,7 @@ pub unsafe extern "C" fn variable_handler(
         check(&var, &(*context).config, &mut (*context).report);
     }
 
+    // data type occurences, count the number of text & numeric variables
     if let Some(occ) = (*context).report.metadata.data_type_occurences.get_mut(&var.type_) {
         (*occ) += 1;
     } else {
