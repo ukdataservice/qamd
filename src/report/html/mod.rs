@@ -283,7 +283,7 @@ mod tests {
             :  metadata(&mdata);
         };
 
-        let actual = r#"<div id="title" class="row"><h1 id="file-name">test</h1></div><div class="row metadata"><strong>Raw Case Count: 0</strong></div><div class="row metadata"></div><div class="row metadata"><strong>Total Variables: 0</strong></div><div class="row metadata"><strong>Created At: 0</strong></div><div class="row metadata"><strong>Last modified at: 0</strong></div><div class="row metadata"><strong>File Label: </strong></div><div class="row metadata"><strong>File Format Version: 0</strong></div><div class="row metadata"></div><div class="row metadata"><strong>Compression type: </strong></div>"#;
+        let actual = r#"<div id="title" class="row"><h1 id="file-name">test</h1></div><div class="row metadata"><strong>Raw Case Count: 0</strong></div><div class="row metadata"></div><div class="row metadata"><strong>Total Variables: 0</strong></div><div class="row metadata"><strong>Data Type Occurences: {}</strong></div><div class="row metadata"><strong>Created At: 0</strong></div><div class="row metadata"><strong>Last modified at: 0</strong></div><div class="row metadata"><strong>File Label: </strong></div><div class="row metadata"><strong>File Format Version: 0</strong></div><div class="row metadata"></div><div class="row metadata"><strong>Compression type: </strong></div>"#;
 
         assert_eq!(format!("{}", rendered), actual.to_string());
     }

@@ -49,7 +49,7 @@ mod tests {
 
     use config::Setting;
     use model::anyvalue::AnyValue;
-    use model::variable::Variable;
+    use model::variable::{Variable, VariableType};
 
     fn setup() -> (Value, Config, Report) {
         let value = Value {
@@ -57,6 +57,7 @@ mod tests {
                 index: 0,
                 name: String::from("test"),
                 label: String::from("test variable label"),
+                type_: VariableType::Text,
                 value_format: String::new(),
                 value_labels: String::new(),
             },
