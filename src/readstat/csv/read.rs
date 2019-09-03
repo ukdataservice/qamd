@@ -166,15 +166,15 @@ unsafe fn set_metadata(path: &str, context: *mut Context) {
         Err(_) => (),
     }
 
-    (*context).report.metadata.creation_time = {
-        let sys_time = metadata.created().unwrap_or(time::UNIX_EPOCH);
-        sys_time.duration_since(time::UNIX_EPOCH).unwrap().as_secs() as i64
-    };
+    // (*context).report.metadata.creation_time = {
+    //     let sys_time = metadata.created().unwrap_or(time::UNIX_EPOCH);
+    //     sys_time.duration_since(time::UNIX_EPOCH).unwrap().as_secs() as i64
+    // };
 
-    (*context).report.metadata.modified_time = {
-        let sys_time = metadata.modified().unwrap();
-        sys_time.duration_since(time::UNIX_EPOCH).unwrap().as_secs() as i64
-    };
+    // (*context).report.metadata.modified_time = {
+    //     let sys_time = metadata.modified().unwrap();
+    //     sys_time.duration_since(time::UNIX_EPOCH).unwrap().as_secs() as i64
+    // };
 }
 
 fn get_file_contents(path: &str) -> io::Result<String> {

@@ -6,6 +6,8 @@ use model::variable::Variable;
 use readstat::bindings::*;
 use readstat::context::Context;
 
+use chrono::naive::NaiveDateTime;
+
 use std::collections::HashMap;
 
 use std::ffi::CStr;
@@ -23,8 +25,13 @@ pub unsafe extern "C" fn metadata_handler(
     (*context).report.metadata.raw_case_count = readstat_get_row_count(metadata);
     (*context).report.metadata.variable_count = readstat_get_var_count(metadata);
 
-    (*context).report.metadata.creation_time = readstat_get_creation_time(metadata);
-    (*context).report.metadata.modified_time = readstat_get_modified_time(metadata);
+    //(*context).report.metadata.creation_time = readstat_get_creation_time(metadata);
+    //(*context).report.metadata.modified_time = readstat_get_modified_time(metadata);
+    let creation_time: i64 = readstat_get_creation_time(metadata);
+    let modified_time: i64 = readstat_get_modified_time(metadata);
+
+    (*context).report.metadata.creation_time = NaiveDateTime::from_timestamp(creation_time, 0);
+    (*context).report.metadata.modified_time = NaiveDateTime::from_timestamp(modified_time, 0);
 
     (*context).report.metadata.file_label = ptr_to_str!(readstat_get_file_label(metadata));
     (*context).report.metadata.file_format_version =

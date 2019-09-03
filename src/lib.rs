@@ -10,6 +10,8 @@
 //! be carried out and at what stage.
 //!
 
+extern crate chrono;
+
 #[macro_use]
 extern crate horrorshow;
 

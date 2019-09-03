@@ -6,6 +6,7 @@ license = "MIT"
 
 [dependencies]
 base64 = "0.10.1"
+chrono = { version = "0.4.8", features = ["serde"] }
 clap = "2.31.2"
 pbr = "1.0.1"
 serde = "1.0"

@@ -1,4 +1,3 @@
-use check::CheckName;
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -6,6 +5,9 @@ use std::collections::HashSet;
 use std::iter::IntoIterator;
 use std::slice::Iter;
 
+use chrono::naive::NaiveDateTime;
+
+use check::CheckName;
 use model::variable::VariableType;
 
 pub mod html;
@@ -48,8 +50,8 @@ pub struct Metadata {
     pub variable_count: i32,
     pub data_type_occurences: HashMap<VariableType, i32>,
 
-    pub creation_time: i64,
-    pub modified_time: i64,
+    pub creation_time: NaiveDateTime,
+    pub modified_time: NaiveDateTime,
 
     pub file_label: String,
     pub file_format_version: i64,
@@ -68,8 +70,8 @@ impl Metadata {
             variable_count: 0,
             data_type_occurences: HashMap::new(),
 
-            creation_time: 0,
-            modified_time: 0,
+            creation_time: NaiveDateTime::from_timestamp(0, 0),
+            modified_time: NaiveDateTime::from_timestamp(0, 0),
 
             file_label: "".into(),
             file_format_version: 0,
