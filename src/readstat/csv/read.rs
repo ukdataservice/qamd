@@ -10,7 +10,6 @@ use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::Path;
-use std::time;
 
 use check::Check;
 use config::Config;
@@ -153,7 +152,7 @@ unsafe fn parse_csv(contents: String, context: *mut Context) -> readstat_error_t
 }
 
 unsafe fn set_metadata(path: &str, context: *mut Context) {
-    let metadata = fs::metadata(path).unwrap();
+    let _metadata = fs::metadata(path).unwrap();
     let contents = get_file_contents(path).unwrap();
     let mut rdr = Reader::from_reader(contents.as_bytes());
 

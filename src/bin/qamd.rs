@@ -288,3 +288,15 @@ fn write_to_file(path: &str, contents: &str) -> io::Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_config, DEFAULT_CONFIG};
+
+    #[test]
+    fn test_config_parses() {
+        assert!(parse_config(DEFAULT_CONFIG).is_ok(),
+            "Configuration file did not parse correctly.");
+    }
+}
+

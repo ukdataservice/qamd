@@ -19,7 +19,7 @@ basic_file_checks:
   # Checks whether the file name contains illegal/odd/non-compliant characters
   bad_filename:
     setting: "^([a-zA-Z0-9]+)\\.([a-zA-Z0-9]+)$"
-    desc: "File name should match the user specified pattern."
+    desc: "File name should match the user specified pattern"
 
 #####################
 ## Metadata Checks ##
@@ -29,17 +29,17 @@ metadata:
   # Checks high-level grouping (for example, useful if dataset can be grouped by household)
   primary_variable:
     setting: HouseholdID
-    desc: "Counts the unique occurrences for the grouping variable specified."
+    desc: "Counts the unique occurrences for the grouping variable specified"
 
   # Checks whether any variables do not have labels
   missing_variable_labels:
     setting: true
-    desc: "Variables should have a label."
+    desc: "Variables should have a label"
 
   # Checks whether any user-defined missing values do not have labels (sysmis) - SPSS only
   value_defined_missing_no_label:
     setting: true
-    desc: "User-defined missing values should have a label (SPSS only)."
+    desc: "User-defined missing values should have a label (SPSS only)"
 
   # Checks whether any variable names and labels contain illegal/odd/non-compliant characters
   variable_odd_characters:
@@ -52,7 +52,7 @@ metadata:
       - "ç"
       - "ô"
       - "ü"
-    desc: "Variable names and labels should not contain the specified characters."
+    desc: "Variable names and labels should not contain the specified characters"
 
   # Checks whether any value labels contain illegal/odd/non-compliant characters
   value_label_odd_characters:
@@ -65,17 +65,17 @@ metadata:
       - "ç"
       - "ô"
       - "ü"
-    desc: "Value labels should not contain the specified characters."
+    desc: "Value labels should not contain the specified characters"
 
   # Checks whether any variable labels exceed user-defined number of characters, e.g. 79
   variable_label_max_length:
     setting: 79
-    desc: "Variable labels should not exceed the defined number of characters."
+    desc: "Variable labels should not exceed the defined number of characters"
 
   # Checks whether any value labels exceed user-defined number of characters, e.g. 39
   value_label_max_length:
     setting: 39
-    desc: "Value labels should not exceed the defined number of characters."
+    desc: "Value labels should not exceed the defined number of characters"
 
   # Checks variable and value labels for spelling errors and truncation using a user-defined dictionary file
   # Please remember you must input the correct path to the dictionary file in order for the check to run on your data
@@ -83,7 +83,7 @@ metadata:
     setting:
       - /usr/share/dict/words
       - "C:\\path\\to\\dictonary\\file.txt"
-    desc: "Variable and value labels should not contain spelling errors and/or truncations."
+    desc: "Variable and value labels should not contain spelling errors and/or truncations"
 
 ###########################
 ## Data Integrity Checks ##
@@ -101,18 +101,18 @@ data_integrity:
       - "ç"
       - "ô"
       - "ü"
-    desc: "String values should not contain the specified characters."
+    desc: "String values should not contain the specified characters"
 
   # Checks the percentage of undefined missing values ('sysmis')
   system_missing_value_threshold:
     setting: 25
-    desc: "Variable should not exceed the specified percentage of system missing values."
+    desc: "Variable should not exceed the specified percentage of system missing values"
 
   # Checks the user-specified variables for duplicate/repeated values (e.g. useful for checking duplicate IDs)
   duplicate_values:
     setting:
       - Caseno
-    desc: "Variable should not contain duplicate/repeated values."
+    desc: "Variable should not contain duplicate/repeated values"
 
 ###############################
 ## Disclosure Control Checks ##
@@ -129,11 +129,11 @@ disclosure_risk:
   #   setting:
   #     - "^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,4})+)$", # checks for e-mail addresses
   #     - "^(\+44\s?7\d{3}|\(?07\d{3}\)?)\s?\d{3}\s?\d{3}$" # checks for UK mobile numbers
-  #   desc: "Variable should not contain the user-specified RegEx pattern."
+  #   desc: "Variable should not contain the user-specified RegEx pattern"
 
 
   # Checks whether variables contain unique values or number of observations below the set threshold
   unique_values:
     setting: 1
-    desc: "Variable should not contain number of observations equal to or less than specified threshold."
+    desc: "Variable should not contain number of observations equal to or less than specified threshold"
 
