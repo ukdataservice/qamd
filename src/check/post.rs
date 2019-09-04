@@ -76,6 +76,7 @@ fn primary_variable(context: &mut Context) {
 /// Check for odd characters in the value label.
 /// If a value is determined to contain any odd character(s),
 /// the number of fails (or warns) are incremented.
+/// Number represents the quantity of value labels that failed.
 fn value_label_odd_characters(context: &mut Context) {
     let (config, report) = (&context.config, &mut context.report);
 
@@ -90,20 +91,20 @@ fn value_label_odd_characters(context: &mut Context) {
 
         if let Some(ref mut status) = report.summary.get_mut(&ValueLabelOddCharacters) {
             for variable in (*context).variables.iter() {
-                if let Some(values) = (*context).frequency_table.get(&variable) {
-                    for (value, occ) in values.iter() {
-                        if contains(&value.label, &setting.setting) {
-                            status.fail += occ;
+                if let Some(value_labels) = (*context).value_labels.get(&variable.value_labels) {
+                    for (_value, label) in value_labels.iter() {
+                        if contains(label, &setting.setting) {
+                            status.fail += 1;
 
                             include_locators!(
                                 config,
                                 status,
-                                value.variable.name,
-                                value.variable.index,
-                                value.row
+                                variable.name,
+                                variable.index,
+                                -1
                             );
                         } else {
-                            status.pass += occ;
+                            status.pass += 1;
                         }
                     }
                 }
@@ -442,7 +443,11 @@ mod tests {
             temp.insert(Value::from("!baz"), 3);
             temp.insert(qux, 4);
 
-            freq_table.insert(Variable::from("first"), temp.clone());
+            let mut first = Variable::from("first");
+
+            first.value_labels = "labels1".to_string();
+
+            freq_table.insert(first, temp.clone());
         }
 
         {
@@ -500,9 +505,24 @@ mod tests {
             freq_table.insert(variable, temp);
         }
 
+        let mut value_labels: HashMap<String, HashMap<String, String>> = HashMap::new();
+
+        {
+            let mut temp: HashMap<String, String> = HashMap::new();
+
+            temp.insert("qux".to_string(),
+                "this is fine".to_string());
+            temp.insert("bar#".to_string(),
+                "this@ is far too long to pss the test".to_string());
+
+            value_labels.insert("labels1".to_string(), temp);
+        }
+
         let mut report = Report::new();
         report.metadata.variable_count = 4;
         report.metadata.raw_case_count = 10;
+
+        let variables = freq_table.keys().map(|v| v.clone()).collect();
 
         Context {
             config: Config::default(),
@@ -513,13 +533,8 @@ mod tests {
                 post: vec![],
             },
             pb: None,
-            variables: vec![
-                Variable::from("first"),
-                Variable::from("second"),
-                Variable::from("badid"),
-                Variable::from("id"),
-            ],
-            value_labels: HashMap::new(),
+            variables: variables,
+            value_labels: value_labels,
             frequency_table: freq_table,
         }
     }
@@ -649,7 +664,7 @@ mod tests {
         });
 
         value_label_odd_characters(&mut context);
-        assert_setting!(context.report.summary.get(&ValueLabelOddCharacters), 37, 3);
+        assert_setting!(context.report.summary.get(&ValueLabelOddCharacters), 1, 1);
     }
 
     #[test]

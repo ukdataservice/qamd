@@ -14,33 +14,6 @@ pub struct Variable {
     pub value_labels: String,
 }
 
-#[derive(Serialize, Clone, Hash, PartialEq, Eq)]
-pub enum VariableType {
-    Text,
-    Numeric,
-}
-
-impl std::fmt::Debug for VariableType {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            VariableType::Text => write!(f, "String"),
-            VariableType::Numeric => write!(f, "Numeric"),
-        }
-    }
-}
-
-impl From<readstat_type_t> for VariableType {
-    fn from(t: readstat_type_t) -> Self {
-        use self::readstat_type_t::{READSTAT_TYPE_STRING, READSTAT_TYPE_STRING_REF};
-
-        match t {
-            READSTAT_TYPE_STRING => VariableType::Text,
-            READSTAT_TYPE_STRING_REF => VariableType::Text,
-            _ => VariableType::Numeric,
-        }
-    }
-}
-
 impl Variable {
     pub fn from_raw_parts(variable: *mut readstat_variable_s, val_labels: *const c_char) -> Self {
         unsafe {
@@ -93,3 +66,31 @@ impl<'a> From<&'a str> for Variable {
         }
     }
 }
+
+#[derive(Serialize, Clone, Hash, PartialEq, Eq)]
+pub enum VariableType {
+    Text,
+    Numeric,
+}
+
+impl std::fmt::Debug for VariableType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            VariableType::Text => write!(f, "String"),
+            VariableType::Numeric => write!(f, "Numeric"),
+        }
+    }
+}
+
+impl From<readstat_type_t> for VariableType {
+    fn from(t: readstat_type_t) -> Self {
+        use self::readstat_type_t::{READSTAT_TYPE_STRING, READSTAT_TYPE_STRING_REF};
+
+        match t {
+            READSTAT_TYPE_STRING => VariableType::Text,
+            READSTAT_TYPE_STRING_REF => VariableType::Text,
+            _ => VariableType::Numeric,
+        }
+    }
+}
+
