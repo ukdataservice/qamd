@@ -75,10 +75,10 @@ pub unsafe extern "C" fn variable_handler(
     }
 
     // data type occurences, count the number of text & numeric variables
-    if let Some(occ) = (*context).report.metadata.data_type_occurences.get_mut(&var.type_) {
+    if let Some(occ) = (*context).report.metadata.data_type_occurrences.get_mut(&var.type_) {
         (*occ) += 1;
     } else {
-        (*context).report.metadata.data_type_occurences.insert(var.type_, 1);
+        (*context).report.metadata.data_type_occurrences.insert(var.type_, 1);
     }
 
     return READSTAT_HANDLER_OK as c_int;

@@ -48,7 +48,7 @@ pub struct Metadata {
     pub raw_case_count: i32,
     pub case_count: Option<i32>,
     pub variable_count: i32,
-    pub data_type_occurences: HashMap<VariableType, i32>,
+    pub data_type_occurrences: HashMap<VariableType, i32>,
 
     pub creation_time: NaiveDateTime,
     pub modified_time: NaiveDateTime,
@@ -68,7 +68,7 @@ impl Metadata {
             raw_case_count: 0,
             case_count: None,
             variable_count: 0,
-            data_type_occurences: HashMap::new(),
+            data_type_occurrences: HashMap::new(),
 
             creation_time: NaiveDateTime::from_timestamp(0, 0),
             modified_time: NaiveDateTime::from_timestamp(0, 0),
@@ -79,6 +79,16 @@ impl Metadata {
 
             compression: "".into(),
         }
+    }
+
+    pub fn get_data_type_occurrences(&self) -> String {
+        if self.data_type_occurrences.len() < 1 {
+            return "-".to_string();
+        }
+
+        self.data_type_occurrences.iter()
+            .fold("".to_string(), |acc, (k, v)| { format!("{}, {:?}: {}", acc, k, v) })
+            .split_off(2)
     }
 }
 
