@@ -1,12 +1,13 @@
 use check::{contains, PostCheckFn};
 use check::dictionary::{dictionary};
 use model::variable::{Variable, VariableType};
+use model::value::Value;
 use model::anyvalue::AnyValue;
 use model::missing::Missing;
 use readstat::context::Context;
 use report::{Category, Locator, Status};
 
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 use regex::Regex;
 
@@ -168,10 +169,20 @@ fn value_label_max_length(context: &mut Context) {
 fn value_label_spellcheck(context: &mut Context) {
     use check::CheckName::ValueLabelSpellcheck;
 
-    let words: Vec<String> = context.value_labels
-        .values()
-        .flat_map(|v| v.values())
-        .map(|s| s.to_string())
+    let mut mapping: HashMap<String, &Variable> = HashMap::new();
+
+    for variable in context.variables.iter()
+        .filter(|v| !v.value_labels.is_empty()) {
+
+        if let Some(labels) = context.value_labels.get(&variable.value_labels) {
+            for (_value, label) in labels.iter() {
+                mapping.insert(label.clone(), variable);
+            }
+        }
+    }
+
+    let words: HashMap<String, Locator> = mapping.iter()
+        .map(|(k, v)| (k.clone(), Locator::from(v.clone())))
         .collect();
 
     dictionary(context, ValueLabelSpellcheck, &words);
@@ -181,9 +192,11 @@ fn value_label_spellcheck(context: &mut Context) {
 fn variable_label_spellcheck(context: &mut Context) {
     use check::CheckName::VariableLabelSpellcheck;
 
-    let words: Vec<String> = context.variables.iter()
-        .map(|v| v.label.clone())
-        .collect();
+    let mut words: HashMap<String, Locator> = HashMap::new();
+
+    for variable in context.variables.iter() {
+        words.insert(variable.label.clone(), Locator::from(variable));
+    }
 
     dictionary(context, VariableLabelSpellcheck, &words);
 }
@@ -197,22 +210,17 @@ fn string_value_spellcheck(context: &mut Context) {
         .map(|v| v.clone())
         .collect();
 
-    let mut words: Vec<String> = vec![];
+    let mut words: HashMap<String, Locator> = HashMap::new();
     for var in variables {
         if let Some(occurrences) = context.frequency_table.get(&var) {
             for (val, occ) in occurrences.iter() {
-                //if val.missing != Missing::NOT_MISSING {
-                //    continue;
-                //}
+                let mut locator = Locator::from(&var);
+                locator.value_index = val.row;
 
-                for _ in 0..*occ {
-                    words.push(val.value.to_string());
-                }
+                words.insert(val.value.to_string(), locator.clone());
             }
         }
     }
-
-    // println!("{:#?}: {}", &words, &words.len());
 
     dictionary(context, StringValueSpellcheck, &words);
 }
@@ -802,6 +810,6 @@ mod tests {
         });
 
         string_value_spellcheck(&mut context);
-        assert_setting!(context.report.summary.get(&StringValueSpellcheck), 14, 6);
+        assert_setting!(context.report.summary.get(&StringValueSpellcheck), 3, 2);
     }
 }

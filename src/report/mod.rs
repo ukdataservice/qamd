@@ -8,7 +8,7 @@ use std::slice::Iter;
 use chrono::naive::NaiveDateTime;
 
 use check::CheckName;
-use model::variable::VariableType;
+use model::variable::{Variable, VariableType};
 
 pub mod html;
 
@@ -185,6 +185,16 @@ impl PartialEq for Locator {
 }
 impl Eq for Locator {}
 
+impl From<&Variable> for Locator {
+    fn from(variable: &Variable) -> Self {
+        Locator {
+            variable_name: variable.name.clone(),
+            variable_index: variable.index,
+            value_index: -1,
+        }
+    }
+}
+
 impl Locator {
     pub fn new(
         variable_name: String,
@@ -198,3 +208,4 @@ impl Locator {
         }
     }
 }
+

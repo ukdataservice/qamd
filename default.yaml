@@ -98,6 +98,12 @@ metadata:
 ###########################
 
 data_integrity:
+  # Checks the user-specified variables for duplicate/repeated values (e.g. useful for checking duplicate IDs)
+  duplicate_values:
+    setting:
+      - Caseno
+    desc: "Variable should not contain duplicate/repeated values"
+
   # Checks whether any string values contain illegal/odd/non-compliant characters
   string_value_odd_characters:
     setting:
@@ -111,17 +117,6 @@ data_integrity:
       - "ü"
     desc: "String values should not contain the specified characters"
 
-  # Checks the percentage of undefined missing values ('sysmis')
-  system_missing_value_threshold:
-    setting: 25
-    desc: "Variable should not exceed the specified percentage of system missing values"
-
-  # Checks the user-specified variables for duplicate/repeated values (e.g. useful for checking duplicate IDs)
-  duplicate_values:
-    setting:
-      - Caseno
-    desc: "Variable should not contain duplicate/repeated values"
-
   # Checks variable labels for spelling errors using a user-defined dictionary file
   # Please remember you must input the correct path to the dictionary file in order for the check to run on your data
   string_value_spellcheck:
@@ -129,6 +124,12 @@ data_integrity:
       - /usr/share/dict/words
       - "C:\\path\\to\\dictonary\\file.txt"
     desc: "String values should have correct spelling"
+
+  # Checks the percentage of undefined missing values ('sysmis')
+  system_missing_value_threshold:
+    setting: 25
+    desc: "Variable should not exceed the specified percentage of system missing values"
+
 
 ###############################
 ## Disclosure Control Checks ##
