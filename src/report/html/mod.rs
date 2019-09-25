@@ -5,7 +5,7 @@ use horrorshow::{Render, RenderBox};
 
 use report::{Category, Metadata, Report, Status};
 
-static JQUERY: &'static str = include_str!("../../../node_modules/jquery/jquery.min.js");
+static JQUERY: &'static str = include_str!("../../../node_modules/jquery/dist/jquery.min.js");
 static BOOTSTRAP_CSS: &'static str =
     include_str!("../../../node_modules/bootstrap/dist/css/bootstrap.min.css");
 static ANIMATE_CSS: &'static str =

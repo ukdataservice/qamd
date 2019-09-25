@@ -1,7 +1,6 @@
 use check::{contains, PostCheckFn};
 use check::dictionary::{dictionary};
 use model::variable::{Variable, VariableType};
-use model::value::Value;
 use model::anyvalue::AnyValue;
 use model::missing::Missing;
 use readstat::context::Context;
@@ -213,7 +212,7 @@ fn string_value_spellcheck(context: &mut Context) {
     let mut words: HashMap<String, Locator> = HashMap::new();
     for var in variables {
         if let Some(occurrences) = context.frequency_table.get(&var) {
-            for (val, occ) in occurrences.iter() {
+            for (val, _occ) in occurrences.iter() {
                 let mut locator = Locator::from(&var);
                 locator.value_index = val.row;
 
