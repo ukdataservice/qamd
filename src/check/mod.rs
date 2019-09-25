@@ -9,6 +9,13 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 
+#[macro_use]
+mod macros;
+mod dictionary;
+pub mod post;
+pub mod value;
+pub mod variable;
+
 type CheckFn<T> = fn(value: &T, config: &Config, report: &mut Report);
 
 pub type VariableCheckFn = CheckFn<Variable>;
@@ -24,19 +31,20 @@ pub enum CheckName {
     MissingVariableLabels,
     VariableOddCharacters,
     VariableLabelMaxLength,
+    VariableLabelSpellcheck,
 
     ValueLabelOddCharacters,
     ValueLabelMaxLength,
+    ValueLabelSpellcheck,
 
-    Spellcheck,
     ValueDefinedMissingNoLabel,
 
     // Data Integrity
     DuplicateValues,
 
     StringValueOddCharacters,
+    StringValueSpellcheck,
     SystemMissingOverThreshold,
-    // TODO: ValueSpellcheck,
 
     // Disclosure Risk
     DateFormat,
@@ -53,6 +61,7 @@ impl fmt::Display for CheckName {
 }
 
 /// Holds lists of checks to be run
+#[derive(Default)]
 pub struct Check {
     pub variable: Vec<VariableCheckFn>,
     pub value: Vec<ValueCheckFn>,
@@ -126,12 +135,6 @@ fn capitalize(s: &str) -> String {
         Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
     }
 }
-
-#[macro_use]
-mod macros;
-pub mod post;
-pub mod value;
-pub mod variable;
 
 #[cfg(test)]
 mod tests {

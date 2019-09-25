@@ -1,4 +1,6 @@
-use check::{contains, only_contains, read_file, PostCheckFn};
+use check::{contains, PostCheckFn};
+use check::dictionary::{dictionary};
+use model::variable::{Variable, VariableType};
 use model::anyvalue::AnyValue;
 use model::missing::Missing;
 use readstat::context::Context;
@@ -13,21 +15,31 @@ pub fn register() -> Vec<PostCheckFn> {
     vec![
         // Basic File Checks
         bad_filename,
+
         // Metadata
         primary_variable,
+
         value_label_odd_characters,
         value_label_max_length,
-        spellcheck,
+        value_label_spellcheck,
+
+        variable_label_spellcheck,
+
         // Data Integrity
         duplicate_values,
         string_value_odd_characters,
         system_missing_over_threshold,
+        string_value_spellcheck,
+
         //  Disclosure Risk
         regex_patterns,
         unique_values,
     ]
 }
 
+// Basic Flle Checks
+
+/// Filename must fit the provided regex pattern
 fn bad_filename(context: &mut Context) {
     let (config, report) = (&context.config, &mut context.report);
 
@@ -52,6 +64,8 @@ fn bad_filename(context: &mut Context) {
         report.summary.insert(BadFileName, status);
     }
 }
+
+// Metadata
 
 /// Count the number of cases using the provided primary variable_count
 fn primary_variable(context: &mut Context) {
@@ -150,75 +164,57 @@ fn value_label_max_length(context: &mut Context) {
     }
 }
 
-fn spellcheck(context: &mut Context) {
-    let (config, report) = (&context.config, &mut context.report);
+/// Spellcheck value labels
+fn value_label_spellcheck(context: &mut Context) {
+    use check::CheckName::ValueLabelSpellcheck;
 
-    if config.metadata.spellcheck.is_none() {
-        return;
-    }
-
-    let setting_desc = match config.metadata.spellcheck {
-        Some(ref setting) => &setting.desc,
-        None => "",
-    };
-
-    let dictonaries_paths = config.get_dictionaries();
-
-    let words: Vec<String> = dictonaries_paths
-        .iter()
-        .map(|path| read_file(path))
-        .filter_map(|result| result.ok())
-        .map(|s| {
-            s.split("\n")
-                .map(|x| x.to_string())
-                .collect::<Vec<String>>()
-        })
-        .flatten()
+    let words: Vec<String> = context.value_labels
+        .values()
+        .flat_map(|v| v.values())
+        .map(|s| s.to_string())
         .collect();
 
-    use check::CheckName::Spellcheck;
-    include_check!(
-        report.summary,
-        Spellcheck,
-        &setting_desc,
-        Category::Metadata
-    );
+    dictionary(context, ValueLabelSpellcheck, &words);
+}
 
-    if let Some(ref mut status) = report.summary.get_mut(&Spellcheck) {
-        for variable in context.variables.iter() {
-            // if only_contains(&variable.label, &words) {
-            //     include_locators!(config, status, variable.name, variable.index, -1);
-            //     status.fail += 1;
-            // }
+/// Spellcheck variable labels
+fn variable_label_spellcheck(context: &mut Context) {
+    use check::CheckName::VariableLabelSpellcheck;
 
-            for (value, occ) in context.frequency_table.get(&variable).unwrap() {
-                if only_contains(&value.label, &words) {
-                    status.pass += occ;
-                } else {
-                    include_locators!(
-                        config,
-                        status,
-                        value.variable.name,
-                        value.variable.index,
-                        value.row
-                    );
+    let words: Vec<String> = context.variables.iter()
+        .map(|v| v.label.clone())
+        .collect();
 
-                    status.fail += occ;
+    dictionary(context, VariableLabelSpellcheck, &words);
+}
+
+/// Spellcheck string values
+fn string_value_spellcheck(context: &mut Context) {
+    use check::CheckName::StringValueSpellcheck;
+
+    let variables: Vec<Variable> = context.variables.iter()
+        .filter(|v| v.type_ == VariableType::Text)
+        .map(|v| v.clone())
+        .collect();
+
+    let mut words: Vec<String> = vec![];
+    for var in variables {
+        if let Some(occurrences) = context.frequency_table.get(&var) {
+            for (val, occ) in occurrences.iter() {
+                //if val.missing != Missing::NOT_MISSING {
+                //    continue;
+                //}
+
+                for _ in 0..*occ {
+                    words.push(val.value.to_string());
                 }
             }
         }
-
-        {
-            let total_values = &report.metadata.raw_case_count * &report.metadata.variable_count;
-            let total_counted = status.pass + status.fail;
-            assert!(
-                total_counted == total_values,
-                "Total counted: {} is not equal to total values: {}",
-                total_counted,
-                total_values
-            );
-        }
     }
+
+    // println!("{:#?}: {}", &words, &words.len());
+
+    dictionary(context, StringValueSpellcheck, &words);
 }
 
 /// Notify if a variable has duplicate values, and where they are
@@ -443,11 +439,16 @@ mod tests {
             temp.insert(Value::from("!baz"), 3);
             temp.insert(qux, 4);
 
-            let mut first = Variable::from("first");
+            let variable = Variable {
+                index: 0,
+                name: "first".to_string(),
+                label: "first fine label".to_string(),
+                type_: VariableType::Text,
+                value_format: String::new(),
+                value_labels: "labels1".to_string(),
+            };
 
-            first.value_labels = "labels1".to_string();
-
-            freq_table.insert(first, temp.clone());
+            freq_table.insert(variable, temp.clone());
         }
 
         {
@@ -458,12 +459,28 @@ mod tests {
             temp.insert(Value::from("g@regs"), 2);
             temp.insert(missing_value, 8);
 
-            freq_table.insert(Variable::from("second"), temp);
+            let variable = Variable {
+                index: 1,
+                name: "second".to_string(),
+                label: "second fine label".to_string(),
+                type_: VariableType::Text,
+                value_format: String::new(),
+                value_labels: String::new(),
+            };
+
+            freq_table.insert(variable, temp);
         }
 
         {
             let mut temp: HashMap<Value, i32> = HashMap::new();
-            let variable = Variable::from("badid");
+            let variable = Variable {
+                index: 2,
+                name: "badid".to_string(),
+                label: "this is nt ok".to_string(),
+                type_: VariableType::Numeric,
+                value_format: String::new(),
+                value_labels: String::new(),
+            };
 
             for i in 1i32..=10 {
                 if i == 4 {
@@ -488,7 +505,15 @@ mod tests {
 
         {
             let mut temp: HashMap<Value, i32> = HashMap::new();
-            let variable = Variable::from("id");
+            let variable = Variable {
+                index: 3,
+                name: "id".to_string(),
+                label: "this is nt ok either".to_string(),
+                type_: VariableType::Numeric,
+                value_format: String::new(),
+                value_labels: String::new(),
+            };
+
             for i in 1i32..=10 {
                 temp.insert(
                     Value {
@@ -537,6 +562,28 @@ mod tests {
             value_labels: value_labels,
             frequency_table: freq_table,
         }
+    }
+
+    #[test]
+    fn test_bad_filename() {
+        let mut context = setup();
+
+        use check::CheckName::BadFileName;
+
+        assert!(context.report.summary.get(&BadFileName).is_none());
+
+        context.config.basic_file_checks.bad_filename = Some(Setting {
+            setting: "^([a-zA-Z0-9]+)\\.([a-zA-Z0-9]+)$".to_string(),
+            desc: "filename must match pattern".to_string(),
+        });
+
+        context.report.metadata.file_name = "goodfilename.dta".to_string();
+        bad_filename(&mut context);
+        assert_setting!(context.report.summary.get(&BadFileName), 1, 0);
+
+        context.report.metadata.file_name = "bad& filename.foo".to_string();
+        bad_filename(&mut context);
+        assert_setting!(context.report.summary.get(&BadFileName), 0, 1);
     }
 
     #[test]
@@ -706,41 +753,55 @@ mod tests {
     }
 
     #[test]
-    fn test_spellcheck() {
+    fn test_value_label_spellcheck() {
         let mut context = setup();
 
-        use check::CheckName::Spellcheck;
+        use check::CheckName::ValueLabelSpellcheck;
 
-        assert!(context.report.summary.get(&Spellcheck).is_none());
+        assert!(context.report.summary.get(&ValueLabelSpellcheck).is_none(),
+            "ValueLabelSpellcheck was set in the summary report");
 
-        context.config.metadata.spellcheck = Some(Setting {
+        context.config.metadata.value_label_spellcheck = Some(Setting {
             setting: vec!["test/words.txt".to_string()],
             desc: "spellcheck: description from config".to_string(),
         });
 
-        spellcheck(&mut context);
-        assert_setting!(context.report.summary.get(&Spellcheck), 37, 3);
+        value_label_spellcheck(&mut context);
+        assert_setting!(context.report.summary.get(&ValueLabelSpellcheck), 1, 1);
     }
 
     #[test]
-    fn test_bad_filename() {
+    fn test_variable_label_spellcheck() {
         let mut context = setup();
+        use check::CheckName::VariableLabelSpellcheck;
 
-        use check::CheckName::BadFileName;
+        assert!(context.report.summary.get(&VariableLabelSpellcheck).is_none(),
+            "VariableLabelSpellcheck was set in the summary report");
 
-        assert!(context.report.summary.get(&BadFileName).is_none());
-
-        context.config.basic_file_checks.bad_filename = Some(Setting {
-            setting: "^([a-zA-Z0-9]+)\\.([a-zA-Z0-9]+)$".to_string(),
-            desc: "filename must match pattern".to_string(),
+        context.config.metadata.variable_label_spellcheck = Some(Setting {
+            setting: vec!["test/words.txt".to_string()],
+            desc: "variable label spellcheck: description from config".to_string(),
         });
 
-        context.report.metadata.file_name = "goodfilename.dta".to_string();
-        bad_filename(&mut context);
-        assert_setting!(context.report.summary.get(&BadFileName), 1, 0);
+        variable_label_spellcheck(&mut context);
+        assert_setting!(context.report.summary.get(&VariableLabelSpellcheck), 2, 2);
+    }
 
-        context.report.metadata.file_name = "bad& filename.foo".to_string();
-        bad_filename(&mut context);
-        assert_setting!(context.report.summary.get(&BadFileName), 0, 1);
+    #[test]
+    fn test_string_value_spellcheck() {
+        let mut context = setup();
+
+        use check::CheckName::StringValueSpellcheck;
+
+        assert!(context.report.summary.get(&StringValueSpellcheck).is_none(),
+            "StringValueSpellcheck was set in the summary report.");
+
+        context.config.data_integrity.string_value_spellcheck = Some(Setting {
+            setting: vec!["test/words.txt".to_string()],
+            desc: "string value spellcheck: description from config".to_string(),
+        });
+
+        string_value_spellcheck(&mut context);
+        assert_setting!(context.report.summary.get(&StringValueSpellcheck), 14, 6);
     }
 }

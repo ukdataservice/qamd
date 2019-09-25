@@ -77,13 +77,21 @@ metadata:
     setting: 39
     desc: "Value labels should not exceed the defined number of characters"
 
-  # Checks variable and value labels for spelling errors and truncation using a user-defined dictionary file
+  # Checks variable labels for spelling errors using a user-defined dictionary file
   # Please remember you must input the correct path to the dictionary file in order for the check to run on your data
-  spellcheck:
+  variable_label_spellcheck:
+    setting:
+      - "/usr/share/dict/words"
+      - "C:\\path\\to\\dictonary\\file.txt"
+    desc: "Variable labels should have correct spelling"
+
+  # Checks value labels for spelling errors using a user-defined dictionary file
+  # Please remember you must input the correct path to the dictionary file in order for the check to run on your data
+  value_label_spellcheck:
     setting:
       - /usr/share/dict/words
       - "C:\\path\\to\\dictonary\\file.txt"
-    desc: "Variable and value labels should not contain spelling errors and/or truncations"
+    desc: "Value labels should have correct spelling"
 
 ###########################
 ## Data Integrity Checks ##
@@ -113,6 +121,14 @@ data_integrity:
     setting:
       - Caseno
     desc: "Variable should not contain duplicate/repeated values"
+
+  # Checks variable labels for spelling errors using a user-defined dictionary file
+  # Please remember you must input the correct path to the dictionary file in order for the check to run on your data
+  string_value_spellcheck:
+    setting:
+      - /usr/share/dict/words
+      - "C:\\path\\to\\dictonary\\file.txt"
+    desc: "String values should have correct spelling"
 
 ###############################
 ## Disclosure Control Checks ##

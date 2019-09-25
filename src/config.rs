@@ -1,4 +1,5 @@
 use std::path::Path;
+use check::CheckName;
 
 pub trait Valid {
     fn validate(&self) -> Result<(), &'static str>;
@@ -30,10 +31,18 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn get_dictionaries(&self) -> Vec<String> {
+    pub fn get_spellcheck_desc(&self, check_name: &CheckName) -> &str {
+        if let Some(ref setting) = self.config_for_check(check_name) {
+            return &setting.desc;
+        }
+
+        return "";//.to_string();
+    }
+
+    pub fn get_dictionaries(&self, check_name: &CheckName) -> Vec<String> {
         let mut result: Vec<String> = vec![];
 
-        if let Some(ref paths) = self.metadata.spellcheck {
+        if let Some(ref paths) = self.config_for_check(check_name) {
             for spath in paths.setting.iter() {
                 let path = Path::new(spath);
 
@@ -48,6 +57,15 @@ impl Config {
         }
 
         return result;
+    }
+
+    fn config_for_check(&self, check_name: &CheckName) -> &Option<Setting<Vec<String>>> {
+        return match check_name {
+            CheckName::VariableLabelSpellcheck => &self.metadata.variable_label_spellcheck,
+            CheckName::ValueLabelSpellcheck => &self.metadata.value_label_spellcheck,
+            CheckName::StringValueSpellcheck => &self.data_integrity.string_value_spellcheck,
+            _ => &None,
+        };
     }
 }
 
@@ -89,11 +107,12 @@ pub struct Metadata {
     pub missing_variable_labels: Option<Setting<bool>>,
     pub variable_odd_characters: Option<Setting<Vec<String>>>,
     pub variable_label_max_length: Option<Setting<i32>>,
+    pub variable_label_spellcheck: Option<Setting<Vec<String>>>,
 
     pub value_label_odd_characters: Option<Setting<Vec<String>>>,
     pub value_label_max_length: Option<Setting<i32>>,
+    pub value_label_spellcheck: Option<Setting<Vec<String>>>,
 
-    pub spellcheck: Option<Setting<Vec<String>>>,
     pub value_defined_missing_no_label: Option<Setting<bool>>, // SPSS only. E.g. -9 is Defined missing but has no label
 }
 
@@ -153,6 +172,7 @@ pub struct DataIntegrity {
     pub duplicate_values: Option<Setting<Vec<String>>>,
 
     pub string_value_odd_characters: Option<Setting<Vec<String>>>,
+    pub string_value_spellcheck: Option<Setting<Vec<String>>>,
     pub system_missing_value_threshold: Option<Setting<i32>>,
 }
 

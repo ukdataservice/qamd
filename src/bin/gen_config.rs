@@ -39,16 +39,19 @@ fn main() -> Result<(), serde_yaml::Error> {
                                             )),
                 variable_odd_characters: Some(setting(odd_chars.clone(), "Variable names and lables cannot contain certain 'odd' characters.")),
                 variable_label_max_length: Some(setting(79, "Variable labels cannot exceed a maximum length.")),
+                variable_label_spellcheck: Some(setting(dicts.clone(), "Word file(s) used for spellchecking variable labels.")),
 
                 value_label_odd_characters: Some(setting(odd_chars.clone(), "Value labels cannot contain certain 'odd' characters")),
                 value_label_max_length: Some(setting(39, "Value labels cannot exceet a maximum length")),
-                spellcheck: Some(setting(dicts, "Word file(s) used for spellchecking value and variable labels.")),
+                value_label_spellcheck: Some(setting(dicts.clone(), "Word file(s) used for spellchecking value labels.")),
+
                 value_defined_missing_no_label: Some(setting(true, "Values defined as missing must have a label (only applicable to SPSS data files)")),
             },
             data_integrity: DataIntegrity {
                 duplicate_values: Some(setting(duplicate_values, "For each variable specified will check for duplicate values. Useful for checking all ID's are unique.")),
 
                 string_value_odd_characters: Some(setting(odd_chars, "String values cannot contain certain 'odd' characters.")),
+                string_value_spellcheck: Some(setting(dicts, "Word file(s) used for spellchecking string values.")),
                 system_missing_value_threshold: Some(setting(25, "Percentage of missing variables that becomes unacceptable.")),
             },
             disclosure_risk: DisclosureRisk {
