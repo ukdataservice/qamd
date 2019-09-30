@@ -9,6 +9,9 @@ fn main() -> Result<(), serde_yaml::Error> {
         "/usr/share/dict/words",
         "C:\\path\\to\\dictonary\\file.txt",
     ]);
+    let stopwords = vec_of_strings(vec![
+        "stopwords.txt",
+    ]);
     let duplicate_values = vec_of_strings(vec!["Caseno"]);
     let regexps = vec_of_strings(vec![
         "^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,4})+)$",
@@ -59,6 +62,7 @@ fn main() -> Result<(), serde_yaml::Error> {
 
                 regex_patterns: Some(setting(regexps, "Values matching a regex pattern fail. Can be used to find post codes and telephone numbers.")),
                 unique_values: Some(setting(1, "Detects outliers (if a variable contains unique values)")),
+                string_value_stopword: Some(setting(stopwords, "Find string values that contain words listed in a dictionary")),
             }
     };
 

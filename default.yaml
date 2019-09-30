@@ -79,6 +79,7 @@ metadata:
 
   # Checks variable labels for spelling errors using a user-defined dictionary file
   # Please remember you must input the correct path to the dictionary file in order for the check to run on your data
+  # You can use more than one file.
   variable_label_spellcheck:
     setting:
       - "/usr/share/dict/words"
@@ -87,6 +88,7 @@ metadata:
 
   # Checks value labels for spelling errors using a user-defined dictionary file
   # Please remember you must input the correct path to the dictionary file in order for the check to run on your data
+  # You can use more than one file.
   value_label_spellcheck:
     setting:
       - /usr/share/dict/words
@@ -119,6 +121,7 @@ data_integrity:
 
   # Checks variable labels for spelling errors using a user-defined dictionary file
   # Please remember you must input the correct path to the dictionary file in order for the check to run on your data
+  # You can use more than one file.
   string_value_spellcheck:
     setting:
       - /usr/share/dict/words
@@ -153,4 +156,14 @@ disclosure_risk:
   unique_values:
     setting: 1
     desc: "Variable should not contain number of observations equal to or less than specified threshold"
+
+  # Checks string values for words listed in a user defined dictionary. If a
+  # word in the dictionary is found, it fails the check.
+  # Please remember you must input the correct path to the dictionary file in
+  # order for the check to run correctly on your data
+  # You can use more than one file.
+  string_value_stopword:
+    setting:
+      - "stopword.txt"
+    desc: "String values should not contain user defined values"
 

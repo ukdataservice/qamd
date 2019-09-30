@@ -1,5 +1,5 @@
 use check::{contains, PostCheckFn};
-use check::dictionary::{dictionary};
+use check::dictionary::{dictionary, spellcheck_predicate, stopword_predicate};
 use model::variable::{Variable, VariableType};
 use model::anyvalue::AnyValue;
 use model::missing::Missing;
@@ -34,6 +34,7 @@ pub fn register() -> Vec<PostCheckFn> {
         //  Disclosure Risk
         regex_patterns,
         unique_values,
+        string_value_stopword,
     ]
 }
 
@@ -184,7 +185,7 @@ fn value_label_spellcheck(context: &mut Context) {
         .map(|(k, v)| (k.clone(), Locator::from(v.clone())))
         .collect();
 
-    dictionary(context, ValueLabelSpellcheck, &words);
+    dictionary(context, ValueLabelSpellcheck, &words, spellcheck_predicate);
 }
 
 /// Spellcheck variable labels
@@ -197,7 +198,7 @@ fn variable_label_spellcheck(context: &mut Context) {
         words.insert(variable.label.clone(), Locator::from(variable));
     }
 
-    dictionary(context, VariableLabelSpellcheck, &words);
+    dictionary(context, VariableLabelSpellcheck, &words, spellcheck_predicate);
 }
 
 /// Spellcheck string values
@@ -221,7 +222,7 @@ fn string_value_spellcheck(context: &mut Context) {
         }
     }
 
-    dictionary(context, StringValueSpellcheck, &words);
+    dictionary(context, StringValueSpellcheck, &words, spellcheck_predicate);
 }
 
 /// Notify if a variable has duplicate values, and where they are
@@ -414,6 +415,31 @@ fn unique_values(context: &mut Context) {
             }
         }
     }
+}
+
+fn string_value_stopword(context: &mut Context) {
+    use check::CheckName::StringValueStopword;
+
+    let variables: Vec<Variable> = context.variables.iter()
+        .filter(|v| v.type_ == VariableType::Text)
+        .map(|v| v.clone())
+        .collect();
+
+    let mut words: HashMap<String, Locator> = HashMap::new();
+    for var in variables {
+        if let Some(occurrences) = context.frequency_table.get(&var) {
+            for (val, _occ) in occurrences.iter() {
+                let mut locator = Locator::from(&var);
+                locator.value_index = val.row;
+
+                words.insert(val.value.to_string(), locator.clone());
+            }
+        }
+    }
+
+    //println!("words: {:#?}", &words);
+
+    dictionary(context, StringValueStopword, &words, stopword_predicate);
 }
 
 #[cfg(test)]
@@ -810,5 +836,23 @@ mod tests {
 
         string_value_spellcheck(&mut context);
         assert_setting!(context.report.summary.get(&StringValueSpellcheck), 3, 2);
+    }
+
+    #[test]
+    fn test_string_value_stopword() {
+        let mut context = setup();
+
+        use check::CheckName::StringValueStopword;
+
+        assert!(context.report.summary.get(&StringValueStopword).is_none(),
+            "StringValueStopword was set in the summary report.");
+
+        context.config.disclosure_risk.string_value_stopword = Some(Setting {
+            setting: vec!["test/stopwords.txt".to_string()],
+            desc: "string value stopword: desc from config".to_string(),
+        });
+
+        string_value_stopword(&mut context);
+        assert_setting!(context.report.summary.get(&StringValueStopword), 4, 1);
     }
 }

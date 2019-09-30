@@ -31,7 +31,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn get_spellcheck_desc(&self, check_name: &CheckName) -> &str {
+    pub fn get_desc(&self, check_name: &CheckName) -> &str {
         if let Some(ref setting) = self.config_for_check(check_name) {
             return &setting.desc;
         }
@@ -59,11 +59,13 @@ impl Config {
         return result;
     }
 
-    fn config_for_check(&self, check_name: &CheckName) -> &Option<Setting<Vec<String>>> {
+    pub fn config_for_check(&self, check_name: &CheckName) -> &Option<Setting<Vec<String>>> {
         return match check_name {
             CheckName::VariableLabelSpellcheck => &self.metadata.variable_label_spellcheck,
             CheckName::ValueLabelSpellcheck => &self.metadata.value_label_spellcheck,
             CheckName::StringValueSpellcheck => &self.data_integrity.string_value_spellcheck,
+
+            CheckName::StringValueStopword => &self.disclosure_risk.string_value_stopword,
             _ => &None,
         };
     }
@@ -215,6 +217,8 @@ pub struct DisclosureRisk {
 
     pub regex_patterns: Option<Setting<Vec<String>>>,
     pub unique_values: Option<Setting<i32>>,
+
+    pub string_value_stopword: Option<Setting<Vec<String>>>,
 }
 
 impl Valid for DisclosureRisk {
